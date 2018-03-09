@@ -1,0 +1,37 @@
+{
+    "exeName":"/usr/sbin/audiod",
+    "allowedNames": ["com.webos.audio","com.webos.service.audio"],
+    "type": "regular",
+    "permissions": [
+        {
+            "service":"com.webos.audio",
+            "outbound":["com.webos.service.tv.sound",
+                        "com.webos.service.irdbmanager",
+                        "com.webos.applicationManager",
+                        "com.palm.bluetooth",
+                        "com.palm.power",
+                        "com.palm.systemmanager",
+                        "com.palm.systemservice",
+                        "com.webos.settingsservice"]
+        },
+        {
+            "service":"com.webos.service.audio",
+            "outbound":["com.webos.service.tv.sound",
+                        "com.webos.service.irdbmanager",
+                        "com.webos.applicationManager",
+                        "com.palm.bluetooth",
+                        "com.palm.display",
+                        "com.palm.pmvoicecommand",
+                        "com.palm.telephony",
+                        "com.palm.lunabus",
+                        "com.palm.power",
+                        "com.palm.systemmanager",
+                        "com.palm.ims",
+                        "com.palm.systemservice",
+                        "com.webos.service.bluetooth2",
+                        "com.webos.vibrate",
+                        "com.webos.settingsservice",
+                        "com.webos.keys"]
+        }
+    ]
+}

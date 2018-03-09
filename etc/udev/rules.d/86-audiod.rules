@@ -1,0 +1,6 @@
+#!/bin/sh
+SUBSYSTEM=="switch",ACTION=="change",ATTR{state}=="1",DEVPATH=="/devices/virtual/switch/h2w",RUN+="/etc/udev/scripts/headset.sh 'HEADSETMIC_ADDED' %b"
+SUBSYSTEM=="switch",ACTION=="change",ATTR{state}=="0",DEVPATH=="/devices/virtual/switch/h2w",RUN+="/etc/udev/scripts/headset.sh 'HEADSET_REMOVED' %b"
+SUBSYSTEM=="switch",ACTION=="change",ATTR{state}=="2",DEVPATH=="/devices/virtual/switch/h2w",RUN+="/etc/udev/scripts/headset.sh 'HEADSET_ADDED' %b"
+
+

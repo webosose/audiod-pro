@@ -1,0 +1,20 @@
+{
+    "com.webos.audio": [
+        "devices",
+        "system",
+        "settings",
+        "media",
+        "tv.services",
+        "applications.query"
+    ],
+    "com.webos.service.audio": [
+        "devices",
+        "services",
+        "system",
+        "telephony",
+        "settings",
+        "media",
+        "tv.services",
+        "applications.query"
+    ]
+}
