@@ -64,63 +64,73 @@ NotificationScenarioModule::programNotificationVolumes(bool ramp)
 }
 
 void
-NotificationScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
+NotificationScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType)
 {
-    g_debug("NotificationScenarioModule::onSinkChanged: sink %i-%s %s", sink,
+    g_debug("NotificationScenarioModule::onSinkChanged: sink %i-%s %s %d", sink,
                                                          virtualSinkName(sink),
-                                                         controlEventName(event));
+                                                         controlEventName(event),p_eSinkType);
+    if(p_eSinkType==ePulseAudio)
+      {
+        g_debug("NotificationScenarioModule: pulse audio onsink changed");                                                     
 
-        const int cKillFakeVibrateThreshold = 5;
+          const int cKillFakeVibrateThreshold = 5;
 
-        if (eControlEvent_FirstStreamOpened == event)
-        {
-            bool shouldFakeVibrate = false;
-            bool fakeVibrateIfCantVibrate = true;
-            bool needsSCOBeepAlert = false;
 
-            bool ringerOn = gState.getRingerOn();
-            if (gState.getOnActiveCall() || !ringerOn  || gState.getRecordStatus())
-            {
-                programVolume(sink, 0); // mute calendar/notification sound
-                shouldFakeVibrate = true; // fake vibrate,
-                                          //even if user has disabled vibrations!
-            }
-            else
-            {
-                int volume = mNotificationVolume.get();
-                if (programVolume(sink, volume) &&
-                    volume >= cKillFakeVibrateThreshold)
-                    fakeVibrateIfCantVibrate = false; // if alert is audible enough, no need for a fake vibration
+          if (eControlEvent_FirstStreamOpened == event)
+          {
+              bool shouldFakeVibrate = false;
+              bool fakeVibrateIfCantVibrate = true;
+              bool needsSCOBeepAlert = false;
 
-                if (gAudioDevice.needsSCOBeepAlert())
-                    needsSCOBeepAlert = true;
-            }
+              bool ringerOn = gState.getRingerOn();
+              if (gState.getOnActiveCall() || !ringerOn  || gState.getRecordStatus())
+              {
+                  programVolume(sink, 0); // mute calendar/notification sound
+                  shouldFakeVibrate = true; // fake vibrate,
+                                            //even if user has disabled vibrations!
+              }
+              else
+              {
+                  int volume = mNotificationVolume.get();
+                  if (programVolume(sink, volume) &&
+                      volume >= cKillFakeVibrateThreshold)
+                      fakeVibrateIfCantVibrate = false; // if alert is audible enough, no need for a fake vibration
 
-            // Determine if we should vibrate?
-            if (gState.shouldVibrate()) // take into account user settings
-            {
-                if (gState.getOnActiveCall() || gState.getOnThePuck() || gState.getRecordStatus())
-                {
-                    shouldFakeVibrate = fakeVibrateIfCantVibrate;
-                }
-                else
-                {
-                    getVibrateDevice()->realVibrate("{\"name\":\"notification\"}");
-                    shouldFakeVibrate = false; // if vibrated, we no need to fake vibrate anymore...
-                }
+                      if (gAudioDevice.needsSCOBeepAlert())
+                      needsSCOBeepAlert = true;
+              }
 
-                if (!ringerOn && gState.getHeadsetState() != eHeadsetState_None)
-                    shouldFakeVibrate = true;
-            }
+              // Determine if we should vibrate?
+              if (gState.shouldVibrate()) // take into account user settings
+              {
+                  if (gState.getOnActiveCall() || gState.getOnThePuck() || gState.getRecordStatus())
+                  {
+                      shouldFakeVibrate = fakeVibrateIfCantVibrate;
+                  }
+                  else
+                  {
+                      //getVibrateDevice()->realVibrate(enotifications != sink);
+                      getVibrateDevice()->realVibrate("{\"name\":\"notification\"}");
+                      shouldFakeVibrate = false; // if vibrated, we no need to fake vibrate anymore...
+                  }
 
-            if (shouldFakeVibrate && gState.getOnActiveCall())
-            {    // fake vibrate during calls
-                gAudioMixer.playSystemSound ("notification_buzz", eeffects);
-                if (gAudioDevice.needsSCOBeepAlert())
-                    needsSCOBeepAlert = true;
-            }
-            if (needsSCOBeepAlert)
-                gAudioDevice.generateSCOBeepAlert();
+                  if (!ringerOn && gState.getHeadsetState() != eHeadsetState_None)
+                      shouldFakeVibrate = true;
+              }
+
+              if (shouldFakeVibrate && gState.getOnActiveCall())
+              {    // fake vibrate during calls
+                  gAudioMixer.playSystemSound ("notification_buzz", eeffects);
+                  if (gAudioDevice.needsSCOBeepAlert())
+                      needsSCOBeepAlert = true;
+              }
+              if (needsSCOBeepAlert)
+                  gAudioDevice.generateSCOBeepAlert();
+          }
+      }
+      else
+      {
+        g_debug("NotificationScenarioModule: UMI onsink changed");
         }
 }
 

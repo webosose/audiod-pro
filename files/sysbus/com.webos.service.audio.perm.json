@@ -15,6 +15,7 @@
         "settings",
         "media",
         "tv.services",
-        "applications.query"
+        "applications.query",
+        "audiooutputd"
     ]
 }

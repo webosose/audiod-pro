@@ -108,7 +108,10 @@ void AlarmScenarioModule::setAlarmOn (bool AlarmOn)
         g_message ("setting alarm");
         gAudiodProperties->mAlarmOn.set(AlarmOn);
         gState.setPreference(cPref_OverrideRingerForAlaram, AlarmOn);
-        ScenarioModule::getCurrent()->programSoftwareMixer(true);
+        if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))
+        { 
+            module->programSoftwareMixer(true);
+        }
     }
 }
 
@@ -165,19 +168,21 @@ gboolean alarmTimeoutForVibrate (gpointer data)
 
     if (data) {
         AlarmScenarioModule *alarmModule = (AlarmScenarioModule *)data;
-        alarmModule->onSinkChanged(ealarm, eControlEvent_LastStreamClosed);
+        alarmModule->onSinkChanged(ealarm, eControlEvent_LastStreamClosed,ePulseAudio);
     }
 
     return false;
 }
 
 void
-AlarmScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
+AlarmScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType)
 {
-    g_debug("AlarmScenarioModule::onSinkChanged: sink %i-%s %s", sink,
+      g_debug("AlarmScenarioModule::onSinkChanged: sink %i-%s %s %d", sink,
                                                          virtualSinkName(sink),
-                                                         controlEventName(event));
-
+                                                         controlEventName(event),(int)p_eSinkType);
+      if(p_eSinkType==ePulseAudio)
+      {
+        g_debug("AlarmScenarioModule: pulse audio onsink changed");
         if (eControlEvent_FirstStreamOpened == event)
         {
             bool shouldFakeVibrate = false;
@@ -242,7 +247,11 @@ AlarmScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
                      }
                }
             }
-
+     }
+     else
+     {
+       g_debug("AlarmScenarioModule: UMI onsink changed");
+     }
 }
 
 static LSMethod alarmMethods[] = {

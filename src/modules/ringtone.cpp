@@ -164,7 +164,9 @@ RingtoneScenarioModule::programRingToneVolumes(bool ramp)
     }
     else
         programVolume(etts, 0);
-
+    programVolume(evoicerecognition, (gState.getRingerOn() &&
+                                      activeStreams.contain(evoicerecognition)) ?
+                                      volume : 0, ramp);
 }
 
 int
@@ -261,99 +263,121 @@ error:
 }
 
 void
-RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
+RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType)
 {
-    g_debug("RingtoneScenarioModule::onSinkChanged: sink %i-%s %s", sink,
+    g_debug("RingtoneScenarioModule::onSinkChanged: sink %i-%s %s %d", sink,
                                                     virtualSinkName(sink),
-                                                    controlEventName(event));
-    const int cKillFakeVibrateThreshold = 5;
-    int mediaVolume = 0;
-    bool dndOn = false;
-    ScenarioModule *media = getMediaModule();
-
-    if (eringtones == sink || etts == sink)
+                                                    controlEventName(event),(int)p_eSinkType);
+    if(p_eSinkType==ePulseAudio)
     {
-        if (eControlEvent_FirstStreamOpened == event)
-        {
-            bool    needsSCOBeepAlarm = false;
-            if (mMuted){
-                g_message("Ringtone::onSinkChanged: Ringtone module muted when opening %s!!!!",\
-                                                      virtualSinkName(sink));
-            }
-            // We unmute a newly opened ringtone
-            //That's the only way to set these flags,
-            // because until the user mutes them, they should always go through!
-            //not required  as we are doing it per call now and not per sink open-close
-            if (etts == sink) {
-                getMediaModule()->getScenarioVolumeOrMicGain(0, mediaVolume, true);
-                gState.getPreference(cPref_DndOn, dndOn);
-            }
+      g_debug("RingtoneScenarioModule: Pulse Audio onsink changed");                                                    
+      const int cKillFakeVibrateThreshold = 5;
+      int mediaVolume = 0;
+      bool dndOn = false;
+      ScenarioModule *media = getMediaModule();
+      VirtualSinkSet      activeStreams = gAudioMixer.getActiveStreams();
+      if (eringtones == sink || etts == sink)
+      {
+          if (eControlEvent_FirstStreamOpened == event)
+          {
+              bool    needsSCOBeepAlarm = false;
+              if (mMuted){
+                  g_message("Ringtone::onSinkChanged: Ringtone module muted when opening %s!!!!",\
+                                                        virtualSinkName(sink));
+              }
+              // We unmute a newly opened ringtone
+              //That's the only way to set these flags,
+              // because until the user mutes them, they should always go through!
+              //not required  as we are doing it per call now and not per sink open-close
+              /*if (eringtones == sink)
+                  mRingtoneMuted = false; */
+              if (etts == sink) {
+                  getMediaModule()->getScenarioVolumeOrMicGain(0, mediaVolume, true);
+                  gState.getPreference(cPref_DndOn, dndOn);
+              }
 
-            bool    fakeVibrateIfCantVibrate = true;
-            if (VERIFY(mCurrentScenario) &&
-                 gState.getRingerOn () &&
-                  !mRingtoneMuted )//added to continue in muted mode if ringtone is muted using vol keys
-            {
-                int volume = !gState.getOnActiveCall()?getAdjustedRingtoneVolume(true):mRingtoneVolume.get();
-                if(etts == sink && gState.getRingerOn ()){
-                    programVolume(sink, mediaVolume);
-                }
-                else if ( programVolume(sink, volume) && volume >=
-                    cKillFakeVibrateThreshold){
-                    fakeVibrateIfCantVibrate = false;// if alert is audible
-                                                     // enough, no need for
-                                                     // a fake vibration
-                }
+              bool    fakeVibrateIfCantVibrate = true;
+              if (VERIFY(mCurrentScenario) &&
+                   gState.getRingerOn () &&
+                    !mRingtoneMuted )//added to continue in muted mode if ringtone is muted using vol keys
+              {
+                  int volume = !gState.getOnActiveCall()?getAdjustedRingtoneVolume(true):mRingtoneVolume.get();
+                  if(etts == sink && gState.getRingerOn ()){
+                      programVolume(sink, mediaVolume);
+                  }
+                  else if ( programVolume(sink, volume) && volume >=
+                      cKillFakeVibrateThreshold){
+                      fakeVibrateIfCantVibrate = false;// if alert is audible
+                                                       // enough, no need for
+                                                       // a fake vibration
+                  }
 
-                if (gAudioDevice.needsSCOBeepAlert()){
-                    needsSCOBeepAlarm = true;
-                }
+                  if (gAudioDevice.needsSCOBeepAlert()){
+                      needsSCOBeepAlarm = true;
+                  }
 
-            }else{
-                VirtualSinkSet activeStreams = gAudioMixer.getActiveStreams();
-                if(!gState.getRingerOn ())
-                {
-                    if (activeStreams.contain(etts) && !dndOn)
-                        programVolume(sink, mediaVolume);
-                    else
-                        programVolume(sink, 0);
+              }else{
+                  if(!gState.getRingerOn ())
+                  {
+                      if (activeStreams.contain(etts) && !dndOn)
+                          programVolume(sink, mediaVolume);
+                      else
+                          programVolume(sink, 0);
 
-                }else{
-                    programVolume(sink, 0);
-                }
-            }
+                  }else{
+                      programVolume(sink, 0);
+                  }
+              }
 
-            if (!gState.getOnActiveCall() && checkRingtoneVibration() && eringtones == sink)
-            {    // repeated vibration
-                getVibrateDevice()->realVibrate("{\"name\":\"ringtone\"}");
-                if (gState.getHeadsetState() != eHeadsetState_None &&
-                                                fakeVibrateIfCantVibrate)
-                {
-                    getVibrateDevice()->startFakeBuzz();
-                    fakeVibrateIfCantVibrate = false;
-                }
-                if (gAudioDevice.needsSCOBeepAlert())
-                    needsSCOBeepAlarm = true;
-            }
-            if (needsSCOBeepAlarm && !mSCOBeepAlarmRunning)
-            {
-                mSCOBeepAlarmRunning = true;
-                SCOBeepAlarm();    // we can't play the ringtone
-                                //alarm in the user's ear,
-                                // let's beep! (Castle bluetooth...)
-            }
-        }
-        else if (eControlEvent_LastStreamClosed == event)
-        {
-            VirtualSinkSet activeStreams = gAudioMixer.getActiveStreams();
-            if (!activeStreams.contain(eringtones))
-            {    // last alarm/ringtone: stop vibrating & unmute for the next time
-                cancelVibrate();
-                setMuted(false); //not required - in case the ringtone is muted
-            }
-            programVolume(sink, 0);
-        }
-    }
+              if (!gState.getOnActiveCall() && checkRingtoneVibration() && eringtones == sink)
+              {    // repeated vibration
+                  //getVibrateDevice()->startVibrate(fakeVibrateIfCantVibrate);
+                  getVibrateDevice()->realVibrate("{\"name\":\"ringtone\"}");
+                  if (gState.getHeadsetState() != eHeadsetState_None &&
+                                                  fakeVibrateIfCantVibrate)
+                  {
+                      getVibrateDevice()->startFakeBuzz();
+                      fakeVibrateIfCantVibrate = false;
+                  }
+                  if (gAudioDevice.needsSCOBeepAlert())
+                      needsSCOBeepAlarm = true;
+              }
+              if (needsSCOBeepAlarm && !mSCOBeepAlarmRunning)
+              {
+                  mSCOBeepAlarmRunning = true;
+                  SCOBeepAlarm();    // we can't play the ringtone
+                                  //alarm in the user's ear,
+                                  // let's beep! (Castle bluetooth...)
+              }
+          }
+          else if (eControlEvent_LastStreamClosed == event)
+          {
+              if (!activeStreams.contain(eringtones))
+              {    // last alarm/ringtone: stop vibrating & unmute for the next time
+                  cancelVibrate();
+                  setMuted(false); //not required - in case the ringtone is muted
+              }
+              programVolume(sink, 0);
+          }
+      }
+    else if (evoicerecognition == sink) {
+           bool muteVoicerecognition = false;
+           muteVoicerecognition = (event == eControlEvent_FirstStreamOpened) ? false : true;
+
+           int volume = 0;
+           if(muteVoicerecognition)
+               programVolume(evoicerecognition, volume);
+           else {
+               getScenarioVolume(cRingtone_Default, volume);
+               programVolume(evoicerecognition, (gState.getRingerOn() \
+                   && activeStreams.contain(evoicerecognition)) ? volume : 0);
+           }
+      }
+  }
+  else
+  {
+    g_debug("RingtoneScenarioModule: UMI onsink changed");
+  }
 }
 
 static LSMethod ringtoneMethods[] = {
@@ -381,6 +405,7 @@ RingtoneScenarioModule::RingtoneScenarioModule() :
 {
     gAudiodCallbacks.registerModuleCallback(this, eringtones, true);
     gAudiodCallbacks.registerModuleCallback(this, etts, true);
+    gAudiodCallbacks.registerModuleCallback(this, evoicerecognition, true);
 
     Scenario *s = new Scenario(cRingtone_Default,
                                 true,

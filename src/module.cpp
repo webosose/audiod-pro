@@ -29,6 +29,7 @@
 #include "VolumeControlChangesMonitor.h"
 #include "AudioDevice.h"
 #include "main.h"
+#include "genericScenarioModule.h"
 
 #define SUBSCRIPTION_KEY "lockVolumeKeysSubscription"
 
@@ -391,7 +392,7 @@ _enableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     ScenarioModule * module = (ScenarioModule*)ctx;
     const gchar * reply = STANDARD_JSON_SUCCESS;
     std::string scenario;
-    Scenario * s = NULL;
+    GenericScenario * s = nullptr;
     // scenario parameter is NOT optional
     if (!msg.get("scenario", scenario))
     {
@@ -400,7 +401,7 @@ _enableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     }
 
     s = module->getScenario(scenario.c_str());
-    if (s == NULL  || g_str_has_suffix(scenario.c_str(),"NULL"))
+    if (s == nullptr  || g_str_has_suffix(scenario.c_str(),"NULL"))
     {
         reply = INVALID_PARAMETER_ERROR(scenario, string);
         goto error;
@@ -433,7 +434,7 @@ _disableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     ScenarioModule * module = (ScenarioModule*)ctx;
     const gchar * reply = STANDARD_JSON_SUCCESS;
     std::string scenario;
-    Scenario * s = NULL;
+    GenericScenario * s = nullptr;
     // scenario parameter is NOT optional
     if (!msg.get("scenario", scenario))
     {
@@ -442,7 +443,7 @@ _disableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     }
 
     s = module->getScenario(scenario.c_str());
-    if (s == NULL)
+    if (s == nullptr)
     {
         reply = INVALID_PARAMETER_ERROR(scenario, string);
         goto error;
@@ -547,7 +548,8 @@ _listScenarios(LSHandle *lshandle, LSMessage *message, void *ctx)
     for (ScenarioModule::ScenarioMap::const_iterator iter = scenarios.begin();
                                               iter != scenarios.end(); ++iter)
     {
-        Scenario *s = iter->second;
+        GenericScenario *s = iter->second;
+//        g_debug("%s: looking at '%s' scenario", __FUNCTION__, s->getName());
         if (true == s->mEnabled)
         {
             if (enabled)
@@ -595,7 +597,7 @@ _status(LSHandle *lshandle, LSMessage *message, void *ctx)
 }
 
 bool
-ScenarioModule::broadcastEvent (const char *event)
+GenericScenarioModule::broadcastEvent (const char *event)
 {
     return CHECK(sendChangedUpdate(UPDATE_BROADCAST_EVENT, event));
 }
@@ -631,7 +633,7 @@ _broadcastEvent(LSHandle *lshandle, LSMessage *message, void *ctx)
 }
 
 bool
-ScenarioModule::setMuted (bool muted)
+GenericScenarioModule::setMuted (bool muted)
 {
     if (mMuted != muted)
     {
@@ -979,7 +981,7 @@ error:
 #endif
 
 bool
-ScenarioModule::setVolumeOverride (bool override)
+GenericScenarioModule::setVolumeOverride (bool override)
 {
     if (override)
         mVolumeOverride++;
@@ -1000,12 +1002,12 @@ ScenarioModule::setVolumeOverride (bool override)
 }
 
 bool
-ScenarioModule::registerMe (LSMethod *methods)
+GenericScenarioModule::registerMe (LSMethod *methods)
 {
     bool result;
     CLSError lserror;
 
-    result = ServiceRegisterCategory (mCategory, methods, NULL, this);
+    result = ServiceRegisterCategory (mCategory, methods, nullptr, this);
     if (!result)
     {
         lserror.Print(__FUNCTION__, __LINE__);

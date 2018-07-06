@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>Bare App</title>
+<!-- -->
+<meta http-equiv="Content-Type" content="text/html; charset=utf8"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<script language="javascript" src="webOSjs-0.1.0/webOS.js"></script>
+<script>
+    function navigation()
+    {
+        var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                  method:"systemsounds/playFeedback",
+                                                  parameters:{"name": "voicestart", "sink":"pfeedback", "play":true ,"override":true},
+                                                  onFailure: function(inError) {
+                                                  //....
+                                                  },
+                                                  onComplete: function(inResponse) {
+                                                  //....
+                                                  }
+                                            });
+    }
+    function connectHeadset()
+    {
+        var val = document.getElementById("connectHeadset");
+        if (val.value == "connectHeadset")
+        {
+            val.value = "disconnectHeadset";
+            var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                      method:"udev/event",
+                                                      parameters:{"event":"headset-inserted"},
+                                                      onFailure: function(inError)
+                                                      {
+                                                      //....
+                                                      },
+                                                      onComplete: function(inResponse) {
+                                                      //....
+                                                      }
+                                               });
+        }
+        else
+        {
+            val.value = "connectHeadset";
+            var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                      method:"udev/event",
+                                                      parameters:{"event":"headset-removed"},
+                                                      onFailure: function(inError) {
+                                                      //....
+                                                      },
+                                                      onComplete: function(inResponse) {
+                                                      //....
+                                                      }
+                                               });
+        }
+    }
+    function mute()
+    {
+        var val = document.getElementById("mute");
+        if (val.value == "mute")
+        {
+            val.value = "un-mute";
+            var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                      method:"master/muteVolume",
+                                                      parameters:{"soundOutput": "alsa", "mute": true},
+                                                      onFailure: function(inError)
+                                                      {
+                                                      //....
+                                                      },
+                                                      onComplete: function(inResponse) {
+                                                      //....
+                                                      }
+                                                });
+        }
+        else
+        {
+            val.value = "mute";
+            var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                      method:"master/muteVolume",
+                                                      parameters:{"soundOutput": "alsa", "mute": false},
+                                                      onFailure: function(inError) {
+                                                      //....
+                                                      },
+                                                      onComplete: function(inResponse) {
+                                                      //....
+                                                      }
+                                                });
+        }
+    }
+    function setVolume()
+    {
+        var volume= parseInt(document.getElementById("volume").value);
+        if (0<volume<100)
+        {
+            var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                      method:"master/setVolume",
+                                                      parameters:{"soundOutput":"alsa","volume":volume},
+                                                      onFailure: function(inError) {
+                                                      //....
+                                                      },
+                                                      onComplete: function(inResponse) {
+                                                      //....
+                                                      }
+                                               });
+        }
+    }
+    function volumeUp()
+    {
+        var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                  method:"master/volumeUp",
+                                                  parameters:{"soundOutput": "alsa"},
+                                                  onFailure: function(inError) {
+                                                  //....
+                                                  },
+                                                  onComplete: function(inResponse) {
+                                                  //....
+                                                  }
+                                           });
+    }
+    function volumeDown()
+    {
+        var request = webOS.service.request("luna://com.webos.service.audio", {
+                                                  method:"master/volumeDown",
+                                                  parameters:{"soundOutput": "alsa"},
+                                                  onFailure: function(inError) {
+                                                  //....
+                                                  },
+                                                  onComplete: function(inResponse) {
+                                                  //....
+                                                  }
+                                           });
+    }
+</script>
+<style>
+    body, html {
+        height: 100%;
+        margin: 0;
+        }
+
+    .bg {
+        background-image: url("img.jpg");
+        height: 100%;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        }
+</style>
+</head>
+<body text="white">
+    <div>
+        <h1> Audio Test App</h1>
+        <input onclick="mute()" type="button" value="mute" id="mute"></input>
+        Volume : <input type="text" id="volume">
+        <input onclick="setVolume()" type="button" value="OK" id="setVolume"></input>
+        <input onclick="volumeUp()" type="button" value="volumeUp" id="volumeUp"></input>
+        <input onclick="volumeDown()" type="button" value="volumeDown" id="volumeDown"></input>
+        <input onclick="connectHeadset()" type="button" value="connectHeadset" id="connectHeadset"></input>
+        <input onclick="navigation()" type="button" value="navigation" id="navigation"></input>
+    </div>
+    <div class="bg">
+        <video width="1000px" height="500px" controls>
+            <source src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</body>
+</html>

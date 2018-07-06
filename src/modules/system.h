@@ -33,7 +33,7 @@ public:
     //! Calculate volume adjusted for current situation
     int                getAdjustedSystemVolume(bool alertStarting = false) const;
 
-    void            onSinkChanged (EVirtualSink sink, EControlEvent event);
+    void            onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType);
 
     unsigned long    getNewSessionId();
 

@@ -27,7 +27,7 @@ public:
     virtual void    programControlVolume();
 
     void            programNotificationVolumes(bool ramp);
-    void            onSinkChanged (EVirtualSink sink, EControlEvent event);
+    void            onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType);
 
 
 private:

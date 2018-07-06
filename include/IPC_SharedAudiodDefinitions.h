@@ -33,9 +33,13 @@ enum EHeadsetState
     eHeadsetState_None = 0,
     eHeadsetState_Headset,
     eHeadsetState_HeadsetMic,
+    eHeadsetState_UsbMic_Connected,
+    eHeadsetState_UsbMic_DisConnected,
+    eHeadsetState_UsbHeadset_Connected,
+    eHeadsetState_UsbHeadset_DisConnected,
 
     eHeadsetState_First = eHeadsetState_None,
-    eHeadsetState_Last = eHeadsetState_HeadsetMic
+    eHeadsetState_Last = eHeadsetState_UsbHeadset_DisConnected
 };
 
 enum EMediaServerCommand

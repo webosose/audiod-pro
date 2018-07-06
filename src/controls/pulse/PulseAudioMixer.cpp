@@ -33,6 +33,7 @@
 #define SHORT_DTMF_LENGTH  200
 #define phone_MaxVolume 70
 #define phone_MinVolume 0
+#define FILENAME "/dev/snd/pcmC"
 
 #define _NAME_STRUCT_OFFSET(struct_type, member) \
                        ((long) ((unsigned char*) &((struct_type*) 0)->member))
@@ -553,6 +554,105 @@ bool PulseAudioMixer::programUnLoadBluetooth (const char *profile) {
     return ret;
 }
 
+bool PulseAudioMixer::programHeadsetRoute(int route) {
+    char cmd = 'w';
+    char buffer[SIZE_MESG_TO_PULSE]="";
+    bool ret  = false;
+
+    g_debug ("check for pulseaudio connection");
+    if (!mChannel) {
+        g_message("There is no socket connection to pulseaudio");
+        return ret;
+    }
+
+    g_debug ("programHeadsetState sending message");
+    if (0 == route)
+      snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, eHeadsetState_None);
+    else if (1 == route)
+      snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, eHeadsetState_Headset);
+    else {
+      g_warning("Wrong argument passed to programHeadsetRoute");
+      return ret;
+    }
+
+    int sockfd = g_io_channel_unix_get_fd (mChannel);
+    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
+    if (bytes != SIZE_MESG_TO_PULSE) {
+        g_warning("Error sending msg for headset routing from audiod(%d)", bytes);
+    }
+    else {
+       g_debug("msg sent for headset routing from audiod");
+       ret = true;
+    }
+    return ret;
+}
+
+bool PulseAudioMixer::externalSoundcardPathCheck (std::string filename, int status) {
+    struct stat buff = {0};
+
+    if (1 == status) {
+        if (!(0 == stat (filename.c_str(), &buff)))
+            return false;
+    }
+    else {
+        if (0 == stat (filename.c_str(), &buff))
+            return false;
+    }
+    return true;
+}
+
+bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status)
+{
+    char buffer[SIZE_MESG_TO_PULSE] = "";
+    bool ret  = false;
+    std::string card_no = std::to_string(cardno);
+    std::string device_no = std::to_string(deviceno);
+    std::string filename;
+
+    g_debug ("check for pulseaudio connection");
+    if (!mChannel) {
+        g_message("There is no socket connection to pulseaudio");
+        return ret;
+    }
+
+    switch (cmd) {
+        case 'j':
+                {
+                filename = FILENAME+card_no+"D"+device_no+"c";
+                break;
+                }
+        case 'z':
+                {
+                filename = FILENAME+card_no+"D"+device_no+"p";
+                break;
+                }
+        default:
+                return false;
+    }
+
+    ret = externalSoundcardPathCheck(filename, status);
+    if (false == ret)
+        return ret;
+
+    g_debug ("loadUSBSinkSource sending message");
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d", cmd, cardno, deviceno, status);
+    int sockfd = g_io_channel_unix_get_fd (mChannel);
+    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
+    if (bytes != SIZE_MESG_TO_PULSE) {
+       g_warning("Error sending msg from loadUSBSinkSource", bytes);
+    }
+    else {
+       g_message("msg sent from loadUSBSinkSource from audiod", bytes);
+       ret = true;
+    }
+    return ret;
+}
+
+
+
+
+
+
 bool PulseAudioMixer::programLoadRTP(const char *type, const char *ip, int port)
 {
 
@@ -981,7 +1081,7 @@ PulseAudioMixer::openCloseSink (EVirtualSink sink, bool openNotClose)
                                            eControlEvent_LastStreamClosed;
         if (mCallbacks)
         {
-            mCallbacks->onSinkChanged(sink, event);
+            mCallbacks->onSinkChanged(sink, event, ePulseAudio);
         }
     }
 }
