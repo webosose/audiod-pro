@@ -33,20 +33,11 @@
 static bool
 _event(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    bool retVal = false;
-    LSMessageJsonParser    msg(message, SCHEMA_3(REQUIRED(event, string),OPTIONAL(soundcard_no, integer),OPTIONAL(device_no, integer)));
+    LSMessageJsonParser    msg(message, SCHEMA_1(REQUIRED(event, string)));
     if (!msg.parse(__FUNCTION__, lshandle))
         return true;
 
     const gchar * reply = STANDARD_JSON_SUCCESS;
-
-    // read optional parameters with appropriate default values
-    int soundcard_no = 0;
-    int device_no = 0;
-    if (!msg.get("soundcard_no", soundcard_no))
-        soundcard_no = 0;
-    if (!msg.get("device_no", device_no))
-        device_no = 0;
 
     if (gState.getUseUdevForHeadsetEvents()) {
         std::string event;
@@ -62,27 +53,6 @@ _event(LSHandle *lshandle, LSMessage *message, void *ctx)
 
               else if (event == "headset-mic-inserted")
                   gState.setHeadsetState (eHeadsetState_HeadsetMic);
-
-              else if (event == "usb-mic-inserted") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbMic_Connected , soundcard_no, device_no, 1);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
-              else if (event == "usb-mic-removed") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbMic_DisConnected , soundcard_no, device_no, 0);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
-              else if (event == "usb-headset-inserted") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbHeadset_Connected , soundcard_no, device_no, 1);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
-              else if (event == "usb-headset-removed") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbHeadset_DisConnected , soundcard_no, device_no, 0);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
               else
                   reply = INVALID_PARAMETER_ERROR(event, string);
         }

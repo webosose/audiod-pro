@@ -16,8 +16,7 @@
         },
         {
             "service":"com.webos.service.audio",
-            "outbound":["com.webos.service.audiooutput",
-                        "com.webos.service.tv.sound",
+            "outbound":["com.webos.service.tv.sound",
                         "com.webos.service.irdbmanager",
                         "com.webos.applicationManager",
                         "com.palm.bluetooth",
@@ -32,7 +31,6 @@
                         "com.webos.service.bluetooth2",
                         "com.webos.vibrate",
                         "com.webos.settingsservice",
-                        "com.webos.media",
                         "com.webos.keys"]
         }
     ]

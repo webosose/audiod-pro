@@ -34,7 +34,7 @@ public:
 
     virtual bool    setMuted (bool muted);
 
-    virtual void    onSinkChanged(EVirtualSink sink, EControlEvent event,ESinkType p_eSinkType);
+    virtual void    onSinkChanged(EVirtualSink sink, EControlEvent event);
 
     virtual void    programControlVolume();
     virtual void    programMuted();

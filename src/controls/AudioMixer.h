@@ -121,20 +121,8 @@ inline bool isNeverMutedSink(EVirtualSink sink)
 enum EControlEvent
 {
     eControlEvent_None                    = 0,
-    eControlEvent_FirstStreamOpened       = 1,
+    eControlEvent_FirstStreamOpened        = 1,
     eControlEvent_LastStreamClosed        = 2
-};
-
-/*
-TODO : Currently there are 2 mixers (UMI mixer and Pulse audio Mixer). 
-We'll be working on common interface layer for mixers and 
-Take care of generation of them using config files and respective design pattern 
-*/
-enum ESinkType
-{
-    eNone,
-    ePulseAudio,
-    eUmi
 };
 
 /// Interface to notify audiod that AudioMixier events happened
@@ -146,7 +134,7 @@ public:
     virtual void        onAudioMixerConnected() = 0;
 
     /// An audio sink was opened or closed: adjust volumes as necessary
-    virtual void        onSinkChanged(EVirtualSink sink, EControlEvent event,ESinkType p_eSinkType) = 0;
+    virtual void        onSinkChanged(EVirtualSink sink, EControlEvent event) = 0;
 
     /// Notification that a first input stream was opened,
     // or that the last input stream was closed
@@ -250,9 +238,7 @@ public:
     virtual void            stopDtmf()= 0;
 
     virtual bool            programLoadRTP(const char *type, const char *ip, int port) = 0;
-    virtual bool            programHeadsetRoute(int route) = 0;
     virtual bool            programUnloadRTP() = 0;
-    virtual bool            loadUSBSinkSource(char cmd, int cardno, int deviceno, int status) = 0;
 
 #ifdef HAVE_BT_SERVICE_V1
     virtual void setBTvolumeSupport(bool value) = 0;

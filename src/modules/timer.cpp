@@ -107,10 +107,7 @@ void TimerScenarioModule::setTimerOn (bool TimerOn)
         g_message ("setting timer");
         gAudiodProperties->mTimerOn.set(TimerOn);
         gState.setPreference(cPref_OverrideRingerForTimer, TimerOn);
-        if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))
-        {
-            module->programSoftwareMixer(true);
-        }
+        ScenarioModule::getCurrent()->programSoftwareMixer(true);
     }
 }
 
@@ -165,96 +162,88 @@ gboolean timerTimeoutForVibrate (gpointer data)
 
     if (data) {
         TimerScenarioModule *timerModule = (TimerScenarioModule *)data;
-        timerModule->onSinkChanged(etimer, eControlEvent_LastStreamClosed,ePulseAudio);
+        timerModule->onSinkChanged(etimer, eControlEvent_LastStreamClosed);
     }
 
     return false;
 }
 
 void
-TimerScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event,ESinkType p_eSinkType)
+TimerScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
 {
-    g_debug("TimerScenarioModule::onSinkChanged: sink %i-%s %s %d", sink,
+    g_debug("TimerScenarioModule::onSinkChanged: sink %i-%s %s", sink,
                                                      virtualSinkName(sink),
-                                                     controlEventName(event),(int)p_eSinkType);
-      if(p_eSinkType==ePulseAudio)
-      {
-            g_debug("TimerScenarioModule: pulse audio onsink changed");                                               
+                                                     controlEventName(event));
 
-          if (eControlEvent_FirstStreamOpened == event)
-          {
-              bool shouldFakeVibrate = false;
-              bool fakeVibrateIfCantVibrate = true;
-              bool needsSCOBeepAlert = false;
-              bool dndOn = false;
+    if (eControlEvent_FirstStreamOpened == event)
+    {
+        bool shouldFakeVibrate = false;
+        bool fakeVibrateIfCantVibrate = true;
+        bool needsSCOBeepAlert = false;
+        bool dndOn = false;
 
-              bool ringerOn = gState.getRingerOn();
-              int volume = mTimerVolume.get();
-              gState.getPreference(cPref_DndOn, dndOn);
+        bool ringerOn = gState.getRingerOn();
+        int volume = mTimerVolume.get();
+        gState.getPreference(cPref_DndOn, dndOn);
 
-              if (gState.getOnActiveCall() && !ringerOn)
-              {
-                  programVolume(sink, 0);
-                  shouldFakeVibrate = true; // fake vibrate,
-                                                //even if user has disabled vibrations!
-              } else if (dndOn || (!ringerOn && !getTimerOn()) || mTimerMuted)
-                  programVolume(sink, 0);
-              else
-                  programVolume(sink, volume);
+        if (gState.getOnActiveCall() && !ringerOn)
+        {
+            programVolume(sink, 0);
+            shouldFakeVibrate = true; // fake vibrate,
+                                          //even if user has disabled vibrations!
+        } else if (dndOn || (!ringerOn && !getTimerOn()) || mTimerMuted)
+            programVolume(sink, 0);
+        else
+            programVolume(sink, volume);
 
-                  // Determine if we should vibrate?
-              if (gState.shouldVibrate()) // take into account user settings
-              {
-                  if (gState.getOnActiveCall() || gState.getOnThePuck())
-                  {
-                      shouldFakeVibrate = fakeVibrateIfCantVibrate;
-                  }
-                  else
-                  {
-                      if (timerTimeout != 0) {
-                          if (g_source_remove(timerTimeout)) {
-                              g_debug("TimerScenarioModule:Removed timer since new timer stream is created");
-                              timerTimeout = 0;
-                          }
-                      } else {
-                          if (gAudioMixer.getActiveStreams().containAnyOf(enotifications, ealerts, eeffects, ecalendar))
-                              cancelVibrate();
-                          getVibrateDevice()->realVibrate("{\"name\":\"alarm\"}");
-                      }
-                      shouldFakeVibrate = false; // if vibrated, we no need to
-                                                 // fake vibrate anymore...
-                  }
-                  if (!ringerOn && gState.getHeadsetState() != eHeadsetState_None)
-                      shouldFakeVibrate = true;
-              }
+            // Determine if we should vibrate?
+        if (gState.shouldVibrate()) // take into account user settings
+        {
+            if (gState.getOnActiveCall() || gState.getOnThePuck())
+            {
+                shouldFakeVibrate = fakeVibrateIfCantVibrate;
+            }
+            else
+            {
+                if (timerTimeout != 0) {
+                    if (g_source_remove(timerTimeout)) {
+                        g_debug("TimerScenarioModule:Removed timer since new timer stream is created");
+                        timerTimeout = 0;
+                    }
+                } else {
+                    if (gAudioMixer.getActiveStreams().containAnyOf(enotifications, ealerts, eeffects, ecalendar))
+                        cancelVibrate();
+                    getVibrateDevice()->realVibrate("{\"name\":\"alarm\"}");
+                }
+                shouldFakeVibrate = false; // if vibrated, we no need to
+                                           // fake vibrate anymore...
+            }
+            if (!ringerOn && gState.getHeadsetState() != eHeadsetState_None)
+                shouldFakeVibrate = true;
+        }
 
-              if (shouldFakeVibrate && (!gState.getOnThePuck() ||
-                                          etimer == sink ||
-                                          gState.getOnActiveCall()))
-              {    // don't fake vibrate on the puck,
-                  gAudioMixer.playSystemSound ("alarm_buzz", eeffects);
-                  if (gAudioDevice.needsSCOBeepAlert())
-                      needsSCOBeepAlert = true;
-              }
-              if (needsSCOBeepAlert)
-                  gAudioDevice.generateSCOBeepAlert();
-          }else if (eControlEvent_LastStreamClosed == event && sink == etimer){
-              if (!timerTimeout) {
-                  g_debug("TimerScenarioModule:start Timer for 300ms");
-                  timerTimeout = g_timeout_add (300, timerTimeoutForVibrate, this);
-              } else {
-                  if (!gAudioMixer.getActiveStreams().contain(ealarm)) {
-                      cancelVibrate();
-                      setMuted(false);
-                      timerTimeout = 0;
-                  }
-              }
-          }
-     }
-     else
-     {
-        g_debug("TimerScenarioModule: UMI onsink changed");
-     }
+        if (shouldFakeVibrate && (!gState.getOnThePuck() ||
+                                    etimer == sink ||
+                                    gState.getOnActiveCall()))
+        {    // don't fake vibrate on the puck,
+            gAudioMixer.playSystemSound ("alarm_buzz", eeffects);
+            if (gAudioDevice.needsSCOBeepAlert())
+                needsSCOBeepAlert = true;
+        }
+        if (needsSCOBeepAlert)
+            gAudioDevice.generateSCOBeepAlert();
+    }else if (eControlEvent_LastStreamClosed == event && sink == etimer){
+        if (!timerTimeout) {
+            g_debug("TimerScenarioModule:start Timer for 300ms");
+            timerTimeout = g_timeout_add (300, timerTimeoutForVibrate, this);
+        } else {
+            if (!gAudioMixer.getActiveStreams().contain(ealarm)) {
+                cancelVibrate();
+                setMuted(false);
+                timerTimeout = 0;
+            }
+        }
+    }
 }
 
 

@@ -29,7 +29,7 @@ public:
     virtual void    programMuted ();
 
     void            programAlarmVolumes(bool ramp);
-    void            onSinkChanged (EVirtualSink sink, EControlEvent event,ESinkType p_eSinkType);
+    void            onSinkChanged (EVirtualSink sink, EControlEvent event);
     bool getAlarmOn ();
     void setAlarmOn (bool state);
 

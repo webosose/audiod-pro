@@ -116,7 +116,6 @@
     "com.webos.service.audio/setCurrentScenario",
     "com.webos.service.audio/setMuted",
     "com.webos.service.audio/setVolume",
-    "com.webos.service.audio/soundSettings/setSoundOut",
     "com.webos.service.audio/state/get",
     "com.webos.service.audio/state/getPreference",
     "com.webos.service.audio/state/pulse/setFilter",
@@ -202,16 +201,6 @@
     "com.webos.service.audio/alert/offsetVolume",
     "com.webos.service.audio/alert/setMuted",
     "com.webos.service.audio/alert/setVolume",
-    "com.webos.service.audio/alert/getVolume",
-    "com.webos.service.audio/UMI/disconnect",
-    "com.webos.service.audio/UMI/connect",
-    "com.webos.service.audio/UMI/getStatus",
-    "com.webos.service.audio/UMI/mute",
-    "com.webos.service.audio/soundSettings/setSoundOut",
-    "com.webos.service.audio/master/setMuted",
-    "com.webos.service.audio/master/volumeUp",
-    "com.webos.service.audio/master/volumeDown",
-    "com.webos.service.audio/master/setVolume",
-    "com.webos.service.audio/master/getVolume"
+    "com.webos.service.audio/alert/getVolume"
     ]
 }

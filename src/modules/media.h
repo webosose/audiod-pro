@@ -30,7 +30,7 @@ public:
     ~MediaScenarioModule() {};
     MediaScenarioModule(int defaultvolume);
     static void MediaInterfaceExit();
-    virtual void    onSinkChanged(EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType);
+    virtual void    onSinkChanged(EVirtualSink sink, EControlEvent event);
     virtual void    programControlVolume();
     virtual void    programState();
     virtual void    resumeA2DP();

@@ -45,8 +45,8 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
     const gchar * reply = STANDARD_JSON_SUCCESS;
     EVirtualSink sink = efeedback;
     std::string    name, sinkName;
-    bool bPlay = true;
-    bool bOverride = false;
+    bool play = true;
+    bool override = false;
     char *filename = NULL;
     FILE *fp = NULL;
 
@@ -94,20 +94,20 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
     }
 
     // if "play" is false, pre-load the sound & do nothing else
-    if (!msg.get("play", bPlay))
-        bPlay = true;
+    if (!msg.get("play", play))
+        play = true;
 
-    if (!msg.get("override", bOverride))
-        bOverride = false;
-    g_debug("%s play = %d, override = %d\n", __FUNCTION__, bPlay, bOverride);
+    if (msg.get("override", override))
+        override = true;
+    g_debug("%s override = %d\n", __FUNCTION__, override);
 
-    if (bPlay)
+    if (play)
     {
         if (sink == efeedback)
             if (gState.getRingerOn()) // don't bother if ringer is off
-               bPlay = gState.getTouchSound() || bOverride;
+               play = gState.getTouchSound() || override;
             else
-                bPlay = bOverride;
+                play = override;
         std::string    type;
         if (msg.get("type", type))
         {
@@ -121,11 +121,11 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
                     useAutoPolicy = true;
                 else if (pref == "hapticOnly")
                 {
-                    bPlay = false;
+                    play = false;
                     vibrate = true;
                 }
                 else if (pref == "disabled")
-                    bPlay = false;
+                    play = false;
                 else if (pref == "soundOnly")
                     ;// we're ok already
                 else
@@ -138,10 +138,10 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
                 if (useAutoPolicy)
                 {
                     if (gState.getRingerOn())
-                        bPlay = true;
+                        play = true;
                     else
                     {
-                        bPlay = false;
+                        play = false;
                         vibrate = true;
                     }
                 }
@@ -154,7 +154,7 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
                 g_warning("_playFeedback: unknown type '%s'", type.c_str());
         }
 
-        if (bPlay && !gAudioMixer.playSystemSound(name.c_str(), sink))
+        if (play && !gAudioMixer.playSystemSound(name.c_str(), sink))
         {
             reply = STANDARD_JSON_ERROR(3, "unable to connect to pulseaudio.");
             goto error;

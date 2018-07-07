@@ -28,7 +28,7 @@ public:
     virtual void    programMuted();
     virtual bool    setMuted (bool muted);
     void            programTimerVolumes(bool ramp);
-    void            onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType);
+    void            onSinkChanged (EVirtualSink sink, EControlEvent event);
     bool getTimerOn ();
     void setTimerOn (bool state);
 

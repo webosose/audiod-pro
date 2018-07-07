@@ -135,30 +135,22 @@ PhoneScenarioModule::adjustAlertVolume(int volume, bool alertStarting)
 }
 
 void
-PhoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType)
+PhoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
 {
-    g_debug("Phone::onSinkChanged: sink %i-%s %s %d", sink,
-                               virtualSinkName(sink), controlEventName(event),(int)p_eSinkType);
-    if(p_eSinkType==ePulseAudio)
-      {
-        g_debug("PhoneScenarioModule: pulse audio onsink changed");                           
+    g_debug("Phone::onSinkChanged: sink %i-%s %s", sink,
+                               virtualSinkName(sink), controlEventName(event));
 
-        if (evoip == sink)
+    if (evoip == sink)
+    {
+        if (eControlEvent_FirstStreamOpened == event)
         {
-            if (eControlEvent_FirstStreamOpened == event)
-            {
-                gAudioMixer.programVolume(evoip, mCurrentScenario->getVolume(), false);
-            }
-            else if (eControlEvent_LastStreamClosed == event)
-            {
-                gAudioMixer.programVolume(evoip, 0, false);
-            }
+            gAudioMixer.programVolume(evoip, mCurrentScenario->getVolume(), false);
         }
-      }
-      else
-      {
-          g_debug("PhoneScenarioModule: UMI onsink changed");
-      }
+        else if (eControlEvent_LastStreamClosed == event)
+        {
+            gAudioMixer.programVolume(evoip, 0, false);
+        }
+    }
 }
 
 

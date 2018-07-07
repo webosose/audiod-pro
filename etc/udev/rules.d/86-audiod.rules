@@ -2,9 +2,5 @@
 SUBSYSTEM=="switch",ACTION=="change",ATTR{state}=="1",DEVPATH=="/devices/virtual/switch/h2w",RUN+="/etc/udev/scripts/headset.sh 'HEADSETMIC_ADDED' %b"
 SUBSYSTEM=="switch",ACTION=="change",ATTR{state}=="0",DEVPATH=="/devices/virtual/switch/h2w",RUN+="/etc/udev/scripts/headset.sh 'HEADSET_REMOVED' %b"
 SUBSYSTEM=="switch",ACTION=="change",ATTR{state}=="2",DEVPATH=="/devices/virtual/switch/h2w",RUN+="/etc/udev/scripts/headset.sh 'HEADSET_ADDED' %b"
-SUBSYSTEM=="sound",ACTION=="add",DEVPATH=="/devices/platform/soc/3f980000.usb/usb*/1-1/1-1.*/1-1.*:1.0/sound/card*/pcmC*D0c",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_MIC_ADDED' %b $devpath %p"
-SUBSYSTEM=="sound",ACTION=="remove",DEVPATH=="/devices/platform/soc/3f980000.usb/usb*/1-1/1-1.*/1-1.*:1.0/sound/card*/pcmC*D0c",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_MIC_REMOVED' %b $devpath %p"
-SUBSYSTEM=="sound",ACTION=="add",DEVPATH=="/devices/platform/soc/3f980000.usb/usb*/1-1/1-1.*/1-1.*:1.0/sound/card*/pcmC*D0p",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_HEADSET_ADDED' %b $devpath %p"
-SUBSYSTEM=="sound",ACTION=="remove",DEVPATH=="/devices/platform/soc/3f980000.usb/usb*/1-1/1-1.*/1-1.*:1.0/sound/card*/pcmC*D0p",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_HEADSET_REMOVED' %b $devpath %p"
 
 

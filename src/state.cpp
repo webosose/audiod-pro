@@ -40,9 +40,7 @@
 #include "scenario.h"
 #include "timer.h"
 #include "alert.h"
-#include "genericScenarioModule.h"
 #include <pulse/simple.h>
-
 
 #define DEFAULT_CARRIER_BUSYTONE_REPEATS 5
 #define DEFAULT_CARRIER_EMERGENCYTONE_REPEATS 3
@@ -256,12 +254,12 @@ bool State::setLockedVolumeModule (ScenarioModule *module)
 }
 
 // determines if a module controls the volume by some explicit request
-GenericScenarioModule * State::getExplicitVolumeControlModule ()
+ScenarioModule * State::getExplicitVolumeControlModule ()
 {
     if (mLockedVolumeModule)
         return mLockedVolumeModule;
 
-    GenericScenarioModule * currentModule = GenericScenarioModule::getCurrent();
+    ScenarioModule * currentModule = ScenarioModule::getCurrent();
 
     if (currentModule && currentModule->getVolumeOverride() > 0)
         return currentModule;
@@ -270,13 +268,13 @@ GenericScenarioModule * State::getExplicitVolumeControlModule ()
 }
 
 // determines which module controls the volume
-GenericScenarioModule * State::getCurrentVolumeModule ()
+ScenarioModule * State::getCurrentVolumeModule ()
 {
-    GenericScenarioModule * controllingModule = State::getExplicitVolumeControlModule();
+    ScenarioModule * controllingModule = State::getExplicitVolumeControlModule();
     if (controllingModule)
         return controllingModule;
 
-    return GenericScenarioModule::getCurrent();
+    return ScenarioModule::getCurrent();
 }
 
 bool State::getScoUp ()
@@ -414,10 +412,10 @@ bool State::checkPhoneScenario (ScenarioModule * phone)
 {
     bool isEnabled = false;
 
-    if(nullptr != phone)
+    if(NULL != phone)
     {
-        GenericScenario * tempScenario = phone->getScenario(cPhone_BackSpeaker);
-        if(nullptr !=tempScenario)
+        Scenario * tempScenario = phone->getScenario(cPhone_BackSpeaker);
+        if(NULL !=tempScenario)
         {
              isEnabled = tempScenario->mEnabled;
         }
@@ -432,8 +430,7 @@ void State::setRingerOn (bool ringerOn)
     {
         gState.setPreference(cPref_RingerOn, ringerOn);
         gAudiodProperties->mRingerOn.set(ringerOn);
-        if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))
-            module->programSoftwareMixer(true);
+        ScenarioModule::getCurrent()->programSoftwareMixer(true);
 
         ScenarioModule *phone   = getPhoneModule();
         ScenarioModule *media   = getMediaModule();
@@ -834,38 +831,6 @@ EHeadsetState State::getHeadsetState ()
     return gAudiodProperties->mHeadsetState.get();
 }
 
-void State::setHeadsetRoute (EHeadsetState newState)
-{
-    bool ret = false;
-
-    if (newState == eHeadsetState_Headset) {
-        ret = gAudioMixer.programHeadsetRoute(1);
-    }
-    else if (newState == eHeadsetState_None) {
-        ret = gAudioMixer.programHeadsetRoute(0);
-    }
-    if (ret == false)
-        g_debug("Failed execution of programHeadsetRoute");
-}
-
-bool State::setMicOrHeadset (EHeadsetState state, int cardno, int deviceno, int status)
-{
-    bool ret = false;
-
-    if (state == eHeadsetState_UsbMic_Connected || state == eHeadsetState_UsbMic_DisConnected)
-        ret = gAudioMixer.loadUSBSinkSource('j',cardno,deviceno,status);
-    else if (state == eHeadsetState_UsbHeadset_Connected || state == eHeadsetState_UsbHeadset_DisConnected)
-        ret = gAudioMixer.loadUSBSinkSource('z',cardno,deviceno,status);
-    else
-        return false;
-
-    if (false == ret) {
-        g_debug("Failed execution of loadUSBSinkSource");
-        return false;
-    }
-    return true;
-}
-
 static const char * _getHeadsetStateName(EHeadsetState state)
 {
     if (state == eHeadsetState_Headset)
@@ -886,7 +851,7 @@ void State::setHeadsetState (EHeadsetState newState)
 
     g_debug("%s: %s", __FUNCTION__, _getHeadsetStateName(newState));
 
-    setHeadsetRoute(newState);
+
 
     gAudiodProperties->mHeadsetState.set(newState);
     gAudioDevice.setHeadsetState(newState);
@@ -1256,30 +1221,18 @@ void State::resumeAllMediaSaved()
     }
 }
 
-
-void State::umiMixerInit(GMainLoop *loop, LSHandle *handle)
-{
-  mObjUmiMixerInstance = umiaudiomixer::getUmiMixerInstance();
-  if (nullptr!=mObjUmiMixerInstance)
-  {
-    mObjUmiMixerInstance->initUmiMixer(loop, handle, &gAudiodCallbacks);
-  }
-  else
-  {
-    g_message ("State:  m_ObjUmiMixerInstance in null");
-  }
-}
-
 int
 ControlInterfaceInit(GMainLoop *loop, LSHandle *handle)
 {
     gAudioMixer.init(loop, handle, &gAudiodCallbacks);
-    gState.umiMixerInit(loop, handle);
-    if (ScenarioModule * module = dynamic_cast <ScenarioModule*> (GenericScenarioModule::getCurrent()))
+
+    ScenarioModule * module = ScenarioModule::getCurrent();
+    if (module)
         module->programHardwareState ();
 
-    return 0;    }
-    
+    return 0;
+}
+
 static void
 cancelSubscriptionCallback(LSMessage * message, LSMessageJsonParser & msgParser)
 {
@@ -2098,8 +2051,7 @@ static bool _unloadRTPModule(LSHandle *lshandle, LSMessage *message, void *ctx)
 
 
     gState.setRTPLoaded(false);
-    if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))
-            module->programSoftwareMixer(true);
+    ScenarioModule::getCurrent()->programSoftwareMixer(true);
 
     reply.put("returnValue", true);
 
@@ -2165,14 +2117,14 @@ m_carrierEmergencyToneRepeats(DEFAULT_CARRIER_EMERGENCYTONE_REPEATS)
                                                       "carrier",
                                                       "busy_tone",
                                                        NULL);
-    if (err != NULL) m_carrierbusyToneRepeats = DEFAULT_CARRIER_BUSYTONE_REPEATS;
+    if (err!=NULL) m_carrierbusyToneRepeats = DEFAULT_CARRIER_BUSYTONE_REPEATS;
     else g_debug("  busy_tone -> %d", m_carrierbusyToneRepeats);
 
     m_carrierEmergencyToneRepeats = g_key_file_get_integer(keyfile,
                                                            "carrier",
                                                            "emergency_tone",
                                                             NULL);
-    if (err != NULL) m_carrierEmergencyToneRepeats = DEFAULT_CARRIER_EMERGENCYTONE_REPEATS;
+    if (err!=NULL) m_carrierEmergencyToneRepeats = DEFAULT_CARRIER_EMERGENCYTONE_REPEATS;
     else g_debug("  emergency_tone -> %d", m_carrierEmergencyToneRepeats);
 
 cleanup:

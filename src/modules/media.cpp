@@ -61,8 +61,7 @@ MediaScenarioModule * getMediaModule()
 void
 MediaScenarioModule::programControlVolume ()
 {
-    Scenario *scenario = nullptr;
-    if (VERIFY(scenario = dynamic_cast <Scenario*>(mCurrentScenario)))
+    if (VERIFY(mCurrentScenario))
     {
         programMediaVolumes(false, false, false);
         if (isCurrentModule())
@@ -71,7 +70,7 @@ MediaScenarioModule::programControlVolume ()
             getAlertModule()->programAlertVolumes(false);
             if (gState.getAdjustMicGain())
                 gAudioDevice.setMicGain(mCurrentScenario->mName,
-                                        scenario->getMicGainTics());
+                                        mCurrentScenario->getMicGainTics());
         }
     }
 }
@@ -511,8 +510,7 @@ MediaScenarioModule::someAlertIsPlaying ()
     if (gAudioMixer.getActiveStreams().containAnyOf(ealerts,
                                                     enotifications,
                                                     ecalendar,
-                                                    eringtones,
-                                                    evoicerecognition))
+                                                    eringtones))
         playing = true;
 
     return playing || gAudioMixer.isSinkAudible(ealarm);
@@ -589,14 +587,11 @@ void MediaScenarioModule::pauseA2DP ()
 void
 MediaScenarioModule::programState ()
 {
-    Scenario *scenario = nullptr;
     _updateRouting();
-    if ((scenario = dynamic_cast <Scenario*>(mCurrentScenario))
-        && (gState.getAdjustMicGain()))
-    {
-            gAudioDevice.setMicGain(mCurrentScenario->mName,
-                                    scenario->getMicGainTics());
-    }
+
+    if (gState.getAdjustMicGain())
+        gAudioDevice.setMicGain(mCurrentScenario->mName,
+                                 mCurrentScenario->getMicGainTics());
 
     // update media streaming
     if (_isWirelessStreamingScenario()) {
@@ -672,7 +667,7 @@ gboolean timerTimeout (gpointer data)
 {
     g_message("Timer expired... Calling onSinkChanged for media module when timer sink is closed");
     MediaScenarioModule *mediaModule = (MediaScenarioModule *)data;
-    mediaModule->onSinkChanged(etimer, eControlEvent_LastStreamClosed,ePulseAudio);
+    mediaModule->onSinkChanged(etimer, eControlEvent_LastStreamClosed);
     return FALSE;
 }
 
@@ -680,7 +675,7 @@ gboolean alarmTimeout (gpointer data)
 {
     g_message("Timer expired... Calling onSinkChanged for media module when alarm sink is closed");
     MediaScenarioModule *mediaModule = (MediaScenarioModule *)data;
-    mediaModule->onSinkChanged(ealarm, eControlEvent_LastStreamClosed,ePulseAudio);
+    mediaModule->onSinkChanged(ealarm, eControlEvent_LastStreamClosed);
     return FALSE;
 }
 
@@ -688,7 +683,7 @@ gboolean ringtoneTimeout (gpointer data)
 {
     g_message("Ringtone expired... Calling onSinChanged for media module when ringtone sink is closed");
     MediaScenarioModule *mediaModule = (MediaScenarioModule *)data;
-    mediaModule->onSinkChanged(eringtones, eControlEvent_LastStreamClosed,ePulseAudio);
+    mediaModule->onSinkChanged(eringtones, eControlEvent_LastStreamClosed);
     return FALSE;
 }
 
@@ -700,190 +695,180 @@ void MediaScenarioModule::sendAckToPowerd(bool isWakeup)
 }
 
 void
-MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType)
+MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
 {
-    g_debug("MediaScenarioModule::onSinkChanged: sink %i-%s %s %d", sink,
-    virtualSinkName(sink), controlEventName(event),(int)p_eSinkType);
-  if(p_eSinkType==ePulseAudio)
-  {
-      g_debug("MediaScenarioModule: pulseaudio onsink changed");
-      LogIndent    indentLogs("| ");
+    g_debug("MediaScenarioModule::onSinkChanged: sink %i-%s %s", sink,
+    virtualSinkName(sink), controlEventName(event));
+    LogIndent    indentLogs("| ");
 
-      if (!VERIFY(mCurrentScenario != 0))
-          return;
+    if (!VERIFY(mCurrentScenario != 0))
+        return;
 
-      bool priorityMedia = someMediaIsPlaying() ||
-                gState.getActiveSinksAtPhoneCallStart().containAnyOf(eflash,
-                edefaultapp, enavigation);
-      bool alertIsPlaying = someAlertIsPlaying();
+    bool priorityMedia = someMediaIsPlaying() ||
+              gState.getActiveSinksAtPhoneCallStart().containAnyOf(eflash,
+              edefaultapp, enavigation);
+    bool alertIsPlaying = someAlertIsPlaying();
 
-      g_debug("MediaSecnarioModule: priorityMedia = %d alertIsPlaying = %d ",
-                   priorityMedia, alertIsPlaying);
+    g_debug("MediaSecnarioModule: priorityMedia = %d alertIsPlaying = %d ",
+                 priorityMedia, alertIsPlaying);
 
-      // this is the only time when priority between media & alerts is changed
-      if (!alertIsPlaying)
-          mPriorityToAlerts = false;
-      else if (priorityMedia && (event == eControlEvent_FirstStreamOpened || alertIsPlaying))
-          mPriorityToAlerts = true;
+    // this is the only time when priority between media & alerts is changed
+    if (!alertIsPlaying)
+        mPriorityToAlerts = false;
+    else if (priorityMedia && (event == eControlEvent_FirstStreamOpened || alertIsPlaying))
+        mPriorityToAlerts = true;
 
-      g_debug("MediaSecnarioModule: mPriorityToAlerts = %d ", mPriorityToAlerts);
+    g_debug("MediaSecnarioModule: mPriorityToAlerts = %d ", mPriorityToAlerts);
 
-      _updateRouting();
+    _updateRouting();
 
-      VirtualSinkSet activeStreams = gAudioMixer.getActiveStreams ();
+    VirtualSinkSet activeStreams = gAudioMixer.getActiveStreams ();
 
-      if (emedia == sink || eflash == sink || edefaultapp == sink ||
-           enavigation == sink )
-      {
-          if (eControlEvent_FirstStreamOpened == event)
-          {
-              mPreviousSink = sink;
-              if (getVvmModule()->isActive()) {
-                  g_warning("VVM is active, disable vvm and start media");
-                  getVvmModule()->stopVvm("media");
-              }
+    if (emedia == sink || eflash == sink || edefaultapp == sink ||
+        enavigation == sink )
+    {
+        if (eControlEvent_FirstStreamOpened == event)
+        {
+            mPreviousSink = sink;
+            if (getVvmModule()->isActive()) {
+                g_warning("VVM is active, disable vvm and start media");
+                getVvmModule()->stopVvm("media");
+            }
 
-              if (!mPriorityToAlerts)
-              {
-                  _startSinkPlayback(sink);
-              }
-              else
-              {
-                  programMediaVolumes(true, false, true);
-              }
+            if (!mPriorityToAlerts)
+            {
+                _startSinkPlayback(sink);
+            }
+            else
+            {
+                programMediaVolumes(true, false, true);
+            }
 
-          }
-          else if (eControlEvent_LastStreamClosed == event)
-          {
-              // if we are in active media routing
-              // we need to stop playing
-              if (!mPriorityToAlerts)
-              {
-                      _endSinkPlayback (sink);
-              }
-              programMediaVolumes(true, false, false);
-              getSystemModule()->programSystemVolumes(false);
-              getAlertModule()->programAlertVolumes(false);
-              mPreviousSink = eVirtualSink_None;
+        }
+        else if (eControlEvent_LastStreamClosed == event)
+        {
+            // if we are in active media routing
+            // we need to stop playing
+            if (!mPriorityToAlerts)
+            {
+                    _endSinkPlayback (sink);
+            }
+            programMediaVolumes(true, false, false);
+            getSystemModule()->programSystemVolumes(false);
+            getAlertModule()->programAlertVolumes(false);
+            mPreviousSink = eVirtualSink_None;
 
-          }
-      }
-      else if (ealarm == sink ||
-                 eringtones == sink ||
-                 eeffects ==  sink ||
-                 etimer == sink ||/*eeffects added to mute
-                                             media during alert playback, etimer is added */
-                 etts == sink || /*tts added*/
-                 evoicerecognition == sink) /* voicerecogniton added */
-      {
-          // if this is an open event
-          if (eControlEvent_FirstStreamOpened == event)
-          {
-              /* identified : possible place to send 3rd param=true setting the
-              3rd parameter to true enables the code to mute the media in case
-              playback through some other sinks are starting */
-              //programMediaVolumes(true, false, false);
-              programMediaVolumes(true, false, true);
-              if(sink == ealarm ){
-                  if(alarmTimeoutSource != 0)
-                      if(g_source_remove(alarmTimeoutSource)){
-                          g_message("Removed timer since new alarm stream is created");
-                          alarmTimeoutSource = 0;
-                      }
-              }
-              if(sink == etimer){
-                  if(timerTimeoutSource != 0)
-                      if(g_source_remove(timerTimeoutSource)){
-                          g_message("Removed timer since new timer stream is created");
-                          timerTimeoutSource = 0;
-                      }
-              }
-              if (sink == eringtones) {
-                  if (mRingtoneTimeoutSource != 0)
-                      if (g_source_remove(mRingtoneTimeoutSource)) {
-                          g_message("Removed ringtone timer since new ringtone stream is created");
-                          mRingtoneTimeoutSource = 0;
-                      }
-              }
-          }
-          else if (eControlEvent_LastStreamClosed == event)
-          {
-              if ((sink == ealarm && !alarmTimeoutSource) || (sink == etimer && !timerTimeoutSource)
-                          || (sink == eringtones && !mRingtoneTimeoutSource)) {
-                  if (someMediaIsPlaying() || gState.isRecording ()) {
-                       g_message("Setting timer for 400ms");
-                       if(etimer == sink)
-                           timerTimeoutSource = g_timeout_add (400, timerTimeout, this);
-                       else if (ealarm == sink)
-                           alarmTimeoutSource = g_timeout_add (400, alarmTimeout, this);
-                       else
-                           mRingtoneTimeoutSource = g_timeout_add (400, ringtoneTimeout, this);
-                  }
-              }
-              else
-              {
-                  alarmTimeoutSource = 0;
-                  timerTimeoutSource = 0;
-                  mRingtoneTimeoutSource = 0;
-                  if (activeStreams.contain(emedia))
-                      _startSinkPlayback (emedia);
-                  else if (activeStreams.contain(eflash))
-                      _startSinkPlayback (eflash);
-                  else if (activeStreams.contain(edefaultapp))
-                      _startSinkPlayback (edefaultapp);
-                  else if (activeStreams.contain(enavigation))
-                      _startSinkPlayback (enavigation);
-                  else
-                  {
-                      programMediaVolumes(true, false, false);
-                  }
-              }
-          }
-      }
-      else if (efeedback ==sink )
-      {
-          if (eControlEvent_FirstStreamOpened == event)
-          {
-              if (gState.getOnActiveCall()) {
-                  g_message("Sending mute for sink %d", sink);
-                  gAudioMixer.programVolume(sink, 0);
-              }
-          }
-      }
-      else if (ealerts == sink || enotifications == sink || ecalendar == sink)
-      {
-          if (eControlEvent_FirstStreamOpened == event) {
-              /* When Notification/Alerts/Calender comes in Vibrate/Silent Profile,
-                   dont mute media (CCWMP-24809) */
-              if (gState.getRingerOn())
-                  programMediaVolumes(true, false, true);
-          }
-          else if (eControlEvent_LastStreamClosed == event) {
-              if (activeStreams.contain(emedia))
-                  _startSinkPlayback(emedia);
-              else if (activeStreams.contain(eflash))
-                  _startSinkPlayback(eflash);
-              else if (activeStreams.contain(edefaultapp))
-                  _startSinkPlayback(edefaultapp);
-              else if (activeStreams.contain(enavigation))
-                  _startSinkPlayback(enavigation);
-              else
-                  programMediaVolumes(true, false, false);
-          }
-      }
-      else if (evoicedial == sink)
-      {
-          getVoiceCommandModule()->programVoiceCommandVolume(false);
-      }
-      else if (evvm == sink)
-      {
-          getVvmModule()->programVvmVolume(false);
-      }
-  }
-  else
-  {
-    g_debug("MediaScenarioModule: UMI onsink changed");
-  }
+        }
+    }
+    else if (ealarm == sink ||
+               eringtones == sink ||
+               eeffects ==  sink ||
+               etimer == sink ||/*eeffects added to mute
+                                           media during alert playback, etimer is added */
+               etts == sink) /*tts added*/
+    {
+        // if this is an open event
+        if (eControlEvent_FirstStreamOpened == event)
+        {
+            /* identified : possible place to send 3rd param=true setting the
+            3rd parameter to true enables the code to mute the media in case
+            playback through some other sinks are starting */
+            programMediaVolumes(true, false, true);
+            if(sink == ealarm ){
+                if(alarmTimeoutSource != 0)
+                    if(g_source_remove(alarmTimeoutSource)){
+                        g_message("Removed timer since new alarm stream is created");
+                        alarmTimeoutSource = 0;
+                    }
+            }
+            if(sink == etimer){
+                if(timerTimeoutSource != 0)
+                    if(g_source_remove(timerTimeoutSource)){
+                        g_message("Removed timer since new timer stream is created");
+                        timerTimeoutSource = 0;
+                    }
+            }
+            if (sink == eringtones) {
+                if (mRingtoneTimeoutSource != 0)
+                    if (g_source_remove(mRingtoneTimeoutSource)) {
+                        g_message("Removed ringtone timer since new ringtone stream is created");
+                        mRingtoneTimeoutSource = 0;
+                    }
+            }
+        }
+        else if (eControlEvent_LastStreamClosed == event)
+        {
+            if ((sink == ealarm && !alarmTimeoutSource) || (sink == etimer && !timerTimeoutSource)
+                        || (sink == eringtones && !mRingtoneTimeoutSource)) {
+                if (someMediaIsPlaying() || gState.isRecording ()) {
+                     g_message("Setting timer for 400ms");
+                     if(etimer == sink)
+                         timerTimeoutSource = g_timeout_add (400, timerTimeout, this);
+                     else if (ealarm == sink)
+                         alarmTimeoutSource = g_timeout_add (400, alarmTimeout, this);
+                     else
+                         mRingtoneTimeoutSource = g_timeout_add (400, ringtoneTimeout, this);
+                }
+            }
+            else
+            {
+                alarmTimeoutSource = 0;
+                timerTimeoutSource = 0;
+                mRingtoneTimeoutSource = 0;
+                if (activeStreams.contain(emedia))
+                    _startSinkPlayback (emedia);
+                else if (activeStreams.contain(eflash))
+                    _startSinkPlayback (eflash);
+                else if (activeStreams.contain(edefaultapp))
+                    _startSinkPlayback (edefaultapp);
+                else if (activeStreams.contain(enavigation))
+                    _startSinkPlayback (enavigation);
+                else
+                {
+                    programMediaVolumes(true, false, false);
+                }
+            }
+        }
+    }
+    else if (efeedback ==sink )
+    {
+        if (eControlEvent_FirstStreamOpened == event)
+        {
+            if (gState.getOnActiveCall()) {
+                g_message("Sending mute for sink %d", sink);
+                gAudioMixer.programVolume(sink, 0);
+            }
+        }
+    }
+    else if (ealerts == sink || enotifications == sink || ecalendar == sink)
+    {
+        if (eControlEvent_FirstStreamOpened == event) {
+            /* When Notification/Alerts/Calender comes in Vibrate/Silent Profile,
+                 dont mute media */
+            if (gState.getRingerOn())
+                programMediaVolumes(true, false, true);
+        }
+        else if (eControlEvent_LastStreamClosed == event) {
+            if (activeStreams.contain(emedia))
+                _startSinkPlayback(emedia);
+            else if (activeStreams.contain(eflash))
+                _startSinkPlayback(eflash);
+            else if (activeStreams.contain(edefaultapp))
+                _startSinkPlayback(edefaultapp);
+            else if (activeStreams.contain(enavigation))
+                _startSinkPlayback(enavigation);
+            else
+                programMediaVolumes(true, false, false);
+        }
+    }
+    else if (evoicedial == sink)
+    {
+        getVoiceCommandModule()->programVoiceCommandVolume(false);
+    }
+    else if (evvm == sink)
+    {
+        getVvmModule()->programVvmVolume(false);
+    }
 }
 
 static LSMethod mediaMethods[] = {
@@ -995,14 +980,12 @@ MediaScenarioModule::MediaScenarioModule() :
         s->configureRoute (evoip,              eMainSink,     false,     true);
         s->configureRoute (ecallertone,        eMainSink,     true,      true);
         s->configureRoute (ecallertone,        eMainSink,     false,     true);
-        s->configureRoute (evoicerecognition,  eMainSink,     true,      true);
-        s->configureRoute (evoicerecognition,  eMainSink,     false,     true);
-        s->configureRoute (erecord,            eMainSource,   false,     true);
-        s->configureRoute (erecord,            eMainSource,   true,      true);
-        s->configureRoute (evoicedialsource,   eMainSource,   false,     true);
-        s->configureRoute (evoicedialsource,   eMainSource,   true,      true);
-        s->configureRoute (evoipsource,        eMainSource,   false,     true);
-        s->configureRoute (evoipsource,        eMainSource,   true,      true);
+        s->configureRoute (erecord,            eMainSource,   false,  true);
+        s->configureRoute (erecord,            eMainSource,   true,  true);
+        s->configureRoute (evoicedialsource,   eMainSource,   false,  true);
+        s->configureRoute (evoicedialsource,   eMainSource,   true,  true);
+        s->configureRoute (evoipsource,        eMainSource,   false,  true);
+        s->configureRoute (evoipsource,        eMainSource,   true,  true);
 
         addScenario (s);
 

@@ -102,72 +102,63 @@ AlertScenarioModule::getAdjustedAlertVolume(bool alertStarting) const
     return volume;
 }
 void
-AlertScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType)
+AlertScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event)
 {
-    g_debug("AlertScenarioModule::onSinkChanged: sink %i-%s %s %d", sink,
+    g_debug("AlertScenarioModule::onSinkChanged: sink %i-%s %s", sink,
                                                      virtualSinkName(sink),
-                                                     controlEventName(event),p_eSinkType);
-      if(p_eSinkType==ePulseAudio)
-      {
-        g_debug("AlertScenarioModule: pulse audio onsink changed");                                                
+                                                     controlEventName(event));
 
-        if (eControlEvent_FirstStreamOpened == event)
-        {
-            bool shouldFakeVibrate = false;
-            bool fakeVibrateIfCantVibrate = true;
-            bool needsSCOBeepAlert = false;
-
-            bool ringerOn = gState.getRingerOn();
-            //int  volume = (ringerOn || !mAlertMuted)? getAdjustedAlertVolume(true) : 0;
-            int volume = mAlertVolume.get();
-            if (gState.getOnActiveCall() && !ringerOn)
-            {
-                programVolume(sink, 0); // mute alert/notification sound
-                shouldFakeVibrate = true; // fake vibrate,
-                                              //even if user has disabled vibrations!
-            } else if (!ringerOn || mAlertMuted )
-                    programVolume(sink, 0);
-              else
-                    programVolume(sink, volume);
-
-                    // Determine if we should vibrate?
-            if (gState.shouldVibrate()) // take into account user settings
-            {
-                if (gState.getOnActiveCall() || gState.getOnThePuck())
-                {
-                    shouldFakeVibrate = fakeVibrateIfCantVibrate;
-                }
-                else
-                {
-                    //getVibrateDevice()->startVibrate(fakeVibrateIfCantVibrate);
-                    getVibrateDevice()->realVibrate("{\"name\":\"system_notification\"}");
-                    shouldFakeVibrate = false; // if vibrated, we no need to
-                                               // fake vibrate anymore...
-                }
-                if (!ringerOn && gState.getHeadsetState() != eHeadsetState_None)
-                    shouldFakeVibrate = true;
-            }
-
-            if (shouldFakeVibrate && (!gState.getOnThePuck() ||
-                                        gState.getOnActiveCall()))
-            {    // don't fake vibrate on the puck,
-                gAudioMixer.playSystemSound ("notification_buzz", eeffects);
-                if (gAudioDevice.needsSCOBeepAlert())
-                    needsSCOBeepAlert = true;
-            }
-            if (needsSCOBeepAlert)
-                gAudioDevice.generateSCOBeepAlert();
-        }else if (eControlEvent_LastStreamClosed == event)
-        {
-            if(!gAudioMixer.getActiveStreams().contain(ealarm)){
-                cancelVibrate();
-                setMuted(false);
-            }
-        }
-     }
-    else
+    if (eControlEvent_FirstStreamOpened == event)
     {
-       g_debug("AlertScenarioModule: UMI onsink changed");
+        bool shouldFakeVibrate = false;
+        bool fakeVibrateIfCantVibrate = true;
+        bool needsSCOBeepAlert = false;
+
+        bool ringerOn = gState.getRingerOn();
+        int volume = mAlertVolume.get();
+        if (gState.getOnActiveCall() && !ringerOn)
+        {
+            programVolume(sink, 0); // mute alert/notification sound
+            shouldFakeVibrate = true; // fake vibrate,
+                                          //even if user has disabled vibrations!
+        } else if (!ringerOn || mAlertMuted )
+                programVolume(sink, 0);
+          else
+                programVolume(sink, volume);
+
+            // Determine if we should vibrate?
+        if (gState.shouldVibrate()) // take into account user settings
+        {
+            if (gState.getOnActiveCall() || gState.getOnThePuck())
+            {
+                shouldFakeVibrate = fakeVibrateIfCantVibrate;
+            }
+            else
+            {
+                //getVibrateDevice()->startVibrate(fakeVibrateIfCantVibrate);
+                getVibrateDevice()->realVibrate("{\"name\":\"system_notification\"}");
+                shouldFakeVibrate = false; // if vibrated, we no need to
+                                           // fake vibrate anymore...
+            }
+            if (!ringerOn && gState.getHeadsetState() != eHeadsetState_None)
+                shouldFakeVibrate = true;
+        }
+
+        if (shouldFakeVibrate && (!gState.getOnThePuck() ||
+                                    gState.getOnActiveCall()))
+        {    // don't fake vibrate on the puck,
+            gAudioMixer.playSystemSound ("notification_buzz", eeffects);
+            if (gAudioDevice.needsSCOBeepAlert())
+                needsSCOBeepAlert = true;
+        }
+        if (needsSCOBeepAlert)
+            gAudioDevice.generateSCOBeepAlert();
+    }else if (eControlEvent_LastStreamClosed == event)
+    {
+        if(!gAudioMixer.getActiveStreams().contain(ealarm)){
+            cancelVibrate();
+            setMuted(false);
+        }
     }
 }
 

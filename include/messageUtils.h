@@ -38,40 +38,11 @@ struct CLSError : public LSError
     }
 };
 
-typedef struct envelope
-{
-  LSMessage *message;
-  void *context;
-}envelopeRef;
-
 /*
  * Helper macros to build schemas in a more reliable, readable & editable way in C++
  */
 
 #define STR(x) #x
-
-//Strict schema utils changes
-
-#define STRICT_SCHEMA(attributes)                     "{\"type\":\"object\"" attributes ",\"additionalProperties\":false}"
-
-#define NORMAL_SCHEMA(attributes)                            "{\"type\":\"object\"" attributes ",\"additionalProperties\":true}"
-
-#define PROPS_1(p1)                                   ",\"properties\":{" p1 "}"
-#define PROPS_2(p1, p2)                               ",\"properties\":{" p1 "," p2 "}"
-#define PROPS_3(p1, p2, p3)                           ",\"properties\":{" p1 "," p2 "," p3 "}"
-#define PROPS_4(p1, p2, p3, p4)                       ",\"properties\":{" p1 "," p2 "," p3 "," p4 "}"
-#define PROPS_5(p1, p2, p3, p4, p5)                   ",\"properties\":{" p1 "," p2 "," p3 "," p4 "," p5 "}"
-#define PROPS_6(p1, p2, p3, p4, p5, p6)               ",\"properties\":{" p1 "," p2 "," p3 "," p4 "," p5 "," p6 "}"
-
-
-#define PROP(name, type)                              "\"" #name "\":{\"type\":\"" #type "\"}"
-#define PROP_WITH_VAL_1(name, type, v1)               "\"" #name "\":{\"type\":\"" #type "\", \"enum\": [" #v1 "]}"
-
-#define REQUIRED_1(p1)                                ",\"required\":[\"" #p1 "\"]"
-#define REQUIRED_2(p1, p2)                            ",\"required\":[\"" #p1 "\",\"" #p2 "\"]"
-#define REQUIRED_3(p1, p2, p3)                        ",\"required\":[\"" #p1 "\",\"" #p2 "\",\"" #p3 "\"]"
-#define REQUIRED_4(p1, p2, p3, p4)                    ",\"required\":[\"" #p1 "\",\"" #p2 "\",\"" #p3 "\",\"" #p4 "\"]"
-#define REQUIRED_5(p1, p2, p3, p4, p5)                ",\"required\":[\"" #p1 "\",\"" #p2 "\",\"" #p3 "\",\"" #p4 "\",\"" #p5 "\"]"
 
 extern const char * STANDARD_JSON_SUCCESS;
 
@@ -93,7 +64,6 @@ extern const char * STANDARD_JSON_SUCCESS;
 #define SCHEMA_3(p1, p2, p3)            "{\"type\":\"object\",\"properties\":{" p1 "," p2 "," p3 "," SYSTEM_PARAMETERS "},\"additionalProperties\":false}"
 #define SCHEMA_4(p1, p2, p3, p4)        "{\"type\":\"object\",\"properties\":{" p1 "," p2 "," p3 "," p4 "," SYSTEM_PARAMETERS "},\"additionalProperties\":false}"
 #define SCHEMA_5(p1, p2, p3, p4, p5)    "{\"type\":\"object\",\"properties\":{" p1 "," p2 "," p3 "," p4 "," p5 "," SYSTEM_PARAMETERS "},\"additionalProperties\":false}"
-#define SCHEMA_6(p1, p2, p3, p4, p5, p6)    "{\"type\":\"object\",\"properties\":{" p1 "," p2 "," p3 "," p4 "," p5 "," p6 "," SYSTEM_PARAMETERS "},\"additionalProperties\":false}"
 
 // Macros to use in place of the parameters in the SCHEMA_xxx macros above
 #define REQUIRED(name, type) "\"" #name "\":{\"type\":\"" #type "\"}"

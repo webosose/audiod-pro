@@ -50,13 +50,11 @@ VoiceCommandScenarioModule * getVoiceCommandModule()
 void
 VoiceCommandScenarioModule::programControlVolume ()
 {
-    Scenario *scenario = nullptr;
-    if (VERIFY(mCurrentScenario) && (scenario = 
-        dynamic_cast <Scenario*>(mCurrentScenario)) && !mMuted)
+    if (VERIFY(mCurrentScenario) && !mMuted)
     {
         programVolume (evoicedial, mCurrentScenario->getVolume());
         gAudioDevice.setMicGain(mCurrentScenario->mName,
-                                scenario->getMicGainTics());
+                                mCurrentScenario->getMicGainTics());
     }
 }
 
@@ -70,13 +68,8 @@ VoiceCommandScenarioModule::programVoiceCommandVolume(bool ramp)
 void
 VoiceCommandScenarioModule::programState ()
 {
-    Scenario *scenario = nullptr;
-    if (VERIFY(mCurrentScenario) && (!(scenario = 
-        dynamic_cast <Scenario*>(mCurrentScenario))))
-    {
     gAudioDevice.setMicGain(mCurrentScenario->mName,
-                            scenario->getMicGainTics());
-    }
+                            mCurrentScenario->getMicGainTics());
 }
 
 void

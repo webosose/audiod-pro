@@ -30,7 +30,7 @@ public:
     virtual void    programMuted();
     virtual void    programMuse(bool enable);
     virtual void    programHac (bool enable);
-    virtual void    onSinkChanged(EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType);
+    virtual void    onSinkChanged(EVirtualSink sink, EControlEvent event);
 
     virtual void    onActivating();
     virtual void    onDeactivated();
