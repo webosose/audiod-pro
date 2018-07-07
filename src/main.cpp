@@ -21,6 +21,7 @@
 #include <glib.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sstream>
 
 #include <lunaservice.h>
 
@@ -36,7 +37,11 @@
 #include "AudioMixer.h"
 #include "utils.h"
 #include "messageUtils.h"
+#include "MixerInit.h"
 #include "main.h"
+
+
+#define CONFIG_DIR_PATH "/etc/palm/audiod"
 
 #define str(s)      # s
 #define xstr(s)     str(s)
@@ -186,6 +191,17 @@ main(int argc, char **argv)
     g_message("Register [com.webos.service.audio] Successful");
 
 
+    std::stringstream configPath;
+    configPath << CONFIG_DIR_PATH << "/" << "mixerconfig.json";
+    MixerInit mObjMixerInit(configPath);
+    if(mObjMixerInit.readMixerConfig())
+    {
+      mObjMixerInit.initMixerInterface();
+    }
+    else
+    {
+      g_message("Could not reaad mixer config json file");
+    }
     oneInitForAll (gMainLoop, GetPalmService());
     // Verify HW initialization, but after all registered inits,
     // static initializations & shared properties.

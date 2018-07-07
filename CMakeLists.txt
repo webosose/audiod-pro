@@ -92,10 +92,14 @@ include_directories(${Boost_INCLUDE_DIRS})
 # global installation directories for all components
 
 include_directories(src)
+include_directories(src/umi)
+include_directories(src/umi/modules)
+include_directories(src/umi/soundSettings)
 include_directories(src/controls)
 include_directories(src/controls/hardware)
 include_directories(src/controls/pulse)
 include_directories(src/modules)
+include_directories(include/public/)
 
 #Please check these header files again
 include_directories(include)
@@ -139,14 +143,18 @@ SET (modules_files
         src/modules/system.cpp
         src/modules/timer.cpp
         src/modules/vvm.cpp
+        src/umi/soundSettings/soundSettings.cpp
         src/modules/voicecommand.cpp
+        src/umi/umiDispatcher.cpp
+        src/controls/umiaudiomixer.cpp
+        src/MixerInit.cpp
+        src/umi/soundSettings/volumeSettings.cpp
+        src/umi/modules/mock.cpp
     )
 
-
-    add_definitions(-DSYSTEMSOUNDS_PATH="/usr/share/audiod/systemsounds/")
-    install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_DATADIR}/audiod/ FILES_MATCHING PATTERN "*.pcm")
     LIST (APPEND controls_hardware_files src/controls/hardware/unknowndevice.cpp)
     add_definitions(-DSYSTEMSOUNDS_PATH="/media/internal/systemsounds/")
+#    install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}
@@ -205,7 +213,10 @@ add_definitions(-DENABLE_WAKELOCK_FOR_SLEEP_STATE)
 webos_build_system_bus_files()
 webos_build_daemon()
 
+install(FILES include/public/mixerconfig.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
 
 #-- install udev rule for headset detection
 install(FILES etc/udev/rules.d/86-audiod.rules DESTINATION ${WEBOS_INSTALL_WEBOS}/etc/udev/rules.d/)
 install(FILES etc/udev/scripts/headset.sh DESTINATION ${WEBOS_INSTALL_WEBOS}/etc/udev/scripts/ PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE)
+install(FILES etc/udev/scripts/usbsoundcard.sh DESTINATION ${WEBOS_INSTALL_WEBOS}/etc/udev/scripts/ PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE)
+

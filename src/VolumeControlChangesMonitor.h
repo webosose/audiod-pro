@@ -17,7 +17,7 @@
 #ifndef VOLUMECONTROLCHANGESMONITOR_H_
 #define VOLUMECONTROLCHANGESMONITOR_H_
 
-class ScenarioModule;
+class GenericScenarioModule;
 
 // When changing volume control, use this class to make sure appropriate
 // action is taken when control changes
@@ -34,7 +34,7 @@ public:
     static void mediaModuleControllingVolumeChanged();
 
 private:
-    ScenarioModule *    mPreviouslyControllingModule;
+    GenericScenarioModule *    mPreviouslyControllingModule;
 };
 
 #endif /* VOLUMECONTROLCHANGESMONITOR_H_ */

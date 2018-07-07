@@ -19,6 +19,7 @@
 #include "media.h"
 #include "main.h"
 #include "messageUtils.h"
+#include "genericScenarioModule.h"
 
 VolumeControlChangesMonitor::VolumeControlChangesMonitor()
 {
@@ -27,7 +28,7 @@ VolumeControlChangesMonitor::VolumeControlChangesMonitor()
 
 VolumeControlChangesMonitor::~VolumeControlChangesMonitor()
 {
-    ScenarioModule * newController = gState.getExplicitVolumeControlModule();
+    GenericScenarioModule * newController = gState.getExplicitVolumeControlModule();
     if (newController != mPreviouslyControllingModule
             && (newController == getMediaModule() ||
                mPreviouslyControllingModule == getMediaModule()))

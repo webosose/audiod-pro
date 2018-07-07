@@ -20,8 +20,9 @@
 #include "messageUtils.h"
 #include "main.h"
 #include "AudioDevice.h"
+#include "genericScenarioModule.h"
 
-bool ScenarioModule::subscriptionPost(LSHandle * palmService, std::string replyString,ESendUpdate update)
+bool GenericScenarioModule::subscriptionPost(LSHandle * palmService, std::string replyString,ESendUpdate update)
 {
     bool result = true;
     CLSError lserror;
@@ -59,7 +60,7 @@ bool ScenarioModule::subscriptionPost(LSHandle * palmService, std::string replyS
 }
 
 bool
-ScenarioModule::sendChangedUpdate(int changedFlags, const gchar * broadCastEvent)
+GenericScenarioModule::sendChangedUpdate(int changedFlags, const gchar * broadCastEvent)
 {
     g_message("sendChangedUpdate");
     pbnjson::JValue reply = pbnjson::Object();
@@ -176,7 +177,7 @@ ScenarioModule::sendChangedUpdate(int changedFlags, const gchar * broadCastEvent
 }
 
 bool
-ScenarioModule::sendRequestedUpdate(LSHandle *sh, LSMessage *message, bool subscribed)
+GenericScenarioModule::sendRequestedUpdate(LSHandle *sh, LSMessage *message, bool subscribed)
 {
     g_message("sendRequestedUpdate") ;
     pbnjson::JValue reply = pbnjson::Object();
@@ -223,7 +224,7 @@ ScenarioModule::sendRequestedUpdate(LSHandle *sh, LSMessage *message, bool subsc
 }
 
 bool
-ScenarioModule::sendEnabledUpdate(const char *scenario, int enabledFlags)
+GenericScenarioModule::sendEnabledUpdate(const char *scenario, int enabledFlags)
 {
     g_message("sendEnabledUpdate");
     pbnjson::JValue reply = pbnjson::Object();

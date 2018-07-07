@@ -1,0 +1,6 @@
+{
+    "audioMixer":[
+      "pulseaudio",
+      "UMI"
+      ]
+}

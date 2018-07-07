@@ -114,7 +114,11 @@ public:
     void                stopDtmf();
 
     bool                programLoadRTP(const char *type, const char *ip, int port);
+    bool                programHeadsetRoute (int route);
     bool                programUnloadRTP();
+
+    bool                externalSoundcardPathCheck (std::string filename,  int status);
+    bool                loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
 
     /// These should really be private, but they're needed for global callbacks...
     bool                _connectSocket();

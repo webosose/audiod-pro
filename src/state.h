@@ -16,7 +16,7 @@
 
 #ifndef _STATE_H_
 #define _STATE_H_
-
+#include "umiaudiomixer.h"
 #include "scenario.h"
 #include "IPC_SharedAudiodDefinitions.h"
 
@@ -94,12 +94,12 @@ public:
     State();
 
     /// Get the module that controls the volume, never 0
-    ScenarioModule * getCurrentVolumeModule ();
+    GenericScenarioModule * getCurrentVolumeModule ();
     /// Get the module, if any, that has priority
     // access to the volume control by explicit request. MAYBE 0!
     /// Control may have been acquired using State::
     //setLockedVolumeModule or ScenarioModule::setVolumeOverride
-    ScenarioModule * getExplicitVolumeControlModule ();
+    GenericScenarioModule * getExplicitVolumeControlModule ();
     bool setLockedVolumeModule (ScenarioModule *module);
 
     bool getOnActiveCall ();
@@ -132,6 +132,8 @@ public:
 
     EHeadsetState getHeadsetState ();
     void setHeadsetState (EHeadsetState state);
+    void setHeadsetRoute (EHeadsetState state);
+    bool setMicOrHeadset (EHeadsetState state, int cardno, int deviceno, int status);
 
     ETTYMode getTTYMode ();
     void setTTYMode (ETTYMode mode);
@@ -240,6 +242,10 @@ public:
     bool getLoopbackStatus();
     void setLoopbackStatus(bool status);
     bool checkPhoneScenario(ScenarioModule *phone) ;
+
+    /*Initializing umi mixer*/
+    void umiMixerInit(GMainLoop *loop, LSHandle *handle);
+    umiaudiomixer* mObjUmiMixerInstance;
 
 private:
     bool                mOnActiveCall;

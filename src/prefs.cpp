@@ -21,6 +21,7 @@
 #include "log.h"
 #include "IPC_SharedAudiodProperties.h"
 #include "main.h"
+#include "genericScenarioModule.h"
 
 bool State::storePreferences()
 {
@@ -198,7 +199,7 @@ bool State::restorePreferences()
     return true;
 }
 
-void ScenarioModule::storePreferences()
+void GenericScenarioModule::storePreferences()
 {
     LPAppHandle prefHandle = NULL;
 
@@ -212,7 +213,7 @@ void ScenarioModule::storePreferences()
     for (ScenarioMap::iterator iter = mScenarioTable.begin();
                                          iter != mScenarioTable.end(); ++iter)
     {
-        Scenario * scenario = iter->second;
+        GenericScenario * scenario = iter->second;
         snprintf(label, G_N_ELEMENTS(label), "%s_volume", scenario->getName());
         pref.put(label, mCurrentScenario->getVolume());
     }
@@ -227,7 +228,7 @@ void ScenarioModule::storePreferences()
     mStoreTimerID = 0;
 }
 
-void ScenarioModule::restorePreferences()
+void GenericScenarioModule::restorePreferences()
 {
     LPAppHandle prefHandle = NULL;
 
@@ -248,7 +249,7 @@ void ScenarioModule::restorePreferences()
             for (ScenarioMap::iterator iter = mScenarioTable.begin();
                                            iter != mScenarioTable.end(); ++iter)
             {
-                Scenario * scenario = iter->second;
+                GenericScenario * scenario = iter->second;
                 snprintf(label, G_N_ELEMENTS(label), "%s_volume", scenario->getName());
                 int value;
                 if (msg.get(label, value))
@@ -263,7 +264,7 @@ void ScenarioModule::restorePreferences()
         for (ScenarioMap::iterator iter = mScenarioTable.begin();
                                           iter != mScenarioTable.end(); ++iter)
         {
-            Scenario * scenario = iter->second;
+            GenericScenario * scenario = iter->second;
             std::string volumeKey = string_printf("%s_volume", scenario->getName());
             int volume;
             if (_restorePreference(prefHandle, volumeKey.c_str(), "volume", volume))
@@ -286,7 +287,7 @@ gboolean _storePreferencesCallback(gpointer data)
 }
 
 void
-ScenarioModule::scheduleStorePreferences()
+GenericScenarioModule::scheduleStorePreferences()
 {
     if (0 == mStoreTimerID)
     {

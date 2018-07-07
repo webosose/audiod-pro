@@ -29,20 +29,20 @@ class AudiodCallbacks : public AudiodCallbacksInterface
 public:
     /// Methods called by HW/SW implementation layers
     virtual void        onAudioMixerConnected();
-    virtual void        onSinkChanged(EVirtualSink sink, EControlEvent event);
+    virtual void        onSinkChanged(EVirtualSink sink, EControlEvent event,ESinkType sinkType);
     virtual void        onInputStreamActiveChanged(bool active);
 
     // Modules can register to be notified via onSinkChanged()
     // that a sink was opened or closed.
-    void                registerModuleCallback(ScenarioModule * module,
+    void                registerModuleCallback(GenericScenarioModule * module,
                                                EVirtualSink sink,
                                                 bool notifyFirst = false);
-    void                unregisterModuleCallback(ScenarioModule * module);
+    void                unregisterModuleCallback(GenericScenarioModule * module);
 
 private:
-    typedef std::vector<ScenarioModule *> CallbackVector;
+    typedef std::vector<GenericScenarioModule *> CallbackVector;
 
-    CallbackVector        mSinkCallbackModules[eVirtualSink_Count];
+    CallbackVector        mSinkCallbackModules[eumiCount];
 };
 
 
