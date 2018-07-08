@@ -154,7 +154,7 @@ SET (modules_files
 
     LIST (APPEND controls_hardware_files src/controls/hardware/unknowndevice.cpp)
     add_definitions(-DSYSTEMSOUNDS_PATH="/media/internal/systemsounds/")
-#    install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}
