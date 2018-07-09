@@ -60,6 +60,7 @@ const TModuleMethod cModuleMethod_Status = "status";
 const TModuleMethod cModuleMethod_BroadcastEvent = "broadcastEvent";
 const TModuleMethod cModuleMethod_LockVolumeKeys = "lockVolumeKeys";
 const TModuleMethod cModuleMethod_Play = "play";
+const TModuleMethod cModuleMethod_muteVolume = "muteVolume";
 const TModuleMethod cModuleMethod_SetMuted = "setMuted";
 const TModuleMethod cModuleMethod_Control = "control";
 const TModuleMethod cModuleMethod_MuseSet = "museSet";

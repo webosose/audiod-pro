@@ -208,7 +208,7 @@
     "com.webos.service.audio/UMI/getStatus",
     "com.webos.service.audio/UMI/mute",
     "com.webos.service.audio/soundSettings/setSoundOut",
-    "com.webos.service.audio/master/setMuted",
+    "com.webos.service.audio/master/muteVolume",
     "com.webos.service.audio/master/volumeUp",
     "com.webos.service.audio/master/volumeDown",
     "com.webos.service.audio/master/setVolume",

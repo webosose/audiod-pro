@@ -281,9 +281,9 @@ bool volumeSettings::_getVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ct
     return true;
 }
 
-bool volumeSettings::_setMuted(LSHandle *lshandle, LSMessage *message, void *ctx)
+bool volumeSettings::_muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    g_debug("MasterVolume: setMuted");
+    g_debug("MasterVolume: muteVolume");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(soundOutput, string), PROP(mute, boolean)) REQUIRED_2(soundOutput, mute)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return true;
@@ -694,7 +694,7 @@ static LSMethod MasterVolumeMethods[] =
     {cModuleMethod_VolumeDown, volumeSettings::_volumeDown},
     {cModuleMethod_VolumeUp, volumeSettings::_volumeUp},
     {cModuleMethod_GetVolume, volumeSettings::_getVolume},
-    {cModuleMethod_SetMuted, volumeSettings::_setMuted},
+    {cModuleMethod_muteVolume, volumeSettings::_muteVolume},
     { },
 };
 volumeSettings::volumeSettings(): mixerObj(umiaudiomixer::getUmiMixerInstance()), mVolume(0), mMuteStatus(false)

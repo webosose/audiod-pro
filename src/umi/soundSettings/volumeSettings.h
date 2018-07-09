@@ -49,7 +49,7 @@ class volumeSettings
       /*volume settings luna calls start*/
       static bool _setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
       static bool _getVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
-      static bool _setMuted(LSHandle *lshandle, LSMessage *message, void *ctx);
+      static bool _muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
       static bool _volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);
       static bool _volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx);
       /*volume settings luna calls end*/
