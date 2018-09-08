@@ -382,12 +382,6 @@ bool PulseAudioMixer::programVolume (EVirtualSink sink, int volume, bool ramp)
         // there is no stream playing for high latency sinks
         volume = 0;
     }
-    // if nothing's playing, just do the fastest mute,
-    // it's the cheapest, as nothing's playing, it makes no difference!
-    if (volume == 0 && mPulseStateActiveStreamCount[sink] <= 0)
-    {
-        return programSource ('m', sink, 0);
-    }
 
     return programSource ( (ramp ? 'r' : 'v'), sink, volume);
 }
