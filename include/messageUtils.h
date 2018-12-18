@@ -62,7 +62,7 @@ typedef struct envelope
 #define PROPS_4(p1, p2, p3, p4)                       ",\"properties\":{" p1 "," p2 "," p3 "," p4 "}"
 #define PROPS_5(p1, p2, p3, p4, p5)                   ",\"properties\":{" p1 "," p2 "," p3 "," p4 "," p5 "}"
 #define PROPS_6(p1, p2, p3, p4, p5, p6)               ",\"properties\":{" p1 "," p2 "," p3 "," p4 "," p5 "," p6 "}"
-
+#define PROPS_9(p1, p2, p3, p4, p5, p6, p7, p8, p9)   ",\"properties\":{" p1 "," p2 "," p3 "," p4 "," p5 "," p6 "," p7 "," p8 "," p9 "}"
 
 #define PROP(name, type)                              "\"" #name "\":{\"type\":\"" #type "\"}"
 #define PROP_WITH_VAL_1(name, type, v1)               "\"" #name "\":{\"type\":\"" #type "\", \"enum\": [" #v1 "]}"

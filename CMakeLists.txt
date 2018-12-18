@@ -129,6 +129,7 @@ SET (services_files
         src/services/udev.cpp
         src/services/settingsservice.cpp
         src/services/systemmanager.cpp
+        src/services/bluetooth.cpp
 
 )
 

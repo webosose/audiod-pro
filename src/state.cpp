@@ -2110,14 +2110,14 @@ error:
     return true;
 }
 
-void State::setA2DPStatus(std::string Status)
+void State::setA2DPStatus(bool Status)
 {
-    mA2dpStatus = Status;
+    mA2DPStatus = Status;
 }
 
-std::string State::getA2DPStatus()
+bool State::getA2DPStatus()
 {
-    return mA2dpStatus;
+    return mA2DPStatus;
 }
 
 std::string State::getHFPConnectionStatus()

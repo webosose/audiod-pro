@@ -225,8 +225,8 @@ public:
     bool getRecordStatus();
     void btOpenSCO(LSHandle *lshandle);
     void btCloseSCO(LSHandle *lshandle);
-    void setA2DPStatus(std::string Status);
-    std::string getA2DPStatus();
+    void setA2DPStatus(bool Status);
+    bool getA2DPStatus();
     void setHFPConnectionStatus(std::string Status);
     std::string getHFPConnectionStatus();
     void setQvoiceStartedStatus(bool status);
@@ -281,8 +281,9 @@ private:
     bool mQvoiceOpened;
     bool mRecordOpened;
     bool mLoopback;
-    std::string           mA2dpStatus;
-    std::string           mHfpStatus;
+
+    bool                 mA2DPStatus;
+    std::string          mHfpStatus;
     bool                 mQvoiceStarted;
     bool                 mRTPLoaded;
 };

@@ -261,7 +261,7 @@ public:
     virtual bool suspendSink(int sink) = 0;
     virtual void setNREC(bool value) = 0;
     virtual bool programLoadBluetooth (const char *address, const char *profile) = 0;
-    virtual bool programUnLoadBluetooth (const char *profile) = 0;
+    virtual bool programUnloadBluetooth (const char *profile) = 0;
     virtual bool setRouting(const ConstString & scenario) = 0;
     virtual bool phoneEvent(EPhoneEvent event, int parameter) = 0;
     virtual bool programCallVoiceOrMICVolume (char cmd, int volume) = 0;

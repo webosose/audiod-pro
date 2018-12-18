@@ -140,7 +140,7 @@ public:
     void setNREC(bool value);
     void sendNREC(bool value);
     bool programLoadBluetooth (const char * address , const char *profile);
-    bool programUnLoadBluetooth (const char *profile);
+    bool programUnloadBluetooth (const char *profile);
     bool setRouting(const ConstString & scenario);
     bool phoneEvent(EPhoneEvent event, int parameter);
     bool getBTVolumeSupport();

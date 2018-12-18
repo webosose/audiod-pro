@@ -483,53 +483,52 @@ void PulseAudioMixer::sendBTDeviceType (bool type, bool hfpStatus)
 
 bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *profile)
 {
-    char cmd = 'L';
+    char cmd = 'l';
     char buffer[SIZE_MESG_TO_PULSE] ;
     bool ret  = false;
 
-    if (!address || !profile) {
-        g_message("bluetooth  address or/and profile is null");
-        return ret;
-    }
-
-    g_debug ("check for pulseaudio ");
-    if (!mPulseLink.checkConnection()) {
+    if (!mPulseLink.checkConnection())
+    {
         g_message("Pulseaudio is not running");
         return ret;
     }
-
-    if (!mChannel) {
+    if (!mChannel)
+    {
         g_message("There is no socket connection to pulseaudio");
         return ret;
     }
 
-    g_debug ("programLoadBluetooth sending message ");
+    g_debug ("programLoadBluetooth sending message");
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s %s", cmd, 0, address, profile);
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
-    if (bytes != SIZE_MESG_TO_PULSE) {
+    if (bytes != SIZE_MESG_TO_PULSE)
+    {
        g_warning("Error sending msg for BT load(%d)", bytes);
     }
-    else {
+    else
+    {
        g_warning("msg send for BT load(%d)", bytes);
        ret = true;
     }
     return ret;
 }
 
-bool PulseAudioMixer::programUnLoadBluetooth (const char *profile) {
-    char cmd = 'U';
+bool PulseAudioMixer::programUnloadBluetooth (const char *profile)
+{
+    char cmd = 'u';
     char buffer[SIZE_MESG_TO_PULSE];
     bool ret = false;
-    memset (buffer,0,SIZE_MESG_TO_PULSE);
+    memset(buffer, 0, SIZE_MESG_TO_PULSE);
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", cmd, 0, profile);
 
-    if (!mPulseLink.checkConnection()) {
+    if (!mPulseLink.checkConnection())
+    {
         g_message("Pulseaudio is not running");
         return ret;
     }
-
-    if (!mChannel) {
+    if (!mChannel)
+    {
         g_message("There is no socket connection to pulseaudio");
         return ret;
     }
@@ -538,10 +537,12 @@ bool PulseAudioMixer::programUnLoadBluetooth (const char *profile) {
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
 
-    if (bytes != SIZE_MESG_TO_PULSE) {
+    if (bytes != SIZE_MESG_TO_PULSE)
+    {
        g_warning("Error sending msg for BT Unload(%d)", bytes);
     }
-    else {
+    else
+    {
        g_warning("msg send for BT Unload(%d)", bytes);
        ret = true;
     }
@@ -1252,19 +1253,24 @@ void PulseAudioMixer::outputStreamClosed (EVirtualSink sink)
 
 void PulseAudioMixer::inputStreamOpened (EVirtualSource source)
 {
-    if (mInputStreamsCurrentlyOpenedCount == 0 && mCallbacks) {
+    if (mInputStreamsCurrentlyOpenedCount == 0 && mCallbacks)
+    {
         gAudioMixer.programMute(source, true);
-        if (!gState.getOnActiveCall()) {
+        if (!gState.getOnActiveCall())
+        {
 
             if (source != evoiceactivator)
                 gState.setRecordStatus(true);
 
-            if (gState.getHfpStatus() && source == eqvoice) {
+            if (gState.getHfpStatus() && source == eqvoice)
+            {
                 gState.setQvoiceStartedStatus(true);
-                g_message("a2dp %s hfp %s", gState.getA2DPStatus().c_str(), gState.getHFPConnectionStatus().c_str());
+                g_message("a2dp status %d hfp connection status %s", gState.getA2DPStatus(), gState.getHFPConnectionStatus().c_str());
 
-                if (!((gState.getA2DPStatus() == "playing") || (gState.getA2DPStatus() == "Playing"))) {
-                    if (!((gState.getHFPConnectionStatus() == "playing") || (gState.getHFPConnectionStatus() == "Playing"))) {
+                if (!(true == gState.getA2DPStatus()))
+                {
+                    if (!((gState.getHFPConnectionStatus() == "playing") || (gState.getHFPConnectionStatus() == "Playing")))
+                    {
                         g_message("Opening SCO for QVoice since A2DP is not in use");
                         LSHandle *sh = GetPalmService();
                         if (sh)
@@ -1272,7 +1278,9 @@ void PulseAudioMixer::inputStreamOpened (EVirtualSource source)
                         else
                             g_critical("Error : Could not get LSHandle");
                     }
-                } else if ((gState.getA2DPStatus() == "Playing" || gState.getA2DPStatus() == "playing")) {
+                } 
+                else if ((true == gState.getA2DPStatus()))
+                {
                     g_message("Suspending A2DP Sink");
                     gAudioMixer.suspendSink(eA2DPSink);
                     getMediaModule()->pauseA2DP();
@@ -1282,8 +1290,8 @@ void PulseAudioMixer::inputStreamOpened (EVirtualSource source)
             gAudioMixer.programMute(source, false);
             mCallbacks->onInputStreamActiveChanged(true);
         }
-
-        if (gState.getOnActiveCall() && source == evoicecallsource) {
+        if (gState.getOnActiveCall() && source == evoicecallsource)
+        {
             gAudioMixer.programMute(source, false);
             gAudioDevice.setPhoneRecording(true);
         }
