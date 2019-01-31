@@ -9,14 +9,14 @@ To make audio test application available in place of bareapp, below procedure ne
    Path : audiod-pro/HTML5_test_App/TestApp
 2) Replace the index.html of bareapp with the index.html from audiod-pro/HTML5_test_App/TestApp.
 3) Copy the webOSjs-0.1.0 folder from audiod-pro/HTML5_test_App/TestApp to /usr/palm/applications/bareapp
-4) Also copy LS2Request.js file from audiod-pro/HTML5_test_App/TestApp to /usr/palm/applications/bareapp
-5) open the index.html file
+   NOTE:webOS.js file is to communicate internally with the webOS platform
+4) open the index.html file
     vi /usr/palm/applications/bareapp/index.html
-6) According to the user requirement,please provide the video URL in index.html video tag source input as below
+5) According to the user requirement,please provide the video URL in index.html video tag source input as below
    <source src="Please give URL" type="video/mp4">
    Example:<source src="http://10.195.252.40/media_content/videos/tears_of_steel_1080p.mp4" type="video/mp4">
-7) Reboot the RPI device and launch bareapp from the launcher.
-8) Start playing the video on clicking the play button.
+6) Reboot the RPI device and launch bareapp from the launcher.
+7) Start playing the video on clicking the play button.
 
 Ready to verify...
 
