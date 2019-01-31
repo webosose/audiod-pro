@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ GenericScenarioModule::sendChangedUpdate(int changedFlags, const gchar * broadCa
         reply.put("changed", array);
     }
 
-    if (mCurrentScenario)
+    if (nullptr != mCurrentScenario)
     {
         reply.put("scenario", mCurrentScenario->getName());
         reply.put("volume", mCurrentScenario->getVolume());
@@ -189,7 +189,7 @@ GenericScenarioModule::sendRequestedUpdate(LSHandle *sh, LSMessage *message, boo
 
     reply.put("action", "requested");
 
-    if (mCurrentScenario)
+    if (nullptr != mCurrentScenario)
     {
         reply.put("scenario", mCurrentScenario->getName());
         reply.put("volume", mCurrentScenario->getVolume());

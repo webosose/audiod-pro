@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -322,7 +322,7 @@ bool umiaudiomixer::readyToProgram()
 void umiaudiomixer::onSinkChangedReply(EVirtualSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType)
 {
     g_debug("OnSinkChangedReply Sink Name :%d, Connection status: %d sink type %d", eVirtualSink, eConnStatus, (int)eSinkType);
-    EControlEvent event;
+    EControlEvent event = eControlEvent_None;
     if (eConnect == eConnStatus)
     {
         event = eControlEvent_FirstStreamOpened;

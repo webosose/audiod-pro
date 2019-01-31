@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,10 @@ bool State::storePreferences()
 
     if (!VERIFY(LPAppGetHandle(AUDIOD_SERVICE_PATH, &prefHandle) == LP_ERR_NONE) ||
                                                           !VERIFY(prefHandle))
+    {
+        LPAppFreeHandle(prefHandle, false);
         return false;
+    }
 
     pbnjson::JValue pref = pbnjson::Object();
 
@@ -78,7 +81,10 @@ bool State::restorePreferences()
 
     if (!VERIFY(LPAppGetHandle(AUDIOD_SERVICE_PATH, &prefHandle) == LP_ERR_NONE) ||
                                                           !VERIFY(prefHandle))
+    {
+        LPAppFreeHandle(prefHandle, false);
         return false;
+    }
 
     char * json = 0;
     if (LPAppCopyValue(prefHandle, "state_preferences", &json) == LP_ERR_NONE && json)
@@ -205,7 +211,10 @@ void GenericScenarioModule::storePreferences()
 
      if(!VERIFY(LPAppGetHandle(AUDIOD_SERVICE_PATH, &prefHandle) == LP_ERR_NONE) ||
                                                            !VERIFY(prefHandle))
-        return;
+     {
+         LPAppFreeHandle(prefHandle, false);
+         return;
+     }
 
     pbnjson::JValue pref = pbnjson::Object();
 
@@ -234,7 +243,10 @@ void GenericScenarioModule::restorePreferences()
 
     if (!VERIFY(LPAppGetHandle(AUDIOD_SERVICE_PATH, &prefHandle) == LP_ERR_NONE) ||
                                                            !VERIFY(prefHandle))
+    {
+        LPAppFreeHandle(prefHandle, false);
         return;
+    }
 
     char    label[256];
     snprintf(label, G_N_ELEMENTS(label), "%s_preferences", this->getCategory());
