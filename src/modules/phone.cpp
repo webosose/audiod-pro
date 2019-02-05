@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -235,7 +235,9 @@ PhoneScenarioModule::PhoneScenarioModule() :
     s->configureRoute (evoipsource,        eMainSource,   true,  true);
     addScenario (s);
 
+#if PHONE_SUPPORTED
     registerMe (phoneMethods);
+#endif
 
     restorePreferences();
 }

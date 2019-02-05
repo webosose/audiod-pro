@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -251,7 +251,6 @@ _getProperty(LSHandle *lshandle, LSMessage *message, void *ctx)
 }
 
 static LSMethod vibrateMethods[] = {
-
     { "set", _setProperty},
     { "get", _getProperty},
     { },
@@ -263,6 +262,7 @@ VibrateInterfaceInit(GMainLoop *loop, LSHandle *handle)
 {
     /* luna service interface */
     CLSError lserror;
+#if VIBRATE_SUPPORTED
 #if defined (AUDIOD_TEST_API)
     bool result;
     result = ServiceRegisterCategory ("/vibrate", vibrateMethods, NULL, NULL);
@@ -273,6 +273,8 @@ VibrateInterfaceInit(GMainLoop *loop, LSHandle *handle)
         return (-1);
     }
 #endif
+#endif
+
     sVibrateDevice = new VibrateDevice();
 
     return 0;
