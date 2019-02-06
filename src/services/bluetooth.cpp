@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -205,8 +205,8 @@ BluetoothInterfaceInit(GMainLoop *loop, LSHandle *handle)
 {
     bool result;
     CLSError lserror;
-    result = LSRegisterServerStatus(handle, BLUETOOTH_SERVICE,
-            bluetoothServerStatus, loop, &lserror);
+    result = LSRegisterServerStatusEx(handle, BLUETOOTH_SERVICE,
+                 bluetoothServerStatus, loop, NULL, &lserror);
     if (!result)
         lserror.Print(__FUNCTION__, __LINE__);
 

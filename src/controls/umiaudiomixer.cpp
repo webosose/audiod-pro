@@ -306,8 +306,8 @@ AudiodCallbacksInterface * interface)
     g_debug("init connect umiaudiomixer");
     CLSError lserror;
     // check if the service is up
-    bool result = LSRegisterServerStatus(handle, AUDIOOUTPUT_SERVICE,
-    audiodOutputdServiceStatusCallBack, loop, &lserror);
+    bool result = LSRegisterServerStatusEx(handle, AUDIOOUTPUT_SERVICE,
+                      audiodOutputdServiceStatusCallBack, loop, NULL, &lserror);
     if (!result)
     {
         lserror.Print(__FUNCTION__, __LINE__);

@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 LG Electronics, Inc.
+// Copyright (c) 2016-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,8 +86,8 @@ SettingsServiceInterfaceInit(GMainLoop *loop, LSHandle *handle)
     CLSError lserror;
 
     // check if the service is up
-    bool result = LSRegisterServerStatus(handle, "com.webos.settingsservice",
-                                         _settingsServiceServerStatus, loop, &lserror);
+    bool result = LSRegisterServerStatusEx(handle, "com.webos.settingsservice",
+                                           _settingsServiceServerStatus, loop, NULL, &lserror);
     if (!result)
         lserror.Print(__FUNCTION__, __LINE__);
 

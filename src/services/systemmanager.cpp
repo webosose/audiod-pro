@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -143,18 +143,8 @@ SystemmanagerInterfaceInit(GMainLoop *loop, LSHandle *handle)
     CLSError lserror;
 
     // check if the service is up
-/* Disable system manager server status in TV as we are not using
-it and it's luna methods(getLockStatus() & getDeviceLockMode()) are
-deprecated, which are not required for TV */
-#if defined(WEBOS_TARGET_MACHINE_G2) || defined (WEBOS_TARGET_MACHINE_VU2) || defined (WEBOS_TARGET_MACHINE_W2)
-    result = LSRegisterServerStatus(handle, "com.palm.systemmanager",
-            _systemmanagerServerStatus, loop, &lserror);
-    if (!result)
-        lserror.Print(__FUNCTION__, __LINE__);
-#endif
-
-    result = LSRegisterServerStatus(handle, "com.palm.systemservice",
-            _systemserviceServerStatus, loop, &lserror);
+    result = LSRegisterServerStatusEx(handle, "com.palm.systemservice",
+                 _systemserviceServerStatus, loop, NULL, &lserror);
     if (!result)
         lserror.Print(__FUNCTION__, __LINE__);
 
