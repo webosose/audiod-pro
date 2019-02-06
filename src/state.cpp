@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2184,19 +2184,12 @@ static LSMethod stateMethods[] = {
     { "set", _setState},
     { "get", _getState},
 #endif
-    { "setPreference", State::setPreferenceRequest},
     { "getPreference", State::getPreferenceRequest},
-    { "setVolumeBalance", _setVolumeBalance},
     { "getVolumeBalance", _getVolumeBalance},
     { "setRingerSwitch", _setRingerSwitch},
     { "getSoundProfile", _getSoundProfile},
-    { "loopback", _loopback},
-    { "setNREC", _setNREC},
     { "setSoundProfile", _setSoundProfile},
-    { "setTouchSound", _setTouchSound},
     { "getTouchSound", _getTouchSound},
-    { "loadRTPModule", _loadRTPModule},
-    { "unloadRTPModule", _unloadRTPModule},
     { },
 };
 

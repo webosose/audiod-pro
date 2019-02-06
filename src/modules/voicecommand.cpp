@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2019 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -276,21 +276,14 @@ send:
 }
 
 static LSMethod voiceCommandMethods[] = {
-    { cModuleMethod_SetVolume, _setVolume},
     { cModuleMethod_GetVolume, _getVolume},
-    { cModuleMethod_OffsetVolume, _offsetVolume},
-    { cModuleMethod_SetMicGain, _setMicGain},
     { cModuleMethod_GetMicGain, _getMicGain},
-    { cModuleMethod_OffsetMicGain, _offsetMicGain},
     { cModuleMethod_EnableScenario, _enableScenario},
     { cModuleMethod_DisableScenario, _disableScenario},
     { cModuleMethod_SetCurrentScenario, _setCurrentScenario},
     { cModuleMethod_GetCurrentScenario, _getCurrentScenario},
     { cModuleMethod_ListScenarios, _listScenarios},
     { cModuleMethod_Status, _status},
-    { cModuleMethod_BroadcastEvent, _broadcastEvent},
-    { cModuleMethod_Control, _voiceCommandControl}, // this is voice command
-                                                    //specific control
     { },
 };
 #endif
