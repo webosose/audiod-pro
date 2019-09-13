@@ -15,3 +15,12 @@ SUBSYSTEM=="sound",ACTION=="remove",DEVPATH=="/devices/pci0000:00/*/usb[0-9]/*/s
 SUBSYSTEM=="sound",ACTION=="add",DEVPATH=="/devices/pci0000:00/*/sound/card[0-9]/pcmC[0-9]D0p",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_HEADSET_ADDED' %b $devpath %p"
 SUBSYSTEM=="sound",ACTION=="add",DEVPATH=="/devices/pci0000:00/*/sound/card[0-9]/pcmC[0-9]D0c",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_MIC_ADDED' %b $devpath %p"
 
+#Rules for RPI4 for USB soundcard detection
+#USB MIC ADDED
+SUBSYSTEM=="sound",ACTION=="add",DEVPATH=="/devices/platform/scb/fd500000.pcie/pci0000:00/*/usb[0-9]/*/sound/card[0-9]/pcmC[0-9]D[0-9]c",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_MIC_ADDED' %b $devpath %p"
+#USB MIC REMOVED
+SUBSYSTEM=="sound",ACTION=="remove",DEVPATH=="/devices/platform/scb/fd500000.pcie/pci0000:00/*/usb[0-9]/*/sound/card[0-9]/pcmC[0-9]D[0-9]c",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_MIC_REMOVED' %b $devpath %p"
+#USB HEADSET ADDED
+SUBSYSTEM=="sound",ACTION=="add",DEVPATH=="/devices/platform/scb/fd500000.pcie/pci0000:00/*/usb[0-9]/*/sound/card[0-9]/pcmC[0-9]D[0-9]p",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_HEADSET_ADDED' %b $devpath %p"
+#USB HEADSET REMOVED
+SUBSYSTEM=="sound",ACTION=="remove",DEVPATH=="/devices/platform/scb/fd500000.pcie/pci0000:00/*/usb[0-9]/*/sound/card[0-9]/pcmC[0-9]D[0-9]p",RUN+="/etc/udev/scripts/usbsoundcard.sh 'USB_HEADSET_REMOVED' %b $devpath %p"
