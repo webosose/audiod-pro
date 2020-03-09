@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,19 @@ GenericScenarioModule::GenericScenarioModule(const ConstString & category) :
 mCategory(category), mCurrentScenario(0), mStoreTimerID(0),
 mMuted(false), mVolumeOverride(0)
 {
+}
+
+GenericScenarioModule::~GenericScenarioModule()
+{
+    g_debug("GenericScenarioModule::destructor");
+    for (auto &scenarioDetails : mScenarioTable)
+    {
+        if(nullptr != scenarioDetails.second)
+        {
+            delete scenarioDetails.second;
+            scenarioDetails.second = nullptr;
+        }
+    }
 }
 
 void

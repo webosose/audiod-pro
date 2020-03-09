@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,7 +67,11 @@ enum EScenarioPriority
 
     eScenarioPriority_Alert_Default = 50,
 
-    eScenarioPriority_TV_MasterVolume = 200
+    eScenarioPriority_TV_MasterVolume = 200,
+
+    eScenarioPriority_TTS2_Default = 50,
+
+    eScenarioPriority_Default2_Default = 50
 };
 
 enum ESendUpdate {
@@ -159,7 +163,7 @@ public:
 
     GenericScenarioModule(const ConstString & category);
 
-    virtual ~GenericScenarioModule() {}
+    virtual ~GenericScenarioModule();
 
     virtual bool makeCurrent() {return true;};
     bool isCurrentModule() {

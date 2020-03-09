@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,6 +87,7 @@ MediaScenarioModule::rampDownAndMute()
         rampVolume (emedia, 0);
         rampVolume (eflash, 0);
         rampVolume (edefaultapp, 0);
+        rampVolume (edefault1, 0);
         rampVolume (enavigation, 0);
         usleep(400000);
     }
@@ -133,6 +134,8 @@ MediaScenarioModule::programMediaVolumes(bool rampVolumes,
                                                                 baseVolume : 0;
     int defaultAppVolume = !mMuted && activeStreams.contain(edefaultapp) ?
                                                                 baseVolume : 0;
+    int default1Volume = !mMuted && activeStreams.contain(edefault1) ?
+                                                                baseVolume : 0;
     int navigationVolume = !mMuted && activeStreams.contain(enavigation) ?
                                                                 baseVolume : 0;
     int volume_to_set = 0;
@@ -140,6 +143,7 @@ MediaScenarioModule::programMediaVolumes(bool rampVolumes,
     int duckMedia = 0;
     int duckFlash = 0;
     int duckDefaultApp = 0;
+    int duckDefault1 = 0;
     int duckNavigation = 0;
 
     // when navigation is playing, duck other media volumes
@@ -185,6 +189,7 @@ MediaScenarioModule::programMediaVolumes(bool rampVolumes,
         programVolume(edefaultapp, 0, false);
         programVolume(eflash, 0, false);
         programVolume(enavigation, 0, false);
+        programVolume(edefault1, 0, false);
         return;
     }
     else
@@ -194,6 +199,8 @@ MediaScenarioModule::programMediaVolumes(bool rampVolumes,
             volume_to_set = mediaVolume;
         else if(mPreviousSink == edefaultapp)
             volume_to_set = defaultAppVolume;
+        else if(mPreviousSink == edefault1)
+            volume_to_set = default1Volume;
         else if(mPreviousSink == eflash)
             volume_to_set = flashVolume;
         else if(mPreviousSink == enavigation)
@@ -213,6 +220,9 @@ MediaScenarioModule::programMediaVolumes(bool rampVolumes,
     {
         programVolume(edefaultapp, defaultAppVolume, rampVolumes);
     }
+
+    if(mPreviousSink != edefault1)
+        programVolume(edefault1, default1Volume, rampVolumes);
 
     if(mPreviousSink != enavigation)
         programVolume(enavigation, navigationVolume, rampVolumes);
@@ -372,6 +382,7 @@ MediaScenarioModule::adjustAlertVolume(int volume, bool alertStarting)
                                containAnyOf(emedia,
                                             eflash,
                                             edefaultapp,
+                                            edefault1,
                                             enavigation
                                             );
     if (gState.getHeadsetState() != eHeadsetState_None)
@@ -491,7 +502,7 @@ MediaScenarioModule::someMediaIsPlaying ()
 {
     VirtualSinkSet activeStreams = gAudioMixer.getActiveStreams();
 
-    return activeStreams.containAnyOf(emedia, eflash, edefaultapp, enavigation);
+    return activeStreams.containAnyOf(emedia, eflash, edefaultapp, enavigation, edefault1);
 }
 
 bool
@@ -500,6 +511,7 @@ MediaScenarioModule::someMediaIsAudible ()
     return gAudioMixer.isSinkAudible(emedia) ||
            gAudioMixer.isSinkAudible(eflash) ||
            gAudioMixer.isSinkAudible(edefaultapp) ||
+           gAudioMixer.isSinkAudible(edefault1) ||
            gAudioMixer.isSinkAudible(enavigation);
 }
 
@@ -556,8 +568,8 @@ MediaScenarioModule::_isWirelessStreamActive()
 
     /*Allowing all streams except voicedial and voip streams.These streams
     are played on BT headset either directly(bsaa2dp-sink) or through combined sink*/
-    return activeStreams.containAnyOf(emedia, eflash, enavigation, edefaultapp)
-        || activeStreams.containAnyOf(etts, eringtones, ealarm, etimer)
+    return activeStreams.containAnyOf(emedia, eflash, enavigation, edefaultapp, edefault1)
+        || activeStreams.containAnyOf(etts, eringtones, ealarm, etimer, etts1)
         || activeStreams.containAnyOf(ealerts, eeffects, enotifications, efeedback)
         || activeStreams.containAnyOf(eDTMF, ecalendar, ecallertone);
 }
@@ -714,7 +726,7 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
 
       bool priorityMedia = someMediaIsPlaying() ||
                 gState.getActiveSinksAtPhoneCallStart().containAnyOf(eflash,
-                edefaultapp, enavigation);
+                edefaultapp, enavigation, edefault1);
       bool alertIsPlaying = someAlertIsPlaying();
 
       g_debug("MediaSecnarioModule: priorityMedia = %d alertIsPlaying = %d ",
@@ -733,7 +745,7 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
       VirtualSinkSet activeStreams = gAudioMixer.getActiveStreams ();
 
       if (emedia == sink || eflash == sink || edefaultapp == sink ||
-           enavigation == sink )
+           enavigation == sink || edefault1 == sink)
       {
           if (eControlEvent_FirstStreamOpened == event)
           {
@@ -774,6 +786,7 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
                  etimer == sink ||/*eeffects added to mute
                                              media during alert playback, etimer is added */
                  etts == sink || /*tts added*/
+                 etts1 == sink ||
                  evoicerecognition == sink) /* voicerecogniton added */
       {
           // if this is an open event
@@ -831,6 +844,8 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
                       _startSinkPlayback (eflash);
                   else if (activeStreams.contain(edefaultapp))
                       _startSinkPlayback (edefaultapp);
+                  else if (activeStreams.contain(edefault1))
+                      _startSinkPlayback (edefault1);
                   else if (activeStreams.contain(enavigation))
                       _startSinkPlayback (enavigation);
                   else
@@ -865,6 +880,8 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
                   _startSinkPlayback(eflash);
               else if (activeStreams.contain(edefaultapp))
                   _startSinkPlayback(edefaultapp);
+              else if (activeStreams.contain(edefault1))
+                  _startSinkPlayback(edefault1);
               else if (activeStreams.contain(enavigation))
                   _startSinkPlayback(enavigation);
               else
@@ -967,7 +984,7 @@ MediaScenarioModule::MediaScenarioModule() :
 
         //                 class               destination     switch     enabled
         s->configureRoute (ealerts,            eMainSink,     true,      true);
-        s->configureRoute (eeffects,            eMainSink,     true,      true);
+        s->configureRoute (eeffects,           eMainSink,     true,      true);
         s->configureRoute (enotifications,     eMainSink,     true,      true);
         s->configureRoute (efeedback,          eMainSink,     true,      true);
         s->configureRoute (efeedback,          eMainSink,     false,     true);
@@ -981,6 +998,14 @@ MediaScenarioModule::MediaScenarioModule() :
         s->configureRoute (enavigation,        eMainSink,     true,      true);
         s->configureRoute (enavigation,        eMainSink,     false,     true);
         s->configureRoute (edefaultapp,        eMainSink,     true,      true);
+        s->configureRoute (edefault1,          eMainSink,     true,      true);
+        s->configureRoute (edefault1,          eMainSink,     false,     true);
+        s->configureRoute (edefault2,          eMainSink,     true,      true);
+        s->configureRoute (edefault2,          eMainSink,     false,     true);
+        s->configureRoute (etts1,              eMainSink,     true,      true);
+        s->configureRoute (etts1,              eMainSink,     false,     true);
+        s->configureRoute (etts2,              eMainSink,     true,      true);
+        s->configureRoute (etts2,              eMainSink,     false,     true);
         s->configureRoute (eDTMF,              eMainSink,     true,      true);
         s->configureRoute (eDTMF,              eMainSink,     false,     true);
         s->configureRoute (ecalendar,          eMainSink,     true,      true);
@@ -988,8 +1013,8 @@ MediaScenarioModule::MediaScenarioModule() :
         s->configureRoute (ealarm,             eMainSink,     false,     true);
         s->configureRoute (etimer,             eMainSink,     true,     true);
         s->configureRoute (etimer,             eMainSink,     false,     true);
-        s->configureRoute (evoicedial,           eMainSink,     true,      true);
-        s->configureRoute (evoicedial,           eMainSink,     false,     true);
+        s->configureRoute (evoicedial,         eMainSink,     true,      true);
+        s->configureRoute (evoicedial,         eMainSink,     false,     true);
         s->configureRoute (evoip,              eMainSink,     true,      true);
         s->configureRoute (evoip,              eMainSink,     false,     true);
         s->configureRoute (ecallertone,        eMainSink,     true,      true);

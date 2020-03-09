@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -156,14 +156,23 @@ RingtoneScenarioModule::programRingToneVolumes(bool ramp)
                                activeStreams.contain(eringtones)) ?
                                volume : 0, ramp);
 
-    if (activeStreams.contain(etts) && !dndOn) {
+    if (activeStreams.containAnyOf(etts, etts1) && !dndOn) {
         if (!gState.getRingerOn())
+        {
             programVolume(etts, mediaVolume, ramp);
+           programVolume(etts1, mediaVolume, ramp);
+        }
         else
+        {
             programVolume(etts, volume, ramp);
+            programVolume(etts1, volume, ramp);
+        }
     }
     else
+    {
         programVolume(etts, 0);
+        programVolume(etts1, 0);
+    }
     programVolume(evoicerecognition, (gState.getRingerOn() &&
                                       activeStreams.contain(evoicerecognition)) ?
                                       volume : 0, ramp);
@@ -270,13 +279,13 @@ RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, E
                                                     controlEventName(event),(int)p_eSinkType);
     if(p_eSinkType==ePulseAudio)
     {
-      g_debug("RingtoneScenarioModule: Pulse Audio onsink changed");                                                    
+      g_debug("RingtoneScenarioModule: Pulse Audio onsink changed");
       const int cKillFakeVibrateThreshold = 5;
       int mediaVolume = 0;
       bool dndOn = false;
       ScenarioModule *media = getMediaModule();
       VirtualSinkSet      activeStreams = gAudioMixer.getActiveStreams();
-      if (eringtones == sink || etts == sink)
+      if (eringtones == sink || etts == sink || etts1 == sink)
       {
           if (eControlEvent_FirstStreamOpened == event)
           {
@@ -291,7 +300,7 @@ RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, E
               //not required  as we are doing it per call now and not per sink open-close
               /*if (eringtones == sink)
                   mRingtoneMuted = false; */
-              if (etts == sink) {
+              if (etts == sink || etts1 == sink) {
                   getMediaModule()->getScenarioVolumeOrMicGain(0, mediaVolume, true);
                   gState.getPreference(cPref_DndOn, dndOn);
               }
@@ -302,7 +311,7 @@ RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, E
                     !mRingtoneMuted )//added to continue in muted mode if ringtone is muted using vol keys
               {
                   int volume = !gState.getOnActiveCall()?getAdjustedRingtoneVolume(true):mRingtoneVolume.get();
-                  if(etts == sink && gState.getRingerOn ()){
+                  if((etts == sink || etts1 == sink) && gState.getRingerOn ()){
                       programVolume(sink, mediaVolume);
                   }
                   else if ( programVolume(sink, volume) && volume >=
@@ -319,7 +328,7 @@ RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, E
               }else{
                   if(!gState.getRingerOn ())
                   {
-                      if (activeStreams.contain(etts) && !dndOn)
+                      if (activeStreams.containAnyOf(etts, etts1) && !dndOn)
                           programVolume(sink, mediaVolume);
                       else
                           programVolume(sink, 0);
@@ -405,6 +414,7 @@ RingtoneScenarioModule::RingtoneScenarioModule() :
 {
     gAudiodCallbacks.registerModuleCallback(this, eringtones, true);
     gAudiodCallbacks.registerModuleCallback(this, etts, true);
+    gAudiodCallbacks.registerModuleCallback(this, etts1, true);
     gAudiodCallbacks.registerModuleCallback(this, evoicerecognition, true);
 
     Scenario *s = new Scenario(cRingtone_Default,

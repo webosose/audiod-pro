@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,12 +102,13 @@ inline bool isMediaSink(EVirtualSink sink)
     return sink == emedia ||
            sink == eflash ||
            sink == edefaultapp ||
-           sink == enavigation; 
+           sink == edefault1 ||
+           sink == enavigation;
 }
 
 inline bool isWirelessStreamedSink(EVirtualSink sink)
 {
-    return sink == emedia || sink == eflash || sink == enavigation;
+    return sink == emedia || sink == eflash || sink == edefault1 || sink == edefault2 || sink == enavigation;
 }
 
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@
 #include "alarm.h"
 #include "timer.h"
 #include "alert.h"
+#include "default2.h"
+#include "tts2.h"
 
 #define VOICE_COMMAND_SAMPLING_RATE 8000
 #define PHONE_SAMPLING_RATE 8000
@@ -232,6 +234,10 @@ void ScenarioModule::programSoftwareMixer (bool ramp, bool muteMediaSink)
         getAlertModule()->programAlertVolumes(ramp);
         //ecallertone
         getPhoneModule()->programCallertoneVolume(ramp);
+        //etts2
+        getTTS2Module()->programTTS2Volumes(ramp);
+        //edefault2
+        getDefault2Module()->programDefault2Volumes(ramp);
         // Update routing
         for (EVirtualSink sink = eVirtualSink_First; sink <= eVirtualSink_Last;
                sink = EVirtualSink(sink + 1))

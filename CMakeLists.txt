@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2019 LG Electronics, Inc.
+# Copyright (c) 2012-2020 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -174,6 +174,8 @@ SET (modules_files
         src/modules/system.cpp
         src/modules/timer.cpp
         src/modules/vvm.cpp
+        src/modules/tts2.cpp
+        src/modules/default2.cpp
         src/umi/soundSettings/soundSettings.cpp
         src/modules/voicecommand.cpp
         src/umi/umiDispatcher.cpp

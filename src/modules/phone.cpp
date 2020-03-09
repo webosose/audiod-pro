@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -218,6 +218,8 @@ PhoneScenarioModule::PhoneScenarioModule() :
     s->configureRoute (eDTMF,             eMainSink,     true,      true);
     s->configureRoute (etts,              eMainSink,     true,      true);
     s->configureRoute (etts,              eMainSink,     false,     true);
+    s->configureRoute (etts1,              eMainSink,     true,      true);
+    s->configureRoute (etts1,              eMainSink,     false,     true);
     s->configureRoute (efeedback,          eMainSink,     true,     true);
     s->configureRoute (ealarm,             eMainSink,     true,     true);
     s->configureRoute (ealarm,             eMainSink,     false,    true);
