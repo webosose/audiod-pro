@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-* Copyright (c) 2019-2020 LG Electronics Company.
+* Copyright (c) 2020 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ Default2ScenarioModule::programDefault2Volumes(bool ramp)
     if (activeStreams.contain(edefault2) && activeStreams.contain(etts2))
         volume = DUCK_VOLUME;
     else if (activeStreams.contain(edefault2))
-        volume = DEFAULT_VOLUME;
+        volume = default2Volume;
     g_debug("Default2ScenarioModule::programDefault2Volumes: sink volume: %d", volume);
     programVolume(edefault2, volume, ramp);
 }

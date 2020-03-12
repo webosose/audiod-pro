@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -376,13 +376,6 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
 
 bool PulseAudioMixer::programVolume (EVirtualSink sink, int volume, bool ramp)
 {
-    if (volume && !isNeverMutedSink(sink) &&
-        mPulseStateActiveStreamCount[sink] <= 0)
-    {    // don't set the volume up if
-        // there is no stream playing for high latency sinks
-        volume = 0;
-    }
-
     return programSource ( (ramp ? 'r' : 'v'), sink, volume);
 }
 

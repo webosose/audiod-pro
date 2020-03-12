@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,14 +28,19 @@
 #include "ringtone.h"
 #include "VolumeControlChangesMonitor.h"
 #include "AudioDevice.h"
+#include "PulseAudioMixer.h"
 #include "main.h"
 #include "genericScenarioModule.h"
+#include "default2.h"
 
 #define SUBSCRIPTION_KEY "lockVolumeKeysSubscription"
 
 #define VOLUME_GAIN(x) ((x) ? "volume" : "mic_gain")
 
 #define ZERO_IF_EMPTY(x) (x.empty() ? 0 : x.c_str())
+
+#define DISPLAY_ONE 0
+#define DISPLAY_TWO 1
 
 static bool
 _setVolumeOrMicGain(LSHandle *lshandle,
@@ -46,9 +51,12 @@ _setVolumeOrMicGain(LSHandle *lshandle,
     if (!VERIFY(ctx != 0 && message != 0))
         return true;
 
+    int display = 0;
+
     const char * schema = volumeNotMicGain ?
-                          SCHEMA_2(REQUIRED(volume, integer),
-                                              OPTIONAL(scenario, string)) :
+                          SCHEMA_3(REQUIRED(volume, integer),
+                                              OPTIONAL(scenario, string),
+                                              OPTIONAL(sessionId, integer)) :
                           SCHEMA_2(REQUIRED(mic_gain, integer),
                                                OPTIONAL(scenario, string));
 
@@ -62,7 +70,7 @@ _setVolumeOrMicGain(LSHandle *lshandle,
     const char * reply = STANDARD_JSON_SUCCESS;
     const char * parameter = VOLUME_GAIN(volumeNotMicGain);
     std::string scenario;
-    int    volume = -1;
+    int volume = -1;
     ScenarioModule * module = (ScenarioModule*) ctx;
 
     if (!msg.get(parameter, volume))
@@ -85,13 +93,22 @@ _setVolumeOrMicGain(LSHandle *lshandle,
     // scenario is optional. If not present,
     // we will pass 0 to mean "current scenario"
     if (!msg.get("scenario", scenario))
-        scenario.clear();
+         scenario.clear();
 
-    if (!module->setScenarioVolumeOrMicGain(ZERO_IF_EMPTY(scenario),
-                                                     volume, volumeNotMicGain))
+    msg.get("sessionId", display);
+    if (DISPLAY_TWO == display)
     {
-        reply = STANDARD_JSON_ERROR(3, "failed to set parameter (invalid scenario name?)");
-        goto error;
+        Default2ScenarioModule * s = getDefault2Module();
+        s->setVolume(volume);
+    }
+    else
+    {
+        if (!module->setScenarioVolumeOrMicGain(ZERO_IF_EMPTY(scenario),
+                                                     volume, volumeNotMicGain))
+        {
+            reply = STANDARD_JSON_ERROR(3, "failed to set parameter (invalid scenario name?)");
+            goto error;
+        }
     }
 
 error:
