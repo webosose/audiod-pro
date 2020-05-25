@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -242,6 +242,11 @@ public:
     /// For faster first play, on-demand sounds can be pre-loaded
     virtual void            preloadSystemSound(const char * snd) = 0;
 
+    /// mute/unmute the Physical sink
+    virtual bool            setMute(int sink, int mutestatus) = 0;
+
+    /// set volume on a particular diaplyID
+    virtual bool            setVolume(int display, int volume) = 0;
 
     virtual void            playDtmf(const char *snd, EVirtualSink sink) = 0;
 

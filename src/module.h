@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@
 #define AUDIOD_ERRORCODE_FAILED_MIXER_CALL 17
 #define AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE 18
 #define AUDIOD_ERRORCODE_INVALID_AUDIO_TYPE 19
+#define AUDIOD_ERRORCODE_INVALID_SOUNDOUT 204
 
 typedef const char *TModuleMethod;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,66 +21,138 @@
 #include "module.h"
 #include "volumeSettings.h"
 
+#define DISPLAY_ONE 0
+#define DISPLAY_TWO 1
+#define MIN_VOLUME 0
+#define MAX_VOLUME 100
+#define DEFAULT_ONE_DISPLAY_ID 1
+#define DEFAULT_TWO_DISPLAY_ID 2
+
 bool volumeSettings::_setVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     g_debug("MasterVolume: setVolume");
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(soundOutput, string), PROP(volume, integer)) REQUIRED_2(soundOutput, volume)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(soundOutput, string), PROP(volume, integer), PROP(sessionId, integer)) REQUIRED_2(soundOutput, volume)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return true;
+
     bool status = false;
     std::string soundOutput;
-    int volume = 0;
+    int display = DISPLAY_ONE;
+    bool isValidVolume = false;
+    int displayId = DISPLAY_ONE;
+    int volume = MIN_VOLUME;
     std::string reply = STANDARD_JSON_SUCCESS;
+
     msg.get("soundOutput", soundOutput);
     msg.get("volume", volume);
+    msg.get("sessionId", display);
 
-    g_debug("SetMasterVolume with soundout: %s volume: %d", soundOutput.c_str(), volume);
-    envelopeRef *envelope = new (std::nothrow)envelopeRef;
-    if(nullptr != envelope)
+    if ((volume >= MIN_VOLUME) && (volume <= MAX_VOLUME))
+        isValidVolume = true;
+
+    if (DISPLAY_TWO == display)
+        displayId = DEFAULT_TWO_DISPLAY_ID;
+    else
+        displayId = DEFAULT_ONE_DISPLAY_ID;
+
+    g_debug("SetMasterVolume with soundout: %s volume: %d display: %d", soundOutput.c_str(), volume, displayId);
+    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    if (DISPLAY_TWO == display)
     {
-        envelope->message = message;
-        envelope->context = (volumeSettings*)ctx;
-        volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-        if (nullptr != volumeSettingsObj->mixerObj)
+        if (soundOutput != "alsa")
         {
-            if(volumeSettingsObj->mixerObj->setMasterVolume(soundOutput, volume, _setVolumeCallBack, envelope))
+            g_debug("Not a valid soundOutput");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
+        }
+        else if ((volumeInstance) && (isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        {
+            g_debug("set volume %d for display: %d", volume, displayId);
+            volumeInstance->displayTwoVolume = volume;
+            std::string callerId = LSMessageGetSenderServiceName(message);
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+            pbnjson::JValue setVolumeResponse = pbnjson::Object();
+            setVolumeResponse.put("returnValue", true);
+            setVolumeResponse.put("volume", volume);
+            setVolumeResponse.put("soundOutput", soundOutput);
+            reply = setVolumeResponse.stringify();
+        }
+        else
+        {
+            g_debug("Did not able to set volume %d for display: %d", volume, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
+        }
+
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
+    else
+    {
+        if ((volumeInstance) && (isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        {
+            g_debug("set volume %d for display: %d", volume, displayId);
+            volumeInstance->displayOneVolume = volume;
+            std::string callerId = LSMessageGetSenderServiceName(message);
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+            status = true;
+        }
+        else
+        {
+            g_debug("Did not able to set volume %d for display: %d", volume, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+                lserror.Print(__FUNCTION__, __LINE__);
+        }
+        envelopeRef *envelope = new (std::nothrow)envelopeRef;
+        if (nullptr != envelope)
+        {
+            envelope->message = message;
+            envelope->context = (volumeSettings*)ctx;
+            volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
+
+            if ((nullptr != volumeSettingsObj->mixerObj) && (isValidVolume))
             {
-                g_debug("MasterVolume: SetMasterVolume umimixer call successfull");
-                LSMessageRef(message);
-                status = true;
+                if(volumeSettingsObj->mixerObj->setMasterVolume(soundOutput, volume, _setVolumeCallBack, envelope))
+                {
+                    g_debug("MasterVolume: SetMasterVolume umimixer call successfull");
+                    LSMessageRef(message);
+                    status = true;
+                }
+                else
+                {
+                    g_debug("MasterVolume: SetMasterVolume umimixer call failed");
+                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+                }
             }
             else
             {
-                g_debug("MasterVolume: SetMasterVolume umimixer call failed");
-                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+                g_debug("MasterVolume: gumiaudiomixer is NULL");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
             }
         }
         else
         {
-            g_debug("MasterVolume: gumiaudiomixer is NULL");
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+            g_debug("MasterVolume: SetMasterVolume envelope is NULL");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
         }
-    }
-    else
-    {
-        g_debug("MasterVolume: SetMasterVolume envelope is NULL");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
-    }
-    if (false == status)
-    {
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        if (false == status)
         {
-            lserror.Print(__FUNCTION__, __LINE__);
-        }
-        if (nullptr != envelope)
-        {
-            delete envelope;
-            envelope = nullptr;
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+            }
+            if (nullptr != envelope)
+            {
+                delete envelope;
+                envelope = nullptr;
+            }
         }
     }
     return true;
 }
+
 bool volumeSettings::_setVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx)
 {
     g_debug("MasterVolume: setVolumeCallBack");
@@ -150,59 +222,106 @@ bool volumeSettings::_setVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ct
     return true;
 }
 
+std::string volumeSettings::getVolumeInfo(const int &displayId, const std::string &callerId)
+{
+    pbnjson::JValue soundOutInfo = pbnjson::Object();
+    pbnjson::JValue volumeStatus = pbnjson::Object();
+    int volume = MIN_VOLUME;
+    bool muteStatus = false;
+    int display = DISPLAY_ONE;
+    if (DEFAULT_ONE_DISPLAY_ID == displayId)
+    {
+        volume = displayOneVolume;
+        muteStatus = displayOneMuteStatus;
+        display = DISPLAY_ONE;
+    }
+    else
+    {
+        volume = displayTwoVolume;
+        muteStatus = displayTwoMuteStatus;
+        display = DISPLAY_TWO;
+    }
+
+    volumeStatus = {{"muted", muteStatus},
+                    {"volume", volume},
+                    {"soundOutput", "alsa"},
+                    {"sessionId", display}};
+
+    soundOutInfo.put("volumeStatus", volumeStatus);
+    soundOutInfo.put("returnValue", true);
+    soundOutInfo.put("callerId", callerId);
+
+    return soundOutInfo.stringify();
+}
+
+void volumeSettings::notifyVolumeSubscriber(const int &displayId, const std::string &callerId)
+{
+    CLSError lserror;
+    std::string reply = getVolumeInfo(displayId, callerId);
+    g_debug("[%s] reply message to subscriber: %s", __FUNCTION__, reply.c_str());
+    if (!LSSubscriptionReply(GetPalmService(), AUDIOD_API_GET_VOLUME, reply.c_str(), &lserror))
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+        g_debug("Notify error");
+    }
+}
+
 bool volumeSettings::_getVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     g_debug("MasterVolume: getVolume");
-    LSMessageJsonParser msg(message, SCHEMA_0);
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(subscribe, boolean), PROP(sessionId, integer))));
     if (!msg.parse(__FUNCTION__,lshandle))
         return true;
-    bool status = false;
+
+    int display = DISPLAY_ONE;
+    bool subscribed = false;
+    CLSError lserror;
     std::string reply = STANDARD_JSON_SUCCESS;
 
+    msg.get("subscribe", subscribed);
+    msg.get("sessionId", display);
+
+    if (LSMessageIsSubscription (message))
+    {
+        if (!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
+        {
+            lserror.Print(__FUNCTION__, __LINE__);
+            g_debug("LSSubscriptionProcess failed");
+            return true;
+        }
+    }
+
     envelopeRef *envelope = new (std::nothrow)envelopeRef;
-    if(nullptr != envelope)
+    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    if (nullptr != envelope)
     {
         envelope->message = message;
         envelope->context = (volumeSettings*)ctx;
         volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-        if (nullptr != volumeSettingsObj->mixerObj)
+        if (nullptr != volumeSettingsObj)
         {
-            if(volumeSettingsObj->mixerObj->getMasterVolume(_getVolumeCallBack, envelope))
-            {
-                g_debug("MasterVolume: getMasterVolume umimixer call successfull");
-                LSMessageRef(message);
-                status = true;
-            }
-            else
-            {
-                g_debug("MasterVolume: getMasterVolume umimixer call failed");
-                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
-            }
+            int displayId = DEFAULT_ONE_DISPLAY_ID;
+            std::string callerId = LSMessageGetSenderServiceName(message);
+            if (DISPLAY_TWO == display)
+                displayId = DEFAULT_TWO_DISPLAY_ID;
+
+            reply = volumeInstance->getVolumeInfo(displayId, callerId);
         }
         else
         {
-            g_debug("MasterVolume: gumiaudiomixer is NULL");
+            g_debug("MasterVolume: volumeSettingsObj is NULL");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
         }
     }
     else
     {
-        g_debug("MasterVolume: SetMasterVolume envelope is NULL");
+        g_debug("MasterVolume: getVolume envelope is NULL");
         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
     }
-    if (false == status)
-    {
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-        {
-            lserror.Print(__FUNCTION__, __LINE__);
-        }
-        if (nullptr != envelope)
-        {
-            delete envelope;
-            envelope = nullptr;
-        }
-    }
+
+    g_debug("%s : Reply:%s", reply.c_str(), __FUNCTION__);
+    if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        lserror.Print(__FUNCTION__, __LINE__);
     return true;
 }
 bool volumeSettings::_getVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx)
@@ -284,60 +403,107 @@ bool volumeSettings::_getVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ct
 bool volumeSettings::_muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     g_debug("MasterVolume: muteVolume");
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(soundOutput, string), PROP(mute, boolean)) REQUIRED_2(soundOutput, mute)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(soundOutput, string), PROP(mute, boolean), PROP(sessionId, integer)) REQUIRED_2(soundOutput, mute)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return true;
     std::string soundOutput;
     bool mute = false;
     bool status = false;
+    int displayId = DISPLAY_ONE;
+    int display;
     std::string reply = STANDARD_JSON_SUCCESS;
 
     msg.get("soundOutput", soundOutput);
     msg.get("mute", mute);
+    msg.get("sessionId", display);
+
+    if (DISPLAY_ONE == display)
+        displayId = 1;
+    else if (DISPLAY_TWO == display)
+        displayId = 2;
+    else
+        displayId = 3;
 
     g_debug("muteVolume with soundout: %s mute status: %d",soundOutput.c_str(),(int)mute);
     envelopeRef *envelope = new (std::nothrow)envelopeRef;
-    if(nullptr != envelope)
+    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    std::string callerId = LSMessageGetSenderServiceName(message);
+    if (DISPLAY_TWO == display)
     {
-        envelope->message = message;
-        envelope->context = (volumeSettings*)ctx;
-        volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-        if (nullptr != volumeSettingsObj->mixerObj)
+        if (gAudioMixer.setMute(displayId, mute))
         {
-            if(volumeSettingsObj->mixerObj->masterVolumeMute(soundOutput, mute, _muteVolumeCallBack, envelope))
+            volumeInstance->displayTwoMuteStatus = mute;
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+            pbnjson::JValue muteVolumeResponse = pbnjson::Object();
+            muteVolumeResponse.put("returnValue", true);
+            muteVolumeResponse.put("muteStatus", mute);
+            muteVolumeResponse.put("soundOutput", soundOutput);
+            reply = muteVolumeResponse.stringify();
+        }
+        else
+        {
+            g_debug("Did not able to mute volume %d for display: %d", mute, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+        }
+
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
+    else
+    {
+        if (gAudioMixer.setMute(displayId, mute))
+        {
+            g_debug("Successfully set mute volume %d for display: %d", mute, displayId);
+            volumeInstance->displayOneMuteStatus = mute;
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+        }
+        else
+        {
+            g_debug("Did not able to mute volume %d for display: %d", mute, displayId);
+        }
+        if(nullptr != envelope)
+        {
+            envelope->message = message;
+            envelope->context = (volumeSettings*)ctx;
+            volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
+            if (nullptr != volumeSettingsObj->mixerObj)
             {
-                g_debug("MasterVolume: masterVolumeMute umimixer call successfull");
-                LSMessageRef(message);
-                status = true;
+                if(volumeSettingsObj->mixerObj->masterVolumeMute(soundOutput, mute, _muteVolumeCallBack, envelope))
+                {
+                    g_debug("MasterVolume: masterVolumeMute umimixer call successfull");
+                    LSMessageRef(message);
+                    status = true;
+                }
+                else
+                {
+                    g_debug("MasterVolume: masterVolumeMute umimixer call failed");
+                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+                }
             }
             else
             {
-                g_debug("MasterVolume: masterVolumeMute umimixer call failed");
-                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+                g_debug("MasterVolume: gumiaudiomixer is NULL");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
             }
         }
         else
         {
-            g_debug("MasterVolume: gumiaudiomixer is NULL");
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+            g_debug("MasterVolume: muteVolume envelope is NULL");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
         }
-    }
-    else
-    {
-        g_debug("MasterVolume: SetMasterVolume envelope is NULL");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
-    }
-    if (false == status)
-    {
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        if (false == status)
         {
-            lserror.Print(__FUNCTION__, __LINE__);
-        }
-        if (nullptr != envelope)
-        {
-            delete envelope;
-            envelope = nullptr;
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+            }
+            if (nullptr != envelope)
+            {
+                delete envelope;
+                envelope = nullptr;
+            }
         }
     }
     return true;
@@ -415,58 +581,121 @@ bool volumeSettings::_muteVolumeCallBack(LSHandle *sh, LSMessage *reply, void *c
 bool volumeSettings::_volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     g_debug("MasterVolume: volumeUp");
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(soundOutput, string)) REQUIRED_1(soundOutput)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(soundOutput, string), PROP(sessionId, integer)) REQUIRED_1(soundOutput)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return true;
     std::string soundOutput;
     bool status = false;
+    int display = DISPLAY_ONE;
+    bool isValidVolume = false;
+    int volume = MIN_VOLUME;
+    int displayId = DISPLAY_ONE;
     std::string reply = STANDARD_JSON_SUCCESS;
 
     msg.get("soundOutput", soundOutput);
+    msg.get("sessionId", display);
+
+    if (DISPLAY_TWO == display)
+        displayId = 2;
+    else
+        displayId = 1;
 
     g_debug("MasterVolume: volumeUp with soundout: %s", soundOutput.c_str());
-    envelopeRef *envelope = new (std::nothrow)envelopeRef;
-    if(nullptr != envelope)
+    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    std::string callerId = LSMessageGetSenderServiceName(message);
+    if (DISPLAY_TWO == display)
     {
-        envelope->message = message;
-        envelope->context = (volumeSettings*)ctx;
-        volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-        if (nullptr != volumeSettingsObj->mixerObj)
+        if ((volumeInstance->displayTwoVolume+1) <= MAX_VOLUME)
         {
-            if(volumeSettingsObj->mixerObj->masterVolumeUp(soundOutput, _volumeUpCallBack, envelope))
+            isValidVolume = true;
+            volume = volumeInstance->displayTwoVolume+1;
+        }
+        else
+            g_debug("Volume up value not in range");
+        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        {
+            g_debug("set volume %d for display: %d", volume, displayId);
+            ++(volumeInstance->displayTwoVolume);
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+            pbnjson::JValue setVolumeResponse = pbnjson::Object();
+            setVolumeResponse.put("returnValue", true);
+            setVolumeResponse.put("volume", volume);
+            setVolumeResponse.put("soundOutput", soundOutput);
+            reply = setVolumeResponse.stringify();
+        }
+        else
+        {
+            g_debug("Did not able to set volume %d for display: %d", volume, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
+        }
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
+    else
+    {
+        if ((volumeInstance->displayOneVolume+1) <= MAX_VOLUME)
+        {
+            isValidVolume = true;
+            volume = volumeInstance->displayOneVolume+1;
+        }
+        else
+        {
+            g_debug("Volume up value not in range");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+                lserror.Print(__FUNCTION__, __LINE__);
+        }
+        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        {
+            g_debug("set volume %d for display: %d", volume, displayId);
+            ++(volumeInstance->displayOneVolume);
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+        }
+        envelopeRef *envelope = new (std::nothrow)envelopeRef;
+        if(nullptr != envelope)
+        {
+            envelope->message = message;
+            envelope->context = (volumeSettings*)ctx;
+            volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
+            if ((nullptr != volumeSettingsObj->mixerObj) && (isValidVolume))
             {
-                g_debug("MasterVolume: masterVolumeUp umimixer call successfull");
-                LSMessageRef(message);
-                status = true;
+                if(volumeSettingsObj->mixerObj->masterVolumeUp(soundOutput, _volumeUpCallBack, envelope))
+                {
+                    g_debug("MasterVolume: masterVolumeUp umimixer call successfull");
+                    LSMessageRef(message);
+                    status = true;
+                }
+                else
+                {
+                    g_debug("MasterVolume: masterVolumeUp umimixer call failed");
+                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+                }
             }
             else
             {
-                g_debug("MasterVolume: masterVolumeUp umimixer call failed");
-                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+                g_debug("MasterVolume: gumiaudiomixer is NULL");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_PARAMETER_BE_EMPTY, "Internal error");
             }
         }
         else
         {
-            g_debug("MasterVolume: gumiaudiomixer is NULL");
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_PARAMETER_BE_EMPTY, "Internal error");
+            g_debug("MasterVolume: masterVolumeUp envelope is NULL");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
         }
-    }
-    else
-    {
-        g_debug("MasterVolume: SetMasterVolume envelope is NULL");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
-    }
-    if (false == status)
-    {
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        if (false == status)
         {
-            lserror.Print(__FUNCTION__, __LINE__);
-        }
-        if (nullptr != envelope)
-        {
-            delete envelope;
-            envelope = nullptr;
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+            }
+            if (nullptr != envelope)
+            {
+                delete envelope;
+                envelope = nullptr;
+            }
         }
     }
     return true;
@@ -544,58 +773,121 @@ bool volumeSettings::_volumeUpCallBack(LSHandle *sh, LSMessage *reply, void *ctx
 bool volumeSettings::_volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     g_debug("MasterVolume: volumeDown");
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(soundOutput, string)) REQUIRED_1(soundOutput)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(soundOutput, string), PROP(sessionId, integer)) REQUIRED_1(soundOutput)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return true;
     std::string soundOutput;
     bool status = false;
+    int displayId = DISPLAY_ONE;
+    bool isValidVolume = false;
+    int volume = MIN_VOLUME;
+    int display = DISPLAY_ONE;
     std::string reply = STANDARD_JSON_SUCCESS;
 
     msg.get("soundOutput", soundOutput);
+    msg.get("sessionId", display);
+
+    if (DISPLAY_TWO == display)
+        displayId = 2;
+    else
+        displayId = 1;
 
     g_debug("MasterVolume: volumeDown with soundout: %s", soundOutput.c_str());
-    envelopeRef *envelope = new (std::nothrow)envelopeRef;
-    if(nullptr != envelope)
+    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    std::string callerId = LSMessageGetSenderServiceName(message);
+    if (DISPLAY_TWO == display)
     {
-        envelope->message = message;
-        envelope->context = (volumeSettings*)ctx;
-        volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-        if (nullptr != volumeSettingsObj->mixerObj)
+        if ((volumeInstance->displayTwoVolume-1) >= MIN_VOLUME)
         {
-            if(volumeSettingsObj->mixerObj->masterVolumeDown(soundOutput, _volumeDownCallBack, envelope))
+            isValidVolume = true;
+            volume = volumeInstance->displayTwoVolume-1;
+        }
+        else
+            g_debug("Volume down value not in range");
+        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        {
+            g_debug("set volume %d for display: %d", volume, displayId);
+            --(volumeInstance->displayTwoVolume);
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+            pbnjson::JValue setVolumeResponse = pbnjson::Object();
+            setVolumeResponse.put("returnValue", true);
+            setVolumeResponse.put("volume", volume);
+            setVolumeResponse.put("soundOutput", soundOutput);
+            reply = setVolumeResponse.stringify();
+        }
+        else
+        {
+            g_debug("Did not able to set volume %d for display: %d", volume, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
+        }
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
+    else
+    {
+        if ((volumeInstance->displayOneVolume-1) >= MIN_VOLUME)
+        {
+            isValidVolume = true;
+            volume = volumeInstance->displayOneVolume-1;
+        }
+        else
+        {
+            g_debug("Volume down value not in range");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+                lserror.Print(__FUNCTION__, __LINE__);
+        }
+        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        {
+            g_debug("set volume %d for display: %d", volume, displayId);
+            --(volumeInstance->displayOneVolume);
+            volumeInstance->notifyVolumeSubscriber(displayId, callerId);
+        }
+        envelopeRef *envelope = new (std::nothrow)envelopeRef;
+        if(nullptr != envelope)
+        {
+            envelope->message = message;
+            envelope->context = (volumeSettings*)ctx;
+            volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
+            if ((nullptr != volumeSettingsObj->mixerObj) && (isValidVolume))
             {
-                g_debug("MasterVolume: masterVolumeDown umimixer call successfull");
-                LSMessageRef(message);
-                status = true;
+                if(volumeSettingsObj->mixerObj->masterVolumeDown(soundOutput, _volumeDownCallBack, envelope))
+                {
+                    g_debug("MasterVolume: masterVolumeDown umimixer call successfull");
+                    LSMessageRef(message);
+                    status = true;
+                }
+                else
+                {
+                    g_debug("MasterVolume: masterVolumeDown umimixer call failed");
+                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+                }
             }
             else
             {
-                g_debug("MasterVolume: masterVolumeDown umimixer call failed");
-                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+                g_debug("MasterVolume: gumiaudiomixer is NULL");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
             }
         }
         else
         {
-            g_debug("MasterVolume: gumiaudiomixer is NULL");
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+            g_debug("MasterVolume: masterVolumeDown envelope is NULL");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
         }
-    }
-    else
-    {
-        g_debug("MasterVolume: SetMasterVolume envelope is NULL");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
-    }
-    if (false == status)
-    {
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        if (false == status)
         {
-            lserror.Print(__FUNCTION__, __LINE__);
-        }
-        if (nullptr != envelope)
-        {
-            delete envelope;
-            envelope = nullptr;
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+            }
+            if (nullptr != envelope)
+            {
+                delete envelope;
+                envelope = nullptr;
+            }
         }
     }
     return true;
@@ -697,7 +989,7 @@ static LSMethod MasterVolumeMethods[] =
     {cModuleMethod_muteVolume, volumeSettings::_muteVolume},
     { },
 };
-volumeSettings::volumeSettings(): mixerObj(umiaudiomixer::getUmiMixerInstance()), mVolume(0), mMuteStatus(false)
+volumeSettings::volumeSettings(): mixerObj(umiaudiomixer::getUmiMixerInstance()), mVolume(0), mMuteStatus(false), displayOneVolume(100), displayTwoVolume(100)
 {
     g_debug("volumeSettings: constructor");
 }
