@@ -29,11 +29,15 @@
 #include "main.h"
 #include "media.h"
 #include "phone.h"
+#include "volumeSettings.h"
 #include <audiodTracer.h>
+
 #define SHORT_DTMF_LENGTH  200
 #define phone_MaxVolume 70
 #define phone_MinVolume 0
 #define FILENAME "/dev/snd/pcmC"
+#define DISPLAY_ONE 1
+#define DISPLAY_TWO 2
 
 #define _NAME_STRUCT_OFFSET(struct_type, member) \
                        ((long) ((unsigned char*) &((struct_type*) 0)->member))
@@ -520,6 +524,18 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
        g_warning("msg send for BT load(%d)", bytes);
        ret = true;
     }
+
+    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    if (nullptr != volumeInstance)
+    {
+        volumeInstance->setMuteStatus(DISPLAY_ONE);
+        volumeInstance->setVolume(DISPLAY_ONE);
+        volumeInstance->setMuteStatus(DISPLAY_TWO);
+        volumeInstance->setVolume(DISPLAY_TWO);
+    }
+    else
+        g_message ("volumeInstance is NULL");
+
     return ret;
 }
 
@@ -649,6 +665,17 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
        g_message("msg sent from loadUSBSinkSource from audiod", bytes);
        ret = true;
     }
+
+    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    if (nullptr != volumeInstance)
+    {
+        volumeInstance->setMuteStatus(DISPLAY_ONE);
+        volumeInstance->setVolume(DISPLAY_ONE);
+        volumeInstance->setMuteStatus(DISPLAY_TWO);
+        volumeInstance->setVolume(DISPLAY_TWO);
+    }
+    else
+        g_message ("volumeInstance is NULL");
 
     return ret;
 }

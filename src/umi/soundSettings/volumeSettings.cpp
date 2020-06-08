@@ -266,6 +266,39 @@ void volumeSettings::notifyVolumeSubscriber(const int &displayId, const std::str
     }
 }
 
+void volumeSettings::setMuteStatus(const int &displayId)
+{
+    if (DEFAULT_ONE_DISPLAY_ID == displayId)
+    {
+        gAudioMixer.setMute(displayId, displayOneMuteStatus);
+        g_debug("set mute status %d for display: %d", displayOneMuteStatus, displayId);
+    }
+    else if (DEFAULT_TWO_DISPLAY_ID == displayId)
+    {
+        gAudioMixer.setMute(displayId, displayTwoMuteStatus);
+        g_debug("set mute status %d for display: %d", displayTwoMuteStatus, displayId);
+    }
+    else
+    {
+        gAudioMixer.setMute(displayId, displayOneMuteStatus);
+        gAudioMixer.setMute(displayId, displayTwoMuteStatus);
+        g_debug("set mute status is %d for display one and mute status is %d for display two", displayOneMuteStatus, displayTwoMuteStatus);
+    }
+}
+
+void volumeSettings::setVolume(const int &displayId)
+{
+    int volume = 0;
+    if (DEFAULT_ONE_DISPLAY_ID == displayId)
+        volume = displayOneVolume;
+    else if (DEFAULT_TWO_DISPLAY_ID == displayId)
+        volume = displayTwoVolume;
+    if (gAudioMixer.setVolume(displayId, volume))
+        g_debug("set volume %d for display: %d", volume, displayId);
+    else
+        g_debug("Did not able to set volume %d for display: %d", volume, displayId);
+}
+
 bool volumeSettings::_getVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     g_debug("MasterVolume: getVolume");
@@ -455,7 +488,13 @@ bool volumeSettings::_muteVolume(LSHandle *lshandle, LSMessage *message, void *c
         if (gAudioMixer.setMute(displayId, mute))
         {
             g_debug("Successfully set mute volume %d for display: %d", mute, displayId);
-            volumeInstance->displayOneMuteStatus = mute;
+            if (DEFAULT_ONE_DISPLAY_ID == displayId)
+                volumeInstance->displayOneMuteStatus = mute;
+            else
+            {
+                volumeInstance->displayOneMuteStatus = mute;
+                volumeInstance->displayTwoMuteStatus = mute;
+            }
             volumeInstance->notifyVolumeSubscriber(displayId, callerId);
         }
         else

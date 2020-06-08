@@ -62,6 +62,9 @@ class volumeSettings
       /*get volume info based on display id*/
       std::string getVolumeInfo(const int &displayId, const std::string &callerId);
 
+      void setVolume(const int &displayId);
+      void setMuteStatus(const int &displayId);
+
       /*volume settings luna calls start*/
       static bool _setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
       static bool _getVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
