@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@
 #include <cstring>
 #include <glib.h>
 #include "umiaudiomixer.h"
+#define AUDIOD_API_GET_VOLUME "/master/getVolume"
+
 class volumeSettings
 {
     private :
@@ -29,6 +31,14 @@ class volumeSettings
       umiaudiomixer *mixerObj;
 
       int mVolume;
+
+      int displayOneVolume;
+
+      int displayTwoVolume;
+
+      int displayOneMuteStatus;
+
+      int displayTwoMuteStatus;
 
       bool mMuteStatus;
 
@@ -45,6 +55,12 @@ class volumeSettings
 
       /*master volume mute status store*/
       void setCurrentMuteStatus(bool bMuteStatus);
+
+      /*Notify volume info to all subscriber*/
+      void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
+
+      /*get volume info based on display id*/
+      std::string getVolumeInfo(const int &displayId, const std::string &callerId);
 
       /*volume settings luna calls start*/
       static bool _setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);

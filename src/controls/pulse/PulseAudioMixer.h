@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,6 +102,11 @@ public:
     /// Pre-load system sound in Pulse, if necessary
     void                preloadSystemSound(const char * snd)
                                           { mPulseLink.preload(snd); }
+    /// mute/unmute the Physical sink
+    bool                setMute(int sink, int mutestatus);
+
+    /// set volume on a particular display
+    bool                setVolume(int display, int volume);
 
     void                playOneshotDtmf(const char *snd, EVirtualSink sink) ;
 

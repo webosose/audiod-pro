@@ -259,7 +259,19 @@ PulseAudioMixer::programBalance(int balance)
 
    return programSource ('B', eVirtualSink_All, balance);
 
- }
+}
+
+bool
+PulseAudioMixer::setVolume(int display, int volume)
+{
+    return programSource ('n', display, volume);
+}
+
+bool
+PulseAudioMixer::setMute(int sink, int mutestatus)
+{
+    return programSource ('k', sink, mutestatus);
+}
 
 bool
 PulseAudioMixer::programSource (char cmd, int sink, int value)
@@ -351,6 +363,10 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
         {
             sprintf(buffer, "%c %i %i %i", cmd, mPulseStateVolume[sink], headset, value);
             sinkName = virtualSinkName((EVirtualSink)sink);
+        }
+        else if ((cmd == 'n') || (cmd == 'k'))
+        {
+            sprintf(buffer, "%c %i %i", cmd, sink, value);
         }
         else
         {
@@ -633,13 +649,9 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
        g_message("msg sent from loadUSBSinkSource from audiod", bytes);
        ret = true;
     }
+
     return ret;
 }
-
-
-
-
-
 
 bool PulseAudioMixer::programLoadRTP(const char *type, const char *ip, int port)
 {
