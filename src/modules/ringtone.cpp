@@ -34,7 +34,6 @@
 #include "log.h"
 #include "main.h"
 #include "AudiodCallbacks.h"
-#include "vibrate.h"
 #include "IPC_SharedAudiodProperties.h"
 
 #define DO_DEBUG_VIBRATE 0
@@ -69,7 +68,8 @@ void
 RingtoneScenarioModule::silenceRingtone()
 {
     programVolume(eringtones, 0, false);
-    cancelVibrate();
+    //will be removed if alarm module is removed as part of DAP
+    //cancelVibrate();
 }
 
 bool
@@ -79,7 +79,8 @@ RingtoneScenarioModule::setMuted (bool mute)
         !mMuted &&
         !gAudioMixer.getActiveStreams().contain(eringtones))
     {
-        cancelVibrate();
+        //will be removed if alarm module is removed as part of DAP
+        //cancelVibrate();
     }
     else
     {
@@ -91,8 +92,11 @@ RingtoneScenarioModule::setMuted (bool mute)
                 programMuted();        // module's muting is going
                                     //to be optimized out! we don't want that...
             else
-                cancelVibrate();    // we need to make sure we
+            {
+                //will be removed if alarm module is removed as part of DAP
+                //cancelVibrate();    // we need to make sure we
                                     //are canceling vibrations
+            }
         }
         else
             mRingtoneMuted = false; //for next call
@@ -135,7 +139,10 @@ void
 RingtoneScenarioModule::programMuted ()
 {
     if (mMuted)
-        cancelVibrate();
+    {
+        //will be removed if alarm module is removed as part of DAP
+        //cancelVibrate();
+    }
     programRingToneVolumes(false);
 
 }
@@ -341,11 +348,13 @@ RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, E
               if (!gState.getOnActiveCall() && checkRingtoneVibration() && eringtones == sink)
               {    // repeated vibration
                   //getVibrateDevice()->startVibrate(fakeVibrateIfCantVibrate);
-                  getVibrateDevice()->realVibrate("{\"name\":\"ringtone\"}");
+                  //will be removed if alarm module is removed as part of DAP
+                  //getVibrateDevice()->realVibrate("{\"name\":\"ringtone\"}");
                   if (gState.getHeadsetState() != eHeadsetState_None &&
                                                   fakeVibrateIfCantVibrate)
                   {
-                      getVibrateDevice()->startFakeBuzz();
+                      //will be removed if alarm module is removed as part of DAP
+                      //getVibrateDevice()->startFakeBuzz();
                       fakeVibrateIfCantVibrate = false;
                   }
                   if (gAudioDevice.needsSCOBeepAlert())
@@ -363,7 +372,8 @@ RingtoneScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, E
           {
               if (!activeStreams.contain(eringtones))
               {    // last alarm/ringtone: stop vibrating & unmute for the next time
-                  cancelVibrate();
+                  //will be removed if alarm module is removed as part of DAP
+                  //cancelVibrate();
                   setMuted(false); //not required - in case the ringtone is muted
               }
               programVolume(sink, 0);

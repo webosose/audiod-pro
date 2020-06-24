@@ -69,13 +69,13 @@ PhoneScenarioModule::programCallertoneVolume(bool ramp)
 void
 PhoneScenarioModule::onActivating ()
 {
-    gAudioDevice.phoneEvent(ePhoneEvent_CallStarted);
+    //gAudioDevice.phoneEvent(ePhoneEvent_CallStarted);
 }
 
 void
 PhoneScenarioModule::onDeactivated ()
 {
-    gAudioDevice.phoneEvent(ePhoneEvent_CallEnded);
+    //gAudioDevice.phoneEvent(ePhoneEvent_CallEnded);
     /* Explicitly unmuting source,
      need to fix source ouput muting in pulse later */
     gAudioMixer.programMute(evoipsource, false);

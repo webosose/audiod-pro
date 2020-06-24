@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 LG Electronics, Inc.
+// Copyright (c) 2016-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 #include "messageUtils.h"
 #include "state.h"
 #include "utils.h"
-#include "vibrate.h"
 
 #define GET_SYSTEM_SETTINGS "luna://com.webos.settingsservice/getSystemSettings"
 #define DND_PARAMS "{\"category\":\"DND\",\"subscribe\":true}"
@@ -49,7 +48,10 @@ bool __settingCallback(LSHandle *lshandle, LSMessage *message, void *ctx)
         g_debug("__settingCallback(): dndEnable field not found");
 
     if (object["amplitude"].asNumber(amplitude) == CONV_OK)
-        getVibrateDevice()->setVibrateAmplitude(amplitude);
+    {
+        //will be removed if alarm module is removed as part of DAP
+        //getVibrateDevice()->setVibrateAmplitude(amplitude);
+    }
     else
         g_debug("_settingCallback() amplitude field not found");
 

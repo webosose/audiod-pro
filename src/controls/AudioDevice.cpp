@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,33 @@
 #include "state.h"
 
 AudioDevice &gAudioDevice = AudioDevice::get();
+AudioDevice& AudioDevice::get()
+{
+    static AudioDevice sAudioDeviceObject;
+    return sAudioDeviceObject;
+}
+
+AudioDevice::AudioDevice() :
+    mHeadsetState(eHeadsetState_None),
+    mRouting(eRouting_base),
+    mMicGain(5),
+    mActiveOutput(false),
+    mRecording(false),
+    mHAC(false),
+    mSuspended(false),
+    mBeatsOnForHeadphones(true),
+    mBTSupportsEC(false),
+    mCarkit(false),
+    mIncomingCallRinging(false),
+    mAudioDeviceCallMode(eCallMode_None)
+    {
+        g_debug("AudioDevice Constructor");
+    }
+
+AudioDevice::~AudioDevice()
+{
+    g_debug("AudioDevice Destructor");
+}
 
 bool AudioDevice::setRouting(const ConstString & scenario,
                                    ERouting routing,
@@ -48,7 +75,7 @@ int AudioDevice::getDefaultMicGain(const ConstString & scenario)
     return 50;
 }
 
-bool AudioDevice::museSet (bool enable)
+bool AudioDevice::museSet(bool enable)
 {
     std::string param = string_printf("{\"enable\":%s}", (enable) ? "true" : "false");
 

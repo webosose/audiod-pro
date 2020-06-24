@@ -65,6 +65,10 @@ class volumeSettings
       void setVolume(const int &displayId);
       void setMuteStatus(const int &displayId);
 
+      //Internal API for Volume and Mute, will be implemented during dynamic audio policy handling redesign
+      bool _setVolume(int volume, bool notifySubscriber = true){return true;}
+      bool _muteVolume(bool mute){return true;}
+
       /*volume settings luna calls start*/
       static bool _setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
       static bool _getVolume(LSHandle *lshandle, LSMessage *message, void *ctx);

@@ -980,7 +980,7 @@ MediaScenarioModule::MediaScenarioModule() :
                                     eScenarioPriority_Media_BackSpeaker,
                                     mBackSpeakerVolume,
                                     mFrontMicGain);
-        s->setFilter(gAudioDevice.getBackSpeakerFilter());
+        //s->setFilter(gAudioDevice.getBackSpeakerFilter());
 
         //                 class               destination     switch     enabled
         s->configureRoute (ealerts,            eMainSink,     true,      true);

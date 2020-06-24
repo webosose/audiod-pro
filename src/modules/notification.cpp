@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@
 #include "AudioDevice.h"
 #include "log.h"
 #include "AudiodCallbacks.h"
-#include "vibrate.h"
 
 
 static NotificationScenarioModule * sNotificationModule = 0;
@@ -110,7 +109,8 @@ NotificationScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent even
                   else
                   {
                       //getVibrateDevice()->realVibrate(enotifications != sink);
-                      getVibrateDevice()->realVibrate("{\"name\":\"notification\"}");
+                      //will be removed if alarm module is removed as part of DAP
+                      //getVibrateDevice()->realVibrate("{\"name\":\"notification\"}");
                       shouldFakeVibrate = false; // if vibrated, we no need to fake vibrate anymore...
                   }
 

@@ -96,7 +96,6 @@ include_directories(src/umi)
 include_directories(src/umi/modules)
 include_directories(src/umi/soundSettings)
 include_directories(src/controls)
-include_directories(src/controls/hardware)
 include_directories(src/controls/pulse)
 include_directories(src/modules)
 include_directories(include/public/)
@@ -117,7 +116,6 @@ aux_source_directory(pmtrace pmtrace_files)
 #add_definitions(-DAUDIOD_PALM_LEGACY)
 #add_definitions(-DAUDIOD_TEST_API)
 #add_definitions(-DDTMF_SUPPORTED)
-#add_definitions(-DTONEGENERATOR_SUPPORTED)
 #add_definitions(-DVIBRATE_SUPPORTED)
 #add_definitions(-DPHONE_SUPPORTED)
 #add_definitions(-DTIMER_SUPPORTED)
@@ -134,10 +132,6 @@ endif(AUDIOD_TEST_API)
 if (DTMF_SUPPORTED)
     add_definitions(-DDTMF_SUPPORTED=0)
 endif(DTMF_SUPPORTED)
-
-if (TONEGENERATOR_SUPPORTED)
-    add_definitions(-DTONEGENERATOR_SUPPORTED=0)
-endif(TONEGENERATOR_SUPPORTED)
 
 if (VIBRATE_SUPPORTED)
     add_definitions(-DVIBRATE_SUPPORTED=0)
@@ -185,7 +179,8 @@ SET (modules_files
         src/umi/modules/mock.cpp
     )
 
-    LIST (APPEND controls_hardware_files src/controls/hardware/unknowndevice.cpp)
+    add_definitions(-DDEVICE_NAME="Unknown")
+    add_definitions(-DDEVICE_ENUM=eDevice_unknown)
     add_definitions(-DSYSTEMSOUNDS_PATH="/media/internal/systemsounds/")
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
 
@@ -197,7 +192,6 @@ add_executable(audiod     ${utils_1_files}
             ${controls_pulse_files}
             ${services_files}
             ${modules_files}
-            ${controls_hardware_files}
             ${pmtrace_files})
 
 target_link_libraries(audiod     ${GLIB2_LDFLAGS}
@@ -223,7 +217,6 @@ add_executable(audiod     ${utils_1_files}
             ${src_files}
             ${controls_files}
             ${controls_pulse_files}
-            ${controls_hardware_files}
             ${services_files}
             ${modules_files} )
 

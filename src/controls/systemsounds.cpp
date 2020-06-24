@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@
 #include "utils.h"
 #include "messageUtils.h"
 #include "log.h"
-#include "vibrate.h"
 #include "main.h"
 
 static bool
@@ -147,8 +146,10 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
                 }
 
                 if (vibrate)
+                {
                     //getVibrateDevice()->realVibrate("{\"period\":100,\"duration\":100,\"amplitude\":3}");
-                    getVibrateDevice()->realVibrate("{\"name\":\"feedback\"}");
+                    //getVibrateDevice()->realVibrate("{\"name\":\"feedback\"}");
+                }
             }
             else
                 g_warning("_playFeedback: unknown type '%s'", type.c_str());

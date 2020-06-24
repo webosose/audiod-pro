@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@
 #include "../include/IPC_SharedAudiodProperties.cpp"
 #include "AudiodCallbacks.h"
 #include "VolumeControlChangesMonitor.h"
-#include "vibrate.h"
 #include "scenario.h"
 #include "timer.h"
 #include "alert.h"
@@ -473,7 +472,8 @@ void State::setRingerOn (bool ringerOn)
             else
             {
                 //VibrateDevice::realVibrate (false);
-                getVibrateDevice()->realVibrate(false);
+                //will be removed if alarm module is removed as part of DAP
+                //getVibrateDevice()->realVibrate(false);
             }
         }
     }
@@ -648,7 +648,6 @@ void State::setCallMode (ECallMode mode, ECallStatus status)
                     gState.setPhoneStatus(ePhoneStatus_Incoming);
                 } else {
                     g_debug("call mode is voip and incoming call is carrier, so play busy tone");
-                    gAudioDevice.phoneEvent(ePhoneEvent_IncomingCallTone, 0);
                 }
             } else if (status == eCallStatus_Active) {
                 g_debug("active voip call");
@@ -1115,7 +1114,10 @@ void State::setOnThePuck (bool state)
     // in case we are vibrating and we just got put on the cradle,
     // stop vibrating
     if (mOnThePuck)
-       cancelVibrate ();
+    {
+        //will be removed if alarm module is removed as part of DAP
+        //cancelVibrate();
+    }
 }
 
 void State::setPhoneLocked (bool state)
@@ -1278,8 +1280,9 @@ ControlInterfaceInit(GMainLoop *loop, LSHandle *handle)
     if (ScenarioModule * module = dynamic_cast <ScenarioModule*> (GenericScenarioModule::getCurrent()))
         module->programHardwareState ();
 
-    return 0;    }
-    
+    return 0;
+}
+
 static void
 cancelSubscriptionCallback(LSMessage * message, LSMessageJsonParser & msgParser)
 {

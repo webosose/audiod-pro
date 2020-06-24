@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@
 #include "AudioDevice.h"
 #include "log.h"
 #include "AudiodCallbacks.h"
-#include "vibrate.h"
 #include "messageUtils.h"
 #include "IPC_SharedAudiodProperties.h"
 
@@ -59,22 +58,27 @@ AlarmScenarioModule::setMuted (bool mute)
     if(mute &&
         !mMuted &&
         !gAudioMixer.getActiveStreams().contain(ealarm))
-        cancelVibrate();
-     else
-     {
-         if(mute)
-         {
-             mAlarmMuted = true;
-
-             if(mMuted)
-                 programMuted();
-             else
-                 cancelVibrate();
-         }
-         else
-             mAlarmMuted = false;
-         return ScenarioModule::setMuted(mute);
-     }
+    {
+        //will be removed if alarm module is removed as part of DAP
+        //cancelVibrate();
+    }
+    else
+    {
+        if(mute)
+        {
+            mAlarmMuted = true;
+            if(mMuted)
+                programMuted();
+            else
+            {
+                //will be removed if alarm module is removed as part of DAP
+                //cancelVibrate();
+            }
+        }
+        else
+            mAlarmMuted = false;
+        return ScenarioModule::setMuted(mute);
+    }
 
     return true;
 }
@@ -82,8 +86,11 @@ AlarmScenarioModule::setMuted (bool mute)
 void
 AlarmScenarioModule::programMuted ()
 {
-    if(mMuted)
-        cancelVibrate();
+    if (mMuted)
+    {
+        //will be removed if alarm module is removed as part of DAP
+        //cancelVibrate();
+    }
     programAlarmVolumes(false);
 }
 
@@ -217,8 +224,11 @@ AlarmScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
                         }
                     } else {
                          if (gAudioMixer.getActiveStreams().containAnyOf(enotifications, ealerts, eeffects, ecalendar))
-                             cancelVibrate();
-                         getVibrateDevice()->realVibrate("{\"name\":\"alarm\"}");
+                         {
+                             //will be removed if alarm module is removed as part of DAP
+                             //cancelVibrate();
+                         }
+                         //getVibrateDevice()->realVibrate("{\"name\":\"alarm\"}");
                     }
                     shouldFakeVibrate = false; // if vibrated, we no need to
                                                // fake vibrate anymore...
@@ -240,8 +250,10 @@ AlarmScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
                     g_debug("AlarmScenarioModule: start Timer for 300ms");
                     alarmTimeout = g_timeout_add (300, alarmTimeoutForVibrate, this);
                 } else {
-                     if (!gAudioMixer.getActiveStreams().contain(ealarm)) {
-                         cancelVibrate();
+                     if (!gAudioMixer.getActiveStreams().contain(ealarm))
+                     {
+                         //will be removed if alarm module is removed as part of DAP
+                         //cancelVibrate();
                          setMuted(false);
                          alarmTimeout = 0;
                      }

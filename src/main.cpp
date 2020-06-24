@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,8 +124,8 @@ main(int argc, char **argv)
 
     if (argc > 1 && strcmp(argv[1], "--version") == 0)
     {
-        printf("audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.\n",
-                                         *gAudioDevice.getName(), BUILD_INFO);
+        //printf("audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.\n",
+                                         //*gAudioDevice.getName(), BUILD_INFO);
         return 0;
     }
 
@@ -168,8 +168,8 @@ main(int argc, char **argv)
 
     g_log_set_default_handler(logFilter, NULL);
 
-    g_message("Starting audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.",
-                                          *gAudioDevice.getName(), BUILD_INFO);
+    //g_message("Starting audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.",
+                                          //*gAudioDevice.getName(), BUILD_INFO);
 
     setpriority(PRIO_PROCESS,getpid(),niceme);
 

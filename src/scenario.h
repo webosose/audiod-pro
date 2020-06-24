@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,56 +25,6 @@
 #include <map>
 
 #define VOLUME_STORE_DELAY 10000
-
-/*enum EScenarioPriority
-{
-    eScenarioPriority_Special_Lowest = -1,// used temporarily to force sorting
-    eScenarioPriority_Media_BackSpeaker = 10,
-    eScenarioPriority_Media_Headset = 70,
-    eScenarioPriority_Media_HeadsetMic = 70,
-    eScenarioPriority_Media_A2DP = 50,
-    eScenarioPriority_Media_Wireless = 50,
-    eScenarioPriority_Media_FrontSpeaker = 5,
-
-    eScenarioPriority_Phone_FrontSpeaker = 30,
-    eScenarioPriority_Phone_BackSpeaker = 20,
-    eScenarioPriority_Phone_Headset = 70,
-    eScenarioPriority_Phone_HeadsetMic = 70,
-    eScenarioPriority_Phone_BluetoothSCO = 50,
-    eScenarioPriority_Phone_TTY_Full = 100,
-    eScenarioPriority_Phone_TTY_HCO = 100,
-    eScenarioPriority_Phone_TTY_VCO = 100,
-
-    eScenarioPriority_VoiceCommand_BackSpeaker = 30,
-    eScenarioPriority_VoiceCommand_Headset = 70,
-    eScenarioPriority_VoiceCommand_HeadsetMic = 70,
-    eScenarioPriority_VoiceCommand_BluetoothSCO = 50,
-
-    eScenarioPriority_Vvm_BackSpeaker = 30,
-    eScenarioPriority_Vvm_FrontSpeaker = 40,
-    eScenarioPriority_Vvm_Headset = 70,
-    eScenarioPriority_Vvm_HeadsetMic = 70,
-    eScenarioPriority_Vvm_BluetoothSCO = 50,
-
-    eScenarioPriority_Feedback = 50,
-
-    eScenarioPriority_Nav_Default = 50,
-
-    eScenarioPriority_Ringtone_Default = 50,
-
-    eScenarioPriority_System_Default = 50,
-
-    eScenarioPriority_Timer_Default = 50,
-
-    eScenarioPriority_Alert_Default = 50,
-
-};
-
-enum ESendUpdate {
-    eUpdate_Status,
-    eUpdate_GetVolume,
-    eUpdate_GetSoundOut
-};*/
 
 struct ScenarioRoute {
     ScenarioRoute() : mDestination(eMainSink), mRouted(false) {}

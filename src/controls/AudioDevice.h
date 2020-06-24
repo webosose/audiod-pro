@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,163 +66,148 @@ public:
     void* parameter;
 };
 
-#define kPlayAlertWaitMs (800)
-
-/// Hardware abstraction layer: use gAudioDevice (always defined & available for use)
-/// Is instantiated in a platform specific way.
-
+class volumeSettings;
 class AudioDevice
 {
 protected:
-    AudioDevice() : mHeadsetState(eHeadsetState_None), mRouting(eRouting_base),
-        mMicGain(5),
-        mActiveOutput(false),
-        mRecording(false),
-        mHAC(false),
-        mSuspended(false),
-        mBeatsOnForHeadphones(true),
-        mBTSupportsEC(false),
-        mCarkit(false),
-        mIncomingCallRinging(false),
-        mAudioDeviceCallMode(eCallMode_None) {}
-    virtual ~AudioDevice() {}
+    AudioDevice();
+    virtual ~AudioDevice();
 
 public:
 
     /// Give access to the appropriate platform specific HW object. There can be only one, and that's how audiod gets to access it.
-    static AudioDevice     &get();
+    static AudioDevice &get();
 
     /*
      * The following methods are requests made by audiod that the HW needs to implement.
      */
 
     /// Program routing for a specific scenario, using specified routing, with a particular microphone gain. Overload calling base implementation first.
-    virtual bool        setRouting(const ConstString &scenario, ERouting routing,
+    bool setRouting(const ConstString &scenario, ERouting routing,
                                    int micGain);
 
     /// Perform the task expected by HW when a particular phone event occurs
-    virtual bool        phoneEvent(EPhoneEvent event, int parameter = -1) = 0;
+    bool phoneEvent(EPhoneEvent event, int parameter = -1);
 
     // Change volume & mute state
-    virtual bool        setVolume(const ConstString &scenario, int volume) = 0;
-    virtual bool        setMuted(const ConstString &scenario, bool muted) = 0;
-    virtual bool        volumeUpDown(const ConstString &scenario,
-                                         bool volumeup) {return false;}
-    virtual bool        restoreMediaVolume(const ConstString & scenario, int volume){return true;}
+    bool setVolume(int volume);
+    bool setMuted(bool muted);
+    bool volumeUpDown(bool volumeup);
+    bool restoreMediaVolume(const ConstString & scenario, int volume){return true;}
 
-    virtual void        disableHW(){}
-    virtual void        prepareHWForPlayback(){}
-    virtual void        setPhoneRecording(bool recording){}
+    void disableHW(){}
+    void prepareHWForPlayback(){}
+    void setPhoneRecording(bool recording){}
 
     /// Some platforms (Castle...) need to program the modem to handle routing
-    virtual bool        registerScenario(const char *name)
+    bool registerScenario(const char *name)
     {
         return true;
     }
 
     /// Let HW know if any audio mixer output is active, so that HW can mute/unmute speakers. Overload calling base implementation first.
-    virtual void        setActiveOutput(bool active)
+    void setActiveOutput(bool active)
     {
         mActiveOutput = active;
     }
-    virtual bool        isActiveOutput() const
+    bool isActiveOutput() const
     {
         return mActiveOutput;
     }
 
     /// Let HW know if any audio input is being recorded, so that HW can mute/unmute the appropriate microphone. Overload calling base implementation first.
-    virtual void        setRecording(bool recording)
+    void setRecording(bool recording)
     {
         mRecording = recording;
     }
-    virtual bool        isRecording() const
+    bool isRecording() const
     {
         return mRecording;
     }
 
-    virtual void        hacSet(bool hac)
+    void hacSet(bool hac)
     {
         mHAC = hac;
     }
-    virtual bool        hacGet()
+    bool hacGet()
     {
         return mHAC;
     }
 
     /// Set microphone gain
-    virtual bool        setMicGain(const ConstString &scenario, int gain);
+    bool setMicGain(const ConstString &scenario, int gain);
 
     // get default mic gain
-    virtual int         getDefaultMicGain(const ConstString &scenario);
+    int getDefaultMicGain(const ConstString &scenario);
 
     /// Request to check for headset presence
-    virtual bool        checkHeadsetMic(bool poll)
+    bool checkHeadsetMic(bool poll)
     {
         return false;
     }
 
     /// Request various actions from HW
-    virtual void        generateAlertSound(int sound, Callback *callback) = 0;
+    void generateAlertSound(int sound, Callback *callback);
 
     /// Some phones (Castle...) can't play alerts in SCO BT. We need to generate beeps instead. These abstract this limitation.
-    virtual bool        needsSCOBeepAlert()
+    bool needsSCOBeepAlert()
     {
         return false;
     }
-    virtual void        generateSCOBeepAlert()
+    void generateSCOBeepAlert()
     {
         VERIFY(false);    // must be implemented if needsBTBeepAlert() can return true
     }
 
     // play a systemsound, looping "count" times,  wait "intervalms" milliseconds between loop,  invoke "callback" when done
-    void                playThroughPulse(const char *soundname, int count, int intervalms,
+    void playThroughPulse(const char *soundname, int count, int intervalms,
                                          Callback *callback);
 
     // play a systemsound, looping "count" times,  wait "intervalms" milliseconds between loop,  invoke "callback" when done
     // added logic to play only while call mode is not carrier
-    void                playThroughPulseIncomingTone(const char *soundname, int count,
+    void playThroughPulseIncomingTone(const char *soundname, int count,
                                                      int intervalms, Callback *callback);
 
-    void                setIncomingCallRinging(bool ringing);
-    bool                getIncomingCallRinging();
+    void setIncomingCallRinging(bool ringing);
+    bool getIncomingCallRinging();
 
     /// Power management notifications
-    virtual void        suspend()
+    void suspend()
     {
         mSuspended = TRUE;
     }
-    virtual void        unsuspend()
+    void unsuspend()
     {
         mSuspended = FALSE;
     }
 
-    virtual bool        isSuspended()
+    bool isSuspended()
     {
         return mSuspended;
     }
 
     /// Playback prepare
-    virtual void        prepareForPlayback() {}
+    void prepareForPlayback() {}
 
     /// a2dp start/stop notifications
-    virtual void        a2dpStartStreaming() {}
-    virtual void        a2dpStopStreaming() {}
+    void a2dpStartStreaming() {}
+    void a2dpStopStreaming() {}
 
     /// specify backspeaker filter for pulse
-    virtual int         getBackSpeakerFilter() = 0;
+    int getBackSpeakerFilter();
 
 
     /// enable or disable audio eq for phone metrico testing
-    virtual bool         museSet(bool enable);
+    bool museSet(bool enable);
 
     /// notify if slider is opened or closed to update routings if necessary
-    virtual void        sliderChanged() {}
+    void sliderChanged() {}
 
     /// used when a device is connected to phone, hands free relay over bt. for ex. tablet connected to phone.
-    virtual void        setBTHF(bool enable) {}
+    void setBTHF(bool enable) {}
 
     /// Indicates if headset does dsp/echo cancellation or phone does it.
-    virtual void        setBTSupportEC(bool carkit, bool enableEC) {}
+    void setBTSupportEC(bool carkit, bool enableEC) {}
 
     /*
      * The following methods are called to allow for initialization, customization and get notification of relevant configuration changes.
@@ -230,46 +215,44 @@ public:
      */
 
     /// some HW need configuration files, which location may be specified via command line arguments. This is where these are located.
-    virtual void        setConfigRegisterSetDirectory(const char *path) {}
+    void setConfigRegisterSetDirectory(const char *path) {}
 
     // earliest init point, post static initialization, command line option, logging, but prior to scenario setup or any service
-    virtual bool        pre_init()
+    bool pre_init()
     {
         return true;
     }
 
     // last point initialization, just prior to running the event loop, after everything else has been setup
-    virtual bool        post_init()
+    bool post_init()
     {
         return true;
     }
 
-    virtual bool        teardown()
+    bool teardown()
     {
         return true;
     }
 
-    EHeadsetState       getHeadsetState()
+    EHeadsetState getHeadsetState()
     {
         return mHeadsetState;
     }
-    void                setHeadsetState(EHeadsetState state)
+    void setHeadsetState(EHeadsetState state)
     {
         mHeadsetState = state;
     }
 
-    virtual const char *getName() = 0;
+    const char *getName();
 
-    virtual void        setBeatsOnForHeadphones(bool beats)
+    void setBeatsOnForHeadphones(bool beats)
     {
         mBeatsOnForHeadphones = beats;
     }
 
 
-    virtual void        updateCallMode() {}
-
-
-    virtual bool        isVoiceappRunning() {return false;}
+    void updateCallMode() {}
+    bool isVoiceappRunning() {return false;}
 
 protected:
     EHeadsetState       mHeadsetState;
@@ -285,9 +268,8 @@ protected:
     bool                mCarkit;
     bool                mIncomingCallRinging;
     ECallMode           mAudioDeviceCallMode;
-
-    static gboolean     delayCall_timercallback(void *data);
-    static void         delayCall(Callback *callback, int millisecond);
+    static gboolean delayCall_timercallback(void *data);
+    static void delayCall(Callback *callback, int millisecond);
     struct PulsePlay
     {
         int count;
@@ -295,8 +277,8 @@ protected:
         int interval;
         Callback *callback;
     };
-    static gboolean     playThroughPulseCallback(gpointer callback);
-    static gboolean     playThroughPulseCallbackIncomingTone(gpointer callback);
+    static gboolean playThroughPulseCallback(gpointer callback);
+    static gboolean playThroughPulseCallbackIncomingTone(gpointer callback);
 
 };
 

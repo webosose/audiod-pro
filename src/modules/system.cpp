@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@
 #include "AudioDevice.h"
 #include "log.h"
 #include "AudiodCallbacks.h"
-#include "vibrate.h"
 
 static SystemScenarioModule * sSystemModule = 0;
 
@@ -53,7 +52,10 @@ void
 SystemScenarioModule::programMuted ()
 {
     if (mMuted)
-        cancelVibrate();
+    {
+        //will be removed if alarm module is removed as part of DAP
+        //cancelVibrate();
+    }
     programSystemVolumes(false);
 }
 
@@ -119,10 +121,10 @@ SystemScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event,ESin
               }
               else
               {
-                  if (sink == ealarm)
+                  /*if (sink == ealarm)
                       getVibrateDevice()->startVibrate(fakeVibrateIfCantVibrate);
                   else
-                      getVibrateDevice()->realVibrate(enotifications != sink);
+                      getVibrateDevice()->realVibrate(enotifications != sink);*/
                   shouldFakeVibrate = false; // if vibrated, we no need to
                                              // fake vibrate anymore...
               }
@@ -140,7 +142,8 @@ SystemScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event,ESin
               gAudioDevice.generateSCOBeepAlert();
       }else if (eControlEvent_LastStreamClosed == event && sink == ealarm)
       {
-          cancelVibrate();
+          //will be removed if alarm module is removed as part of DAP
+          //cancelVibrate();
       }
   }
   else
