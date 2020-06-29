@@ -23,20 +23,13 @@
 #include "genericScenarioModule.h"
 #include "AudioDevice.h"
 #include "AudioMixer.h"
-#include "phone.h"
 #include "media.h"
-#include "ringtone.h"
-#include "voicecommand.h"
 #include "system.h"
 #include "state.h"
 #include "volume.h"
 #include "utils.h"
 #include "messageUtils.h"
 #include "log.h"
-#include "notification.h"
-#include "alarm.h"
-#include "timer.h"
-#include "alert.h"
 #include "default2.h"
 #include "tts2.h"
 
@@ -218,22 +211,8 @@ void ScenarioModule::programSoftwareMixer (bool ramp, bool muteMediaSink)
         //getMediaModule()->programMediaVolumes(ramp, ramp, muteMediaSink);
         //changed to implement policy of restoring volume level of sinks after headset is removed
         getMediaModule()->programMediaVolumes(ramp, ramp, FALSE);
-        // eringtones
-        getRingtoneModule()->programRingToneVolumes(ramp);
         // eDTMF, efeedback
         getSystemModule()->programSystemVolumes(ramp);
-        // evoicedial
-        getVoiceCommandModule()->programVoiceCommandVolume(ramp);
-        // enotifications, ecalendar
-        getNotificationModule()->programNotificationVolumes(ramp);
-        // ealarm
-        getAlarmModule()->programAlarmVolumes(ramp);
-       // etimer
-        getTimerModule()->programTimerVolumes(ramp);
-       //ealerts,effects
-        getAlertModule()->programAlertVolumes(ramp);
-        //ecallertone
-        getPhoneModule()->programCallertoneVolume(ramp);
         //etts2
         getTTS2Module()->programTTS2Volumes(ramp);
         //edefault2
@@ -373,8 +352,6 @@ bool ScenarioModule::getScenarioLatency (const char * name, int & latency)
         return false;
     }
     latency = dynamic_cast <Scenario *>(s)->mLatency;
-    
-
     return true;
 }
 
@@ -492,11 +469,10 @@ Scenario::Scenario(const ConstString & name,
                    bool enabled,
                    EScenarioPriority priority,
                    Volume & volume,
-                   Volume & micGain) : 
+                   Volume & micGain) :
     GenericScenario(name, enabled, priority, volume, micGain),
     mFilter(0),
     mLatency(SCENARIO_DEFAULT_LATENCY)
-    
 {
 
 }

@@ -28,7 +28,6 @@
 #include "log.h"
 #include "main.h"
 #include "media.h"
-#include "phone.h"
 #include "volumeSettings.h"
 #include <audiodTracer.h>
 
@@ -418,8 +417,8 @@ bool PulseAudioMixer::programDestination (EVirtualSink sink,
 
 void PulseAudioMixer::sendNREC(bool value)
 {
-
-    char cmd = 'Z';
+    //will be removed once DAP design is adapted
+    /*char cmd = 'Z';
     char buffer[SIZE_MESG_TO_PULSE] ;
     ScenarioModule * phone = getPhoneModule();
 
@@ -438,7 +437,7 @@ void PulseAudioMixer::sendNREC(bool value)
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
     if (bytes != SIZE_MESG_TO_PULSE)
-        g_warning("Error sending msg for sendNREC(%d)", bytes);
+        g_warning("Error sending msg for sendNREC(%d)", bytes);*/
 }
 
 void PulseAudioMixer::setNREC(bool value)

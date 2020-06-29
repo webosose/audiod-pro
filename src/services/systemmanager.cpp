@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,7 @@
 #include "utils.h"
 #include "messageUtils.h"
 #include "state.h"
-#include "phone.h"
 #include "media.h"
-#include "voicecommand.h"
 #include "log.h"
 #include "system.h"
 
@@ -104,10 +102,11 @@ _systemserviceSubscription(LSHandle *lshandle, LSMessage *message, void *ctx)
         getSystemModule()->setMuted(!systemSounds);
 
     // Voice Command active if pref exists & is set, otherwise, disable
-    bool voiceCommand;
+    //will be removed once DAP design is adapted
+    /*bool voiceCommand;
     if (msg.get("enableVoiceCommand",
                 voiceCommand) && VERIFY(getVoiceCommandModule()))
-        getVoiceCommandModule()->setIsEnabled(voiceCommand);
+        getVoiceCommandModule()->setIsEnabled(voiceCommand);*/
 
     return true;
 }

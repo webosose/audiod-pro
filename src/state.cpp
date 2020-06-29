@@ -22,23 +22,17 @@
 #include "utils.h"
 #include "messageUtils.h"
 #include "module.h"
-#include "phone.h"
 #include "media.h"
-#include "voicecommand.h"
-#include "vvm.h"
 #include "update.h"
 #include "AudioDevice.h"
 #include "AudioMixer.h"
 #include "system.h"
-#include "ringtone.h"
 #include "log.h"
 #include "main.h"
 #include "../include/IPC_SharedAudiodProperties.cpp"
 #include "AudiodCallbacks.h"
 #include "VolumeControlChangesMonitor.h"
 #include "scenario.h"
-#include "timer.h"
-#include "alert.h"
 #include "genericScenarioModule.h"
 #include <pulse/simple.h>
 
@@ -309,69 +303,7 @@ static int firstCall = 1;
 
 void State::setOnActiveCall (bool state, ECallMode mode)
 {
-    int totalState = 0;
-
-    if (mode == eCallMode_Carrier) {
-        if (mCarrier == state)
-            return;
-        mCarrier = state;
-    } else if (mode == eCallMode_Voip) {
-        if (mVoip == state)
-            return;
-        mVoip = state;
-    }
-
-    totalState = mVoip | mCarrier;
-
-    if (mOnActiveCall != totalState)
-    {
-        mOnActiveCall = totalState;
-
-        ScenarioModule *phone = getPhoneModule();
-        ScenarioModule *media = getMediaModule();
-
-#if defined(MACHINE_BROADWAY)
-        const char *currentPhoneScenario = phone->getCurrentScenarioName();
-#endif
-        if (getVoiceCommandModule()->isCurrentModule() && mOnActiveCall) {
-            // fire the event to voicecommand but don't change the module
-            // until the voicecommand module quit!
-            // see VoiceCommandModule::endVoiceCommand()
-            getVoiceCommandModule()->stopVoiceCommand("audiod phone call");
-            getVvmModule()->stopVvm("audiod phone call");
-        } else
-        if (mOnActiveCall) {
-            phone->makeCurrent();
-#if defined(MACHINE_BROADWAY)
-            // Take out this hack once we figure out why this is necessary to
-            // get uplink/downlink audio working on the first call
-            if (firstCall == 1) {
-                Scenario * tempScenario;
-                g_warning("first call on phone, doing this hack to get   \
-                       uplink/downlink audio working until modem fixes issue");
-                phone->enableScenario (cPhone_BackSpeaker);
-                tempScenario = phone->getScenario(cPhone_BackSpeaker.c_str());
-                gAudioDevice.setRouting(tempScenario->mName, eRouting_base, 0);
-
-                phone->enableScenario (currentPhoneScenario);
-                tempScenario = phone->getScenario(currentPhoneScenario);
-                gAudioDevice.setRouting(tempScenario->mName, eRouting_base, 0);
-                firstCall = 0;
-            }
-#endif
-        }
-        else
-        {
-            media->makeCurrent();
-
-            // since the call ended reset the scenario to
-            // the one that should be selected by priority
-            phone->setCurrentScenarioByPriority();
-            // if phone connected to tablet, unset bluetooth sco scenario
-            if (gState.getTabletConnected())
-                phone->unsetCurrentScenario (cPhone_BluetoothSCO);
-        }
-    }
+    //will be modified once DAP design is adapted
 }
 
 EPhoneStatus State::getPhoneStatus ()
@@ -427,56 +359,7 @@ bool State::checkPhoneScenario (ScenarioModule * phone)
 
 void State::setRingerOn (bool ringerOn)
 {
-    if (getRingerOn() != ringerOn)
-    {
-        gState.setPreference(cPref_RingerOn, ringerOn);
-        gAudiodProperties->mRingerOn.set(ringerOn);
-        if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))
-            module->programSoftwareMixer(true);
-
-        ScenarioModule *phone   = getPhoneModule();
-        ScenarioModule *media   = getMediaModule();
-        ScenarioModule *system  = getSystemModule();
-        ScenarioModule *ringtone = getRingtoneModule();
-        ScenarioModule *timer = getTimerModule();
-        ScenarioModule *alert = getAlertModule();
-
-        CHECK(phone->sendChangedUpdate(UPDATE_CHANGED_RINGER));
-        CHECK(media->sendChangedUpdate(UPDATE_CHANGED_RINGER));
-        CHECK(ringtone->sendChangedUpdate(UPDATE_CHANGED_RINGER));
-        CHECK(system->sendChangedUpdate(UPDATE_CHANGED_RINGER));
-        CHECK(timer->sendChangedUpdate(UPDATE_CHANGED_RINGER));
-        CHECK(alert->sendChangedUpdate(UPDATE_CHANGED_RINGER));
-
-        if (mBooleanPreferences[cPref_VibrateWhenRingerOff].mValue &&
-                                            !ringerOn && !ringtone->isMuted())
-        {
-            // if on an active call,
-            // these scenarios should not vibrate, so just return
-            if (getOnActiveCall())
-            {
-                const char * currentScenarioName =
-                                    getPhoneModule()->getCurrentScenarioName();
-                if (cPhone_FrontSpeaker == currentScenarioName ||
-                    cPhone_BackSpeaker == currentScenarioName ||
-                    cPhone_Headset == currentScenarioName)
-                {
-                    return;
-                }
-            }
-
-            if (getOnThePuck () || getOnActiveCall ())
-            {
-                gAudioMixer.playSystemSound ("alert_buzz", eeffects);
-            }
-            else
-            {
-                //VibrateDevice::realVibrate (false);
-                //will be removed if alarm module is removed as part of DAP
-                //getVibrateDevice()->realVibrate(false);
-            }
-        }
-    }
+    //will be modified once DAP design is adapted
 }
 
 void State::setActiveInputStream (bool active)
@@ -540,82 +423,12 @@ bool State::isRecording ()
 
 void State::setTTYMode (ETTYMode mode)
 {
-
-    if (mTTYMode == mode)
-        return;
-
-    switch (mode) {
-        case eTTYMode_Full:
-            g_debug ("%s: setting ttyMode to FULL", __FUNCTION__);
-            mTTYMode = mode;
-            break;
-        case eTTYMode_HCO:
-            g_debug ("%s: setting ttyMode to HCO", __FUNCTION__);
-            mTTYMode = mode;
-            break;
-        case eTTYMode_VCO:
-            g_debug ("%s: setting ttyMode to VCO", __FUNCTION__);
-            mTTYMode = mode;
-            break;
-        case eTTYMode_Off:
-            g_debug ("%s: setting ttyMode to OFF", __FUNCTION__);
-            mTTYMode = mode;
-            break;
-        default:
-            g_warning ("%s: unknown tty mode, setting ttyMode to OFF", __FUNCTION__);
-            mTTYMode = eTTYMode_Off;
-            break;
-    }
-
-    if (getHeadsetState() == eHeadsetState_Headset ||
-        getHeadsetState() == eHeadsetState_HeadsetMic)
-    {
-        ScenarioModule *phone = getPhoneModule();
-
-        if (eTTYMode_Full == mTTYMode)
-        {
-            phone->enableScenario (cPhone_TTY_Full);
-            phone->disableScenario (cPhone_TTY_HCO);
-            phone->disableScenario (cPhone_TTY_VCO);
-        }
-        else if (eTTYMode_HCO == mTTYMode)
-        {
-            phone->enableScenario (cPhone_TTY_HCO);
-            phone->disableScenario (cPhone_TTY_Full);
-            phone->disableScenario (cPhone_TTY_VCO);
-        }
-        else if (eTTYMode_VCO == mTTYMode)
-        {
-            phone->enableScenario (cPhone_TTY_VCO);
-            phone->disableScenario (cPhone_TTY_Full);
-            phone->disableScenario (cPhone_TTY_HCO);
-        }
-        else
-        {
-            phone->disableScenario (cPhone_TTY_Full);
-            phone->disableScenario (cPhone_TTY_HCO);
-            phone->disableScenario (cPhone_TTY_VCO);
-        }
-        phone->setCurrentScenarioByPriority ();
-    }
+    //will be modified once DAP design is adapted
 }
 
 void State::hacSet (bool mode)
 {
-    if ((mHAC && mode) || (!mHAC && !mode)) return;
-    mHAC = mode;
-    ScenarioModule *phone = getPhoneModule();
-
-    gAudioDevice.hacSet(mHAC);
-    if (mHAC)
-    {
-        phone->disableScenario (cPhone_BackSpeaker);
-        phone->setCurrentScenario (cPhone_FrontSpeaker);
-    }
-    else
-    {
-        phone->enableScenario (cPhone_BackSpeaker);
-    }
+    //will be modified once DAP design is adapted
 }
 
 ETTYMode State::getTTYMode ()
@@ -630,163 +443,12 @@ ECallMode State::getCallMode ()
 
 void State::setCallMode (ECallMode mode, ECallStatus status)
 {
-    ScenarioModule * phone = getPhoneModule();
-    MediaScenarioModule * media = getMediaModule();
-
-    switch (mode) {
-        case eCallMode_Voip:
-            if (status == eCallStatus_Incoming) {
-                g_debug("incoming voip call");
-                mNumVoip++;
-                if (!gState.getOnActiveCall ()) {
-                    media->broadcastEvent ("call:incoming");    // tell luna & Cie ASAP
-                    gState.setIncomingCallActive (true, eCallMode_Voip);
-
-                    if (gState.getRingerOn ())
-                        media->rampDownAndMute();
-
-                    gState.setPhoneStatus(ePhoneStatus_Incoming);
-                } else {
-                    g_debug("call mode is voip and incoming call is carrier, so play busy tone");
-                }
-            } else if (status == eCallStatus_Active) {
-                g_debug("active voip call");
-                g_warning("%s: %d: Call mode is voip!", __FUNCTION__, __LINE__);
-                mCallMode = eCallMode_Voip;
-                gAudioDevice.updateCallMode();
-                if (!gState.getOnActiveCall ()) {
-                    media->rampDownAndMute();
-
-                    gState.setPhoneStatus(ePhoneStatus_Connected);
-                    media->broadcastEvent("call:connected");
-
-                    gState.setIncomingCallActive (false, eCallMode_Voip);
-                    gState.setOnActiveCall (true, eCallMode_Voip);
-
-                    if (phone && cPhone_BluetoothSCO == phone->getCurrentScenarioName())
-                    {
-                        bool isEnabled = checkPhoneScenario(phone);
-                        // Note: we set it on back/front here,
-                        // _btHfgSubscription() may set it to
-                        // phone_bluetooth_sco later when
-                        // user press bluetooth button
-                        if (gState.getOnThePuck() && isEnabled) {
-                            phone->setCurrentScenario (cPhone_BackSpeaker);
-                        } else {
-                            phone->setCurrentScenario (cPhone_FrontSpeaker);
-                        }
-                    }
-                }
-                phone->programMuted();
-                gAudioDevice.setIncomingCallRinging(false);
-            } else if (status == eCallStatus_Dialing) {
-                g_debug("dialing voip call");
-                mNumVoip++;
-                if (!gState.getOnActiveCall ()) {
-                    gState.setIncomingCallActive (true, eCallMode_Voip);
-
-                    media->rampDownAndMute();
-
-                    gState.setPhoneStatus(ePhoneStatus_Dialing);
-                    media->broadcastEvent ("call:dialing");
-                    if (phone && cPhone_BluetoothSCO == phone->getCurrentScenarioName())
-                    {
-                        bool isEnabled = checkPhoneScenario(phone);
-                        // Note: we set it on back/front here,
-                        // _btHfgSubscription() may set it to
-                        // phone_bluetooth_sco later when
-                        //user press bluetooth button
-                        if (gState.getOnThePuck() && isEnabled) {
-                            phone->setCurrentScenario (cPhone_BackSpeaker);
-                        } else {
-                            phone->setCurrentScenario (cPhone_FrontSpeaker);
-                        }
-                    }
-                    gState.setOnActiveCall (true, eCallMode_Voip);
-                }
-            } else if (status == eCallStatus_Disconnected) {
-                g_debug("disconnected voip call");
-                mNumVoip--;
-
-                // some reason, this becomes negative,
-                // probably due to bad phone app messages.
-                if (mNumVoip < 0)
-                    mNumVoip = 0;
-
-                if (mNumVoip == 0) {
-                    if (gState.getOnActiveCall() || gState.getIncomingCallActive()) {
-                        gState.setIncomingCallActive(false, eCallMode_Voip);
-                        gState.setOnActiveCall(false, eCallMode_Voip);
-                    }
-
-                    if (!gState.getOnActiveCall() || !gState.getIncomingCallActive()) {
-                        getMediaModule()->setMuted (false);
-                        getMediaModule()->programMediaVolumes(true, true);
-                        gState.setPhoneStatus(ePhoneStatus_Disconnected);
-
-                        // for the next call
-                        getRingtoneModule()->setMuted (false);
-                        getMediaModule()->broadcastEvent("call:disconnected");
-
-                        // in case we did not stop streaming because ringer switch
-                        // was off we need to notify A2DP to resume streaming
-                        // if the media streams are still playing.
-                        getMediaModule()->resumeA2DP();
-                    }
-
-                    if (mCarrier) {
-                        g_debug("%s: %d: Call mode is carrier!", __FUNCTION__, __LINE__);
-                        mCallMode = eCallMode_Carrier;
-                    }
-                    else {
-                        g_debug("%s: %d: Call mode is none!", __FUNCTION__, __LINE__);
-                        mCallMode = eCallMode_None;
-                    }
-                    setCallWithVideo(false);
-                    phone->programMuted();
-                }
-            }
-            break;
-
-        case eCallMode_Carrier:
-            if (status == eCallStatus_Active) {
-                g_debug("%s: %d: Call mode is carrier!", __FUNCTION__, __LINE__);
-                mCallMode = eCallMode_Carrier;
-                gAudioDevice.updateCallMode();
-            } else if (status == eCallStatus_Disconnected) {
-                if (mVoip) {
-                    g_debug("%s: %d: Call mode is voip!", __FUNCTION__, __LINE__);
-                    mCallMode = eCallMode_Voip;
-                }
-                else {
-                    g_debug("%s: %d: Call mode is none!", __FUNCTION__, __LINE__);
-                    mCallMode = eCallMode_None;
-                }
-            }
-            phone->programMuted();
-
-            break;
-
-        default :
-        case eCallMode_None:
-            break;
-    }
-
+    //will be modified once DAP design is adapted
 }
 
 void State::setCallWithVideo (bool callWithVideo)
 {
-    if (mCallWithVideo!=callWithVideo) {
-        ScenarioModule *phone = getPhoneModule();
-        mCallWithVideo = callWithVideo;
-        if (mCallWithVideo) {
-            g_debug("%s Disable frontspeaker", __PRETTY_FUNCTION__);
-            phone->disableScenario (cPhone_FrontSpeaker);
-        } else {
-            g_debug("%s Enable frontspeaker", __PRETTY_FUNCTION__);
-            phone->enableScenario (cPhone_FrontSpeaker);
-        }
-    }
+    //will be modified once DAP design is adapted
 }
 
 bool State::getCallWithVideo()
@@ -804,22 +466,6 @@ void State::setSliderState (ESliderState state)
             update = true;
 
         mSliderState = state;
-
-        if (update) {
-            ScenarioModule *phone   = getPhoneModule();
-            ScenarioModule *media   = getMediaModule();
-            ScenarioModule *system  = getSystemModule();
-            ScenarioModule *ringtone = getRingtoneModule();
-            ScenarioModule *timer =  getTimerModule();
-            ScenarioModule *alert = getAlertModule();
-
-            CHECK(phone->sendChangedUpdate(UPDATE_CHANGED_SLIDER));
-            CHECK(media->sendChangedUpdate(UPDATE_CHANGED_SLIDER));
-            CHECK(system->sendChangedUpdate(UPDATE_CHANGED_SLIDER));
-            CHECK(ringtone->sendChangedUpdate(UPDATE_CHANGED_SLIDER));
-            CHECK(timer->sendChangedUpdate(UPDATE_CHANGED_SLIDER));
-            CHECK(alert->sendChangedUpdate(UPDATE_CHANGED_SLIDER));
-        }
     }
 }
 
@@ -878,130 +524,7 @@ static const char * _getHeadsetStateName(EHeadsetState state)
 
 void State::setHeadsetState (EHeadsetState newState)
 {
-    EHeadsetState previousState = getHeadsetState();
-
-    if (previousState == newState)
-        return;
-
-    g_debug("%s: %s", __FUNCTION__, _getHeadsetStateName(newState));
-
-    setHeadsetRoute(newState);
-
-    gAudiodProperties->mHeadsetState.set(newState);
-    gAudioDevice.setHeadsetState(newState);
-
-    ScenarioModule *phone = getPhoneModule();
-    ScenarioModule *media = getMediaModule();
-    ScenarioModule *voice = getVoiceCommandModule();
-    ScenarioModule *vvm = getVvmModule();
-
-    if (eHeadsetState_None == newState)
-    {
-        if (eHeadsetState_HeadsetMic == previousState)
-        {
-            phone->disableScenario (cPhone_HeadsetMic);
-            media->disableScenario (cMedia_HeadsetMic);
-            voice->disableScenario (cVoiceCommand_HeadsetMic);
-            vvm->disableScenario (cVvm_HeadsetMic);
-        }
-        else if (eHeadsetState_Headset == previousState)
-        {
-            phone->disableScenario (cPhone_Headset);
-            media->disableScenario (cMedia_Headset);
-            voice->disableScenario (cVoiceCommand_Headset);
-            vvm->disableScenario (cVvm_Headset);
-        }
-        if (mTTYMode != eTTYMode_Off)
-        {
-            phone->disableScenario (cPhone_TTY_Full);
-            phone->disableScenario (cPhone_TTY_HCO);
-            phone->disableScenario (cPhone_TTY_VCO);
-        }
-    }
-    else if (eHeadsetState_HeadsetMic == newState)
-    {
-        phone->enableScenario (cPhone_HeadsetMic);
-        media->enableScenario (cMedia_HeadsetMic);
-        voice->enableScenario (cVoiceCommand_HeadsetMic);
-        vvm->enableScenario (cVvm_HeadsetMic);
-        if (mTTYMode != eTTYMode_Off)
-        {
-            switch (mTTYMode) {
-                case eTTYMode_Full:
-                    phone->enableScenario (cPhone_TTY_Full);
-                    break;
-                case eTTYMode_HCO:
-                    phone->enableScenario (cPhone_TTY_HCO);
-                    break;
-                case eTTYMode_VCO:
-                    phone->enableScenario (cPhone_TTY_VCO);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        phone->setCurrentScenarioByPriority ();
-        media->setCurrentScenarioByPriority ();
-        voice->setCurrentScenarioByPriority ();
-        vvm->setCurrentScenarioByPriority ();
-
-        if (eHeadsetState_Headset == previousState)
-        {
-            phone->disableScenario (cPhone_Headset);
-            media->disableScenario (cMedia_Headset);
-            voice->disableScenario (cVoiceCommand_Headset);
-            vvm->disableScenario (cVvm_Headset);
-        }
-    }
-    else if (eHeadsetState_Headset == newState)
-    {
-        phone->enableScenario (cPhone_Headset);
-        media->enableScenario (cMedia_Headset);
-        voice->enableScenario (cVoiceCommand_Headset);
-        vvm->enableScenario (cVvm_Headset);
-        if (mTTYMode != eTTYMode_Off)
-        {
-            switch (mTTYMode) {
-                case eTTYMode_Full:
-                    phone->enableScenario (cPhone_TTY_Full);
-                    break;
-                case eTTYMode_HCO:
-                    phone->enableScenario (cPhone_TTY_HCO);
-                    break;
-                case eTTYMode_VCO:
-                    phone->enableScenario (cPhone_TTY_VCO);
-                    break;
-                default:
-                    break;
-            }
-        }
-        phone->setCurrentScenarioByPriority ();
-        media->setCurrentScenarioByPriority ();
-        voice->setCurrentScenarioByPriority ();
-        vvm->setCurrentScenarioByPriority ();
-
-        if (eHeadsetState_HeadsetMic == previousState)
-        {
-            phone->disableScenario (cPhone_HeadsetMic);
-            media->disableScenario (cMedia_HeadsetMic);
-            voice->disableScenario (cVoiceCommand_HeadsetMic);
-            vvm->disableScenario (cVvm_HeadsetMic);
-        }
-    }
-
-    if (newState != eHeadsetState_None)
-    {
-        // wake up the display
-        CLSError lserror;
-        bool result;
-
-        LSHandle * sh = GetPalmService();
-        result = LSCall (sh, "palm://com.palm.display/control/setState",
-                              "{\"state\":\"on\"}", NULL, NULL, NULL, &lserror);
-        if (!result)
-            lserror.Print(__FUNCTION__, __LINE__);
-    }
+    //will be modified once DAP design is adapted
 }
 
 
@@ -1132,26 +655,7 @@ bool State::getPhoneLocked ()
 
 void State::setIncomingCallActive (bool state, ECallMode mode)
 {
-    if (mode == eCallMode_Carrier) {
-        if (mIncomingCarrierCallActive == state)
-            return;
-        mIncomingCarrierCallActive = state;
-    } else if (mode == eCallMode_Voip) {
-        if (mIncomingVoipCallActive == state)
-            return;
-        mIncomingVoipCallActive = state;
-    }
-
-    mIncomingCallActive = mIncomingCarrierCallActive | mIncomingVoipCallActive;
-
-    if (getVoiceCommandModule()->isCurrentModule() && mIncomingCallActive) {
-        // fire the event to voicecommand but don't change the module
-        // until the voicecommand module quit!
-        // see VoiceCommandModule::endVoiceCommand()
-        getVoiceCommandModule()->stopVoiceCommand("audiod phone incoming call");
-    } else if (getVvmModule()->isCurrentModule() && mIncomingCallActive) {
-        getVvmModule()->stopVvm("audiod phone incoming call");
-    } 
+    //will be modified once DAP design is adapted
 }
 
 bool State::getIncomingCallActive ()

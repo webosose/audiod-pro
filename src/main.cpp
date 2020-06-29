@@ -27,11 +27,7 @@
 
 #include "log.h"
 #include "media.h"
-#include "phone.h"
 #include "system.h"
-#include "voicecommand.h"
-#include "ringtone.h"
-#include "nav.h"
 #include "state.h"
 #include "AudioDevice.h"
 #include "AudioMixer.h"

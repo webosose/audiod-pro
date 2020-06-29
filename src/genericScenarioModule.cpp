@@ -21,19 +21,12 @@
 #include "module.h"
 #include "genericScenarioModule.h"
 #include "AudioDevice.h"
-#include "phone.h"
 #include "media.h"
-#include "ringtone.h"
-#include "voicecommand.h"
 #include "system.h"
 #include "state.h"
 #include "utils.h"
 #include "messageUtils.h"
 #include "log.h"
-#include "notification.h"
-#include "alarm.h"
-#include "timer.h"
-#include "alert.h"
 
 GenericScenarioModule * GenericScenarioModule::sCurrentModule = 0;
 

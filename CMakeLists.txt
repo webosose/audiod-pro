@@ -93,7 +93,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 include_directories(src)
 include_directories(src/umi)
-include_directories(src/umi/modules)
 include_directories(src/umi/soundSettings)
 include_directories(src/controls)
 include_directories(src/controls/pulse)
@@ -158,25 +157,15 @@ SET (services_files
 )
 
 SET (modules_files
-        src/modules/alarm.cpp
-        src/modules/alert.cpp
         src/modules/media.cpp
-        src/modules/nav.cpp
-        src/modules/notification.cpp
-        src/modules/phone.cpp
-        src/modules/ringtone.cpp
         src/modules/system.cpp
-        src/modules/timer.cpp
-        src/modules/vvm.cpp
         src/modules/tts2.cpp
         src/modules/default2.cpp
+        src/umi/soundSettings/volumeSettings.cpp
         src/umi/soundSettings/soundSettings.cpp
-        src/modules/voicecommand.cpp
         src/umi/umiDispatcher.cpp
         src/controls/umiaudiomixer.cpp
         src/MixerInit.cpp
-        src/umi/soundSettings/volumeSettings.cpp
-        src/umi/modules/mock.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")

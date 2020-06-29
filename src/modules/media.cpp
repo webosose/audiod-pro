@@ -19,17 +19,11 @@
 #include <cstring>
 #include <glib.h>
 
-
 #include <lunaservice.h>
 #include "media.h"
 #include "module.h"
 #include "state.h"
-#include "phone.h"
 #include "system.h"
-#include "ringtone.h"
-#include "voicecommand.h"
-
-#include "vvm.h"
 #include "AudioMixer.h"
 #include "volume.h"
 #include "utils.h"
@@ -38,10 +32,6 @@
 #include "log.h"
 #include "AudiodCallbacks.h"
 #include "main.h"
-#include "vvm.h"
-#include "timer.h"
-#include "alert.h"
-
 
 static MediaScenarioModule * sMediaModule = 0;
 
@@ -68,7 +58,6 @@ MediaScenarioModule::programControlVolume ()
         if (isCurrentModule())
         {
             getSystemModule()->programSystemVolumes(false);
-            getAlertModule()->programAlertVolumes(false);
             if (gState.getAdjustMicGain())
                 gAudioDevice.setMicGain(mCurrentScenario->mName,
                                         scenario->getMicGainTics());
@@ -627,7 +616,6 @@ MediaScenarioModule::_startSinkPlayback (EVirtualSink sink)
 
     if (isMediaSink(sink)) {
         getSystemModule()->programSystemVolumes(false);
-        getAlertModule()->programAlertVolumes(false);
     }
 
     if (_isWirelessStreamingScenario() && isWirelessStreamedSink(sink)) {
@@ -750,10 +738,6 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
           if (eControlEvent_FirstStreamOpened == event)
           {
               mPreviousSink = sink;
-              if (getVvmModule()->isActive()) {
-                  g_warning("VVM is active, disable vvm and start media");
-                  getVvmModule()->stopVvm("media");
-              }
 
               if (!mPriorityToAlerts)
               {
@@ -775,7 +759,6 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
               }
               programMediaVolumes(true, false, false);
               getSystemModule()->programSystemVolumes(false);
-              getAlertModule()->programAlertVolumes(false);
               mPreviousSink = eVirtualSink_None;
 
           }
@@ -887,14 +870,6 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
               else
                   programMediaVolumes(true, false, false);
           }
-      }
-      else if (evoicedial == sink)
-      {
-          getVoiceCommandModule()->programVoiceCommandVolume(false);
-      }
-      else if (evvm == sink)
-      {
-          getVvmModule()->programVvmVolume(false);
       }
   }
   else
