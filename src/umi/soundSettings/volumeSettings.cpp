@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "system.h"
 #include <utils.h>
 #include <string>
 #include "messageUtils.h"

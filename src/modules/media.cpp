@@ -23,7 +23,6 @@
 #include "media.h"
 #include "module.h"
 #include "state.h"
-#include "system.h"
 #include "AudioMixer.h"
 #include "volume.h"
 #include "utils.h"
@@ -57,7 +56,6 @@ MediaScenarioModule::programControlVolume ()
         programMediaVolumes(false, false, false);
         if (isCurrentModule())
         {
-            getSystemModule()->programSystemVolumes(false);
             if (gState.getAdjustMicGain())
                 gAudioDevice.setMicGain(mCurrentScenario->mName,
                                         scenario->getMicGainTics());
@@ -614,10 +612,6 @@ MediaScenarioModule::_startSinkPlayback (EVirtualSink sink)
 
     programMediaVolumes(false, false, false);
 
-    if (isMediaSink(sink)) {
-        getSystemModule()->programSystemVolumes(false);
-    }
-
     if (_isWirelessStreamingScenario() && isWirelessStreamedSink(sink)) {
         if (gState.getScoUp())
             _updateA2DP(true, false);
@@ -758,7 +752,6 @@ MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESin
                       _endSinkPlayback (sink);
               }
               programMediaVolumes(true, false, false);
-              getSystemModule()->programSystemVolumes(false);
               mPreviousSink = eVirtualSink_None;
 
           }

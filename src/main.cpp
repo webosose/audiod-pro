@@ -27,7 +27,6 @@
 
 #include "log.h"
 #include "media.h"
-#include "system.h"
 #include "state.h"
 #include "AudioDevice.h"
 #include "AudioMixer.h"

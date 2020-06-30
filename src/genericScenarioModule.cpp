@@ -22,7 +22,6 @@
 #include "genericScenarioModule.h"
 #include "AudioDevice.h"
 #include "media.h"
-#include "system.h"
 #include "state.h"
 #include "utils.h"
 #include "messageUtils.h"

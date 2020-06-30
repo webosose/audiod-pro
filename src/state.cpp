@@ -26,7 +26,6 @@
 #include "update.h"
 #include "AudioDevice.h"
 #include "AudioMixer.h"
-#include "system.h"
 #include "log.h"
 #include "main.h"
 #include "../include/IPC_SharedAudiodProperties.cpp"

@@ -24,14 +24,11 @@
 #include "AudioDevice.h"
 #include "AudioMixer.h"
 #include "media.h"
-#include "system.h"
 #include "state.h"
 #include "volume.h"
 #include "utils.h"
 #include "messageUtils.h"
 #include "log.h"
-#include "default2.h"
-#include "tts2.h"
 
 #define VOICE_COMMAND_SAMPLING_RATE 8000
 #define PHONE_SAMPLING_RATE 8000
@@ -211,12 +208,6 @@ void ScenarioModule::programSoftwareMixer (bool ramp, bool muteMediaSink)
         //getMediaModule()->programMediaVolumes(ramp, ramp, muteMediaSink);
         //changed to implement policy of restoring volume level of sinks after headset is removed
         getMediaModule()->programMediaVolumes(ramp, ramp, FALSE);
-        // eDTMF, efeedback
-        getSystemModule()->programSystemVolumes(ramp);
-        //etts2
-        getTTS2Module()->programTTS2Volumes(ramp);
-        //edefault2
-        getDefault2Module()->programDefault2Volumes(ramp);
         // Update routing
         for (EVirtualSink sink = eVirtualSink_First; sink <= eVirtualSink_Last;
                sink = EVirtualSink(sink + 1))

@@ -29,7 +29,6 @@
 #include "PulseAudioMixer.h"
 #include "main.h"
 #include "genericScenarioModule.h"
-#include "default2.h"
 
 #define SUBSCRIPTION_KEY "lockVolumeKeysSubscription"
 
@@ -96,8 +95,11 @@ _setVolumeOrMicGain(LSHandle *lshandle,
     msg.get("sessionId", display);
     if (DISPLAY_TWO == display)
     {
+        // Will be taken removed during DAP changes
+        #if 0
         Default2ScenarioModule * s = getDefault2Module();
         s->setVolume(volume);
+        #endif
     }
     else
     {

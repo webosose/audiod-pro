@@ -151,16 +151,12 @@ endif(VVM_SUPPORTED)
 SET (services_files
         src/services/udev.cpp
         src/services/settingsservice.cpp
-        src/services/systemmanager.cpp
         src/services/bluetooth.cpp
 
 )
 
 SET (modules_files
         src/modules/media.cpp
-        src/modules/system.cpp
-        src/modules/tts2.cpp
-        src/modules/default2.cpp
         src/umi/soundSettings/volumeSettings.cpp
         src/umi/soundSettings/soundSettings.cpp
         src/umi/umiDispatcher.cpp
