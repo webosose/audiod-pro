@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ static void pulseAudioCallback(pa_context * c, void * user)
         reinterpret_cast<PulseAudioLink *>(user)->pulseAudioStateChanged(pa_context_get_state(c));
 }
 
-bool PulseAudioLink::play(const char *snd, EVirtualSink sink)
+bool PulseAudioLink::play(const char *snd, EVirtualAudiodSink sink)
 {
     PMTRACE_FUNCTION;
     if (!IsValidVirtualSink(sink))

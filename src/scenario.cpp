@@ -209,8 +209,8 @@ void ScenarioModule::programSoftwareMixer (bool ramp, bool muteMediaSink)
         //changed to implement policy of restoring volume level of sinks after headset is removed
         getMediaModule()->programMediaVolumes(ramp, ramp, FALSE);
         // Update routing
-        for (EVirtualSink sink = eVirtualSink_First; sink <= eVirtualSink_Last;
-               sink = EVirtualSink(sink + 1))
+        for (EVirtualAudiodSink sink = eVirtualSink_First; sink <= eVirtualSink_Last;
+               sink = EVirtualAudiodSink(sink + 1))
         {
             if (!strcmp(mCurrentScenario->getName(),"phone_bluetooth_sco") &&
                  (sink == emedia || sink == edefaultapp))
@@ -236,7 +236,7 @@ void ScenarioModule::programSoftwareMixer (bool ramp, bool muteMediaSink)
     }
 }
 
-bool ScenarioModule::programVolume (EVirtualSink sink, int volume, bool ramp)
+bool ScenarioModule::programVolume (EVirtualAudiodSink sink, int volume, bool ramp)
 {
     bool routed = true;
     if ((!sCurrentModule) && (!(dynamic_cast <ScenarioModule *> (sCurrentModule))))
@@ -346,7 +346,7 @@ bool ScenarioModule::getScenarioLatency (const char * name, int & latency)
     return true;
 }
 
-ScenarioRoute * Scenario::getScenarioRoute(EVirtualSink sink, bool ringerOn)
+ScenarioRoute * Scenario::getScenarioRoute(EVirtualAudiodSink sink, bool ringerOn)
 {
     if (VERIFY(sink >= 0 && sink < eVirtualSink_Count))
         return ringerOn ? mRoutesRingerOn + sink : mRoutesRingerOff + sink;
@@ -360,7 +360,7 @@ ScenarioRoute * Scenario::getScenarioRoute(EVirtualSource source, bool ringerOn)
     return 0;
 }
 
-void Scenario::configureRoute (EVirtualSink sink,
+void Scenario::configureRoute (EVirtualAudiodSink sink,
                           EPhysicalSink destination,
                           bool ringerSwitchOn,
                           bool enabled)
@@ -386,7 +386,7 @@ void Scenario::configureRoute (EVirtualSource source,
     }
 }
 
-bool Scenario::isRouted(EVirtualSink sink)
+bool Scenario::isRouted(EVirtualAudiodSink sink)
 {
     ScenarioRoute * route = getScenarioRoute(sink, gState.getRingerOn());
     if (VERIFY(route))
@@ -402,7 +402,7 @@ bool Scenario::isRouted(EVirtualSource source)
     return false;
 }
 
-EPhysicalSink Scenario::getDestination(EVirtualSink sink)
+EPhysicalSink Scenario::getDestination(EVirtualAudiodSink sink)
 {
     ScenarioRoute * route = getScenarioRoute(sink, gState.getRingerOn());
     if (VERIFY(route))
@@ -430,7 +430,7 @@ void Scenario::logRoutes() const
         {
             if (routeList.size() > 0)
                 routeList += ", ";
-            routeList += virtualSinkName(EVirtualSink(sink));
+            routeList += virtualSinkName(EVirtualAudiodSink(sink));
         }
     }
     g_message("Routes for %s ringer %s: %s.", this->getName(),

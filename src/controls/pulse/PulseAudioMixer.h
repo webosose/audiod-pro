@@ -34,108 +34,103 @@ public:
     ~PulseAudioMixer();
 
     /// Initialize mixer & possibly, register services
-    void                init(GMainLoop * loop,
+    void init(GMainLoop * loop,
                              LSHandle * handle,
                              AudiodCallbacksInterface * interface);
 
     /// We might not be ready for programming the mixer
-    bool  readyToProgram ()    { return mChannel != 0; }
+    bool readyToProgram()    { return mChannel != 0; }
 
     /// Program volume of a sink.
     //Will ignore volume of high latency sinks not playing and mute them.
-    bool  programVolume(EVirtualSink sink, int volume, bool ramp = false);
+    bool programVolume(EVirtualAudiodSink sink, int volume, bool ramp = false);
 
-    bool  programCallVoiceOrMICVolume(char cmd, int volume);
-    bool  programMute(EVirtualSource source, int mute);
+    bool programCallVoiceOrMICVolume(char cmd, int volume);
+    bool programMute(EVirtualSource source, int mute);
 
     /// Same as program volume, but ramped.
-    bool  rampVolume(EVirtualSink sink, int endVolume)
+    bool rampVolume(EVirtualAudiodSink sink, int endVolume)
                        { return programVolume(sink, endVolume, true); }
 
     /// Program destination of a sink
-    bool programDestination(EVirtualSink sink, EPhysicalSink destination);
+    bool programDestination(EVirtualAudiodSink sink, EPhysicalSink destination);
     /// Program destination of a source
     bool programDestination(EVirtualSource source, EPhysicalSource destination);
 
     /// Program a filter
-    bool                programFilter(int filterTable);
-    bool                programLatency(int latency);
-    bool                programBalance(int balance);
-    bool                muteAll();
+    bool programFilter(int filterTable);
+    bool programLatency(int latency);
+    bool programBalance(int balance);
+    bool muteAll();
 
     /// Offset a volume by a number of dB. Calculation only.
-    int                    adjustVolume(int volume, int dB);
+    int  adjustVolume(int volume, int dB);
 
     /// Get active streams set to test which sinks are active.
-    VirtualSinkSet        getActiveStreams()
-                            { return mActiveStreams; }
+    VirtualSinkSet getActiveStreams() { return mActiveStreams; }
 
     /// Get how many streams are active for a particular sink.
-    int                    getStreamCount(EVirtualSink sink);
+    int getStreamCount(EVirtualAudiodSink sink);
 
     /// Count how many output streams are opened
-    void outputStreamOpened (EVirtualSink sink);
-    void outputStreamClosed (EVirtualSink sink);
+    void outputStreamOpened (EVirtualAudiodSink sink);
+    void outputStreamClosed (EVirtualAudiodSink sink);
     int  getOutputStreamOpenedCount ()
                 { return mOutputStreamsCurrentlyOpenedCount; }
 
     /// Count how many input streams are opened
-    void                inputStreamOpened (EVirtualSource source);
-    void                inputStreamClosed (EVirtualSource source);
-    int                    getInputStreamOpenedCount ()
-                            { return mInputStreamsCurrentlyOpenedCount; }
+    void inputStreamOpened (EVirtualSource source);
+    void inputStreamClosed (EVirtualSource source);
+    int  getInputStreamOpenedCount () { return mInputStreamsCurrentlyOpenedCount; }
 
     /// Find out if a particular sink is audible.
     // Something must be playing & the volume must be non-null
-    bool                isSinkAudible(EVirtualSink sink);
+    bool isSinkAudible(EVirtualAudiodSink sink);
 
     /// Suspend all streams (when entering power saving mode).
-    bool                suspendAll();
+    bool suspendAll();
 
     /// Suspend sampling rate on sinks/sources
-    bool                updateRate(int rate);
+    bool updateRate(int rate);
 
 
     /// Play a system sound using Pulse's API
-    bool                playSystemSound(const char *snd, EVirtualSink sink);
+    bool playSystemSound(const char *snd, EVirtualAudiodSink sink);
 
     /// Pre-load system sound in Pulse, if necessary
-    void                preloadSystemSound(const char * snd)
-                                          { mPulseLink.preload(snd); }
+    void preloadSystemSound(const char * snd) { mPulseLink.preload(snd); }
     /// mute/unmute the Physical sink
-    bool                setMute(int sink, int mutestatus);
+    bool setMute(int sink, int mutestatus);
 
     /// set volume on a particular display
-    bool                setVolume(int display, int volume);
+    bool setVolume(int display, int volume);
 
-    void                playOneshotDtmf(const char *snd, EVirtualSink sink) ;
+    void playOneshotDtmf(const char *snd, EVirtualAudiodSink sink) ;
 
-    void                playOneshotDtmf(const char *snd, const char* sink) ;
+    void playOneshotDtmf(const char *snd, const char* sink) ;
 
-    void                playDtmf(const char *snd, EVirtualSink sink) ;
+    void playDtmf(const char *snd, EVirtualAudiodSink sink) ;
 
-    void                playDtmf(const char *snd, const char* sink) ;
+    void playDtmf(const char *snd, const char* sink) ;
 
-    void                stopDtmf();
+    void stopDtmf();
 
-    bool                programLoadRTP(const char *type, const char *ip, int port);
-    bool                programHeadsetRoute (int route);
-    bool                programUnloadRTP();
+    bool programLoadRTP(const char *type, const char *ip, int port);
+    bool programHeadsetRoute (int route);
+    bool programUnloadRTP();
 
-    bool                externalSoundcardPathCheck (std::string filename,  int status);
-    bool                loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+    bool externalSoundcardPathCheck (std::string filename,  int status);
+    bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
 
     /// These should really be private, but they're needed for global callbacks...
-    bool                _connectSocket();
-    void                _pulseStatus(GIOChannel * ch,
-                                     GIOCondition condition,
-                                     gpointer user_data);
-    void                _timer();
-    bool                _sinkStatus(LSHandle *lshandle, LSMessage *message);
-    bool                _setFilter(LSHandle * lshandle, LSMessage * message);
-    bool                _suspend(LSHandle * lshandle, LSMessage * message);
+    bool _connectSocket();
+    void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);
+    void _timer();
+    bool _sinkStatus(LSHandle *lshandle, LSMessage *message);
+    bool _setFilter(LSHandle * lshandle, LSMessage * message);
+    bool _suspend(LSHandle * lshandle, LSMessage * message);
 
-    GIOChannel *        mChannel;
+    GIOChannel* mChannel;
 
 #ifdef HAVE_BT_SERVICE_V1
     void sendBTDeviceType(bool type, bool hfpStatus);
@@ -159,43 +154,43 @@ public:
     inline bool inHfpAgRole(void);
 
 private:
-    bool                programSource(char cmd, int sink, int value);
-    void                openCloseSink(EVirtualSink sink, bool openNotClose);
-    int                    getCurrentPulseVolume(EVirtualSink sink);// get Pulse volume
+    bool programSource(char cmd, int sink, int value);
+    void openCloseSink(EVirtualAudiodSink sink, bool openNotClose);
+    int  getCurrentPulseVolume(EVirtualAudiodSink sink);// get Pulse volume
 
     // Direct socket connection to Pulse
-    int                    mTimeout;
-    unsigned int        mSourceID;
-    int                    mConnectAttempt;
+    int mTimeout;
+    unsigned int mSourceID;
+    int mConnectAttempt;
 
     // Connection to Pulse via official Pulse APIs
-    PulseAudioLink        mPulseLink;
+    PulseAudioLink mPulseLink;
     PulseDtmfGenerator* mCurrentDtmf;
 
-    VirtualSinkSet        mActiveStreams;
-    int                    mPulseStateVolume[eVirtualSink_Count];
-    int                    mPulseStateVolumeHeadset[eVirtualSink_Count];
-    int                    mPulseStateRoute[eVirtualSink_Count];
-    int                    mPulseStateSourceRoute[eVirtualSource_Count];
-    int                    mPulseStateActiveStreamCount[eVirtualSink_Count];
-    bool                 mPulseFilterEnabled;
-    int                    mPulseStateFilter;
-    int                    mPulseStateLatency;
+    VirtualSinkSet mActiveStreams;
+    int mPulseStateVolume[eVirtualSink_Count];
+    int mPulseStateVolumeHeadset[eVirtualSink_Count];
+    int mPulseStateRoute[eVirtualSink_Count];
+    int mPulseStateSourceRoute[eVirtualSource_Count];
+    int mPulseStateActiveStreamCount[eVirtualSink_Count];
+    bool mPulseFilterEnabled;
+    int mPulseStateFilter;
+    int mPulseStateLatency;
 
-    int                    mInputStreamsCurrentlyOpenedCount;
-    int                    mOutputStreamsCurrentlyOpenedCount;
+    int mInputStreamsCurrentlyOpenedCount;
+    int mOutputStreamsCurrentlyOpenedCount;
 
-    bool                   voLTE;
-    int                    BTDeviceType;
-    int                    mPreviousVolume;
-    bool                   NRECvalue;
-    bool                   BTvolumeSupport;
-    bool                   mIsHfpAgRole;
+    bool voLTE;
+    int BTDeviceType;
+    int mPreviousVolume;
+    bool NRECvalue;
+    bool BTvolumeSupport;
+    bool mIsHfpAgRole;
 
 #ifdef HAVE_BT_SERVICE_V1
     bool voiceRxMuted;
 #endif
-    AudiodCallbacksInterface *    mCallbacks;
+    AudiodCallbacksInterface* mCallbacks;
 };
 
 extern PulseAudioMixer gPulseAudioMixer;

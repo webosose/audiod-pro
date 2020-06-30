@@ -270,7 +270,7 @@ public:
     bool subscriptionPost(LSHandle * palmService,
     std::string replyString, ESendUpdate update);
 
-    virtual void onSinkChanged(EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType) {}
+    virtual void onSinkChanged(EVirtualAudiodSink sink, EControlEvent event, ESinkType p_eSinkType) {}
 
     GenericScenario * mCurrentScenario;
 

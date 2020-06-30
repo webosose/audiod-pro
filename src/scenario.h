@@ -119,7 +119,7 @@ public:
         {return hasMicGain() && mMicGain.get() >= 0 ?
     SCVolumeConvertPercentToTic(mMicGain.get()) : -1;}
 
-    void configureRoute (EVirtualSink sink,
+    void configureRoute (EVirtualAudiodSink sink,
                          EPhysicalSink destination,
                          bool ringerSwitchOn,
                          bool enabled = true);
@@ -128,15 +128,15 @@ public:
                          bool ringerSwitchOn,
                          bool enabled = true);
     bool setFilter(int filter);
-    bool isRouted(EVirtualSink sink);
+    bool isRouted(EVirtualAudiodSink sink);
     bool isRouted(EVirtualSource source);
-    EPhysicalSink getDestination(EVirtualSink sink);
+    EPhysicalSink getDestination(EVirtualAudiodSink sink);
     EPhysicalSource getDestination(EVirtualSource source);
 
     void logRoutes() const;
 
 private:
-    ScenarioRoute * getScenarioRoute(EVirtualSink sink, bool ringerOn);
+    ScenarioRoute * getScenarioRoute(EVirtualAudiodSink sink, bool ringerOn);
     ScenarioRoute * getScenarioRoute(EVirtualSource source, bool ringerOn);
 
     ScenarioRoute mRoutesRingerOn[eVirtualSink_Count];
@@ -148,38 +148,20 @@ private:
 
 class ScenarioModule : public GenericScenarioModule {
 public:
-    
+
     bool museSet (bool enabled);
     void programHardwareState ();
 
     ScenarioModule(const ConstString & category) : GenericScenarioModule(category){}
-
-    
-
-    bool            makeCurrent();
-    
-
-    
-
-    bool            setScenarioLatency (const char * name, int latency);
-    bool            getScenarioLatency (const char * name, int & latency);
-
-    void            programSoftwareMixer (bool ramp, bool muteMediaSink = false);
-
-    bool            programVolume (EVirtualSink sink, int volume, bool ramp = false);
-    bool            programMute (EVirtualSource source, int mute);
-    bool            rampVolume (EVirtualSink sink, int volume)
-                                { return programVolume (sink, volume, true); }
-
-    
-
-
-    
-
+    bool makeCurrent();
+    bool setScenarioLatency (const char * name, int latency);
+    bool getScenarioLatency (const char * name, int & latency);
+    void programSoftwareMixer (bool ramp, bool muteMediaSink = false);
+    bool programVolume (EVirtualAudiodSink sink, int volume, bool ramp = false);
+    bool programMute (EVirtualSource source, int mute);
+    bool rampVolume (EVirtualAudiodSink sink, int volume) {return programVolume (sink, volume, true); }
 protected:
-    
-    void            _updateHardwareSettings(bool muteMediaSink = false);
-
+    void _updateHardwareSettings(bool muteMediaSink = false);
 };
 
 #endif // _SCENARIO_H_

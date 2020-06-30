@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -126,8 +126,8 @@ public:
     bool    isConnected() const    { return mPulseAudioReady; }
     bool    checkConnection()    { return isConnected()|| connectToPulse(); }
 
-    /// API to playback a system sound. Prefer the version using a EVirtualSink
-    bool    play(const char *snd, EVirtualSink sink);
+    /// API to playback a system sound. Prefer the version using a EVirtualAudiodSink
+    bool    play(const char *snd, EVirtualAudiodSink sink);
     bool    play(const char *snd, const char *sink);
 
     bool    play(PulseAudioDataProvider* data, const char* sink);

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ void AudiodCallbacks::onAudioMixerConnected()
     }
 }
 
-void AudiodCallbacks::onSinkChanged(EVirtualSink sink, EControlEvent event,ESinkType sinkType)
+void AudiodCallbacks::onSinkChanged(EVirtualAudiodSink sink, EControlEvent event,ESinkType sinkType)
 {
     g_debug ("onSinkChanged: sink(%d) Control Event(%d) Sink Type %d", sink, event,(int)sinkType);
     CallbackVector &    callbacks =  mSinkCallbackModules[sink];
@@ -50,10 +50,10 @@ void AudiodCallbacks::onInputStreamActiveChanged(bool active)
 }
 
 void AudiodCallbacks::registerModuleCallback (GenericScenarioModule * module,
-                                              EVirtualSink sink,
+                                              EVirtualAudiodSink sink,
                                               bool notifyFirst)
 {
-    g_debug("entering function %s : SINK = %d notifyFirst = %d ", __FUNCTION__, 
+    g_debug("entering function %s : SINK = %d notifyFirst = %d ", __FUNCTION__,
                                                             sink, notifyFirst);
     int first = sink;
     int last = sink;
@@ -63,10 +63,15 @@ void AudiodCallbacks::registerModuleCallback (GenericScenarioModule * module,
         first = eVirtualSink_First;
         last = eVirtualSink_Last;
     }
-    else if (sink == eumiAll)
+    else if (sink == eVirtualUMISink_All)
     {
-        first = eumiFirst;
-        last = eumiLast;
+        first = eVirtualUMISink_First;
+        last = eVirtualUMISink_Last;
+    }
+    else if (sink == eAllSink)
+    {
+        first = eVirtualSink_First;
+        last = eVirtualUMISink_Last;
     }
     for (int i = first ; i <= last ; i++)
     {

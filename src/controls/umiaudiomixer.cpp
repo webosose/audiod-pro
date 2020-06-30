@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 LG Electronics, Inc.
+// Copyright (c) 2018-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -319,7 +319,7 @@ bool umiaudiomixer::readyToProgram()
     return mIsReadyToProgram;
 }
 
-void umiaudiomixer::onSinkChangedReply(EVirtualSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType)
+void umiaudiomixer::onSinkChangedReply(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType)
 {
     g_debug("OnSinkChangedReply Sink Name :%d, Connection status: %d sink type %d", eVirtualSink, eConnStatus, (int)eSinkType);
     EControlEvent event = eControlEvent_None;
@@ -346,7 +346,7 @@ void umiaudiomixer::onSinkChangedReply(EVirtualSink eVirtualSink, E_CONNSTATUS e
     }
 }
 
-void umiaudiomixer::updateStreamStatus(EVirtualSink eVirtualSink, E_CONNSTATUS eConnStatus)
+void umiaudiomixer::updateStreamStatus(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus)
 {
     if (eConnect == eConnStatus)
     {
@@ -354,7 +354,7 @@ void umiaudiomixer::updateStreamStatus(EVirtualSink eVirtualSink, E_CONNSTATUS e
     }
     else if (eDisConnect == eConnStatus)
     {
-        for (std::vector<EVirtualSink>::iterator itStream = mVectActiveStreams.begin() ; itStream != mVectActiveStreams.end(); ++itStream)
+        for (std::vector<EVirtualAudiodSink>::iterator itStream = mVectActiveStreams.begin() ; itStream != mVectActiveStreams.end(); ++itStream)
         {
             if (*itStream == eVirtualSink)
             {
@@ -369,7 +369,7 @@ void umiaudiomixer::updateStreamStatus(EVirtualSink eVirtualSink, E_CONNSTATUS e
     }
 }
 
-bool umiaudiomixer::isStreamActive(EVirtualSink eVirtualSink)
+bool umiaudiomixer::isStreamActive(EVirtualAudiodSink eVirtualSink)
 {
     for (auto &elements : mVectActiveStreams)
     {

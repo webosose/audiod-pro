@@ -57,7 +57,7 @@ const char * controlEventName(EControlEvent event)
     return "<invalid event>";
 }
 
-const char * virtualSinkName(EVirtualSink sink, bool prettyName)
+const char * virtualSinkName(EVirtualAudiodSink sink, bool prettyName)
 {
     const char * name = "<invalid sink>";
     if (IsValidVirtualSink(sink))
@@ -70,15 +70,15 @@ const char * virtualSinkName(EVirtualSink sink, bool prettyName)
     return name;
 }
 
-EVirtualSink getSinkByName(const char * name)
+EVirtualAudiodSink getSinkByName(const char * name)
 {
-    EVirtualSink sink = eVirtualSink_None;
+    EVirtualAudiodSink sink = eVirtualSink_None;
     for (int i = eVirtualSink_First; i <= eVirtualSink_Last; i++)
     {
         if (0 == strcmp(name, systemdependantvirtualsinkmap[i].virtualsinkname) ||
              0 == strcmp(name, systemdependantvirtualsinkmap[i].virtualsinkname + 1))
         {
-            sink = (EVirtualSink) systemdependantvirtualsinkmap[i].virtualsinkidentifier;
+            sink = (EVirtualAudiodSink) systemdependantvirtualsinkmap[i].virtualsinkidentifier;
             break;
         }
     }
@@ -294,7 +294,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
 
         case 'r':
 
-            if (VERIFY(IsValidVirtualSink((EVirtualSink)sink)))
+            if (VERIFY(IsValidVirtualSink((EVirtualAudiodSink)sink)))
             {
                 sendCmd = (mPulseStateVolume[sink] != value ||
                            mPulseStateVolumeHeadset[sink] != headset);
@@ -308,7 +308,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
             }
             break;
         case 'd':
-            if (VERIFY(IsValidVirtualSink((EVirtualSink)sink)))
+            if (VERIFY(IsValidVirtualSink((EVirtualAudiodSink)sink)))
             {
                 if (mPulseStateRoute[sink] != value)
                     mPulseStateRoute[sink] = value;
@@ -365,7 +365,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
         else if (cmd == 'b')
         {
             sprintf(buffer, "%c %i %i %i", cmd, mPulseStateVolume[sink], headset, value);
-            sinkName = virtualSinkName((EVirtualSink)sink);
+            sinkName = virtualSinkName((EVirtualAudiodSink)sink);
         }
         else if ((cmd == 'n') || (cmd == 'k'))
         {
@@ -374,7 +374,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
         else
         {
             sprintf(buffer, "%c %i %i %i", cmd, sink, value, headset);
-            sinkName = virtualSinkName((EVirtualSink)sink);    // sink means something
+            sinkName = virtualSinkName((EVirtualAudiodSink)sink);    // sink means something
         }
 
         g_debug ("%s: sending message '%s' %s", __FUNCTION__, buffer, sinkName);
@@ -393,7 +393,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
     return true;
 }
 
-bool PulseAudioMixer::programVolume (EVirtualSink sink, int volume, bool ramp)
+bool PulseAudioMixer::programVolume (EVirtualAudiodSink sink, int volume, bool ramp)
 {
     return programSource ( (ramp ? 'r' : 'v'), sink, volume);
 }
@@ -409,7 +409,7 @@ bool PulseAudioMixer::programMute (EVirtualSource source, int mute)
 }
 
 
-bool PulseAudioMixer::programDestination (EVirtualSink sink,
+bool PulseAudioMixer::programDestination (EVirtualAudiodSink sink,
                                           EPhysicalSink destination)
 {
     return programSource ('d', sink, destination);
@@ -923,9 +923,9 @@ bool PulseAudioMixer::programLatency (int latency)
 
 bool PulseAudioMixer::muteAll ()
 {
-    for (EVirtualSink sink = eVirtualSink_First;
+    for (EVirtualAudiodSink sink = eVirtualSink_First;
          sink <= eVirtualSink_Last;
-         sink = EVirtualSink(sink + 1))
+         sink = EVirtualAudiodSink(sink + 1))
     {
         if (sink != ecallertone)
             programSource ('m', sink, 0);
@@ -995,9 +995,9 @@ PulseAudioMixer::_connectSocket ()
     mConnectAttempt = 0;
 
     // initialize table for the pulse state lookup table
-    for (EVirtualSink sink = eVirtualSink_First;
+    for (EVirtualAudiodSink sink = eVirtualSink_First;
          sink <= eVirtualSink_Last;
-         sink = EVirtualSink(sink + 1))
+         sink = EVirtualAudiodSink(sink + 1))
     {
         mPulseStateVolume[sink] = -1;
         mPulseStateVolumeHeadset[sink] = -1;
@@ -1062,12 +1062,12 @@ void PulseAudioMixer::_timer()
     }
 }
 
-int PulseAudioMixer::getStreamCount (EVirtualSink sink)
+int PulseAudioMixer::getStreamCount (EVirtualAudiodSink sink)
 {
     return mPulseStateActiveStreamCount[sink];
 }
 
-bool PulseAudioMixer::isSinkAudible(EVirtualSink sink)
+bool PulseAudioMixer::isSinkAudible(EVirtualAudiodSink sink)
 {
     if (!VERIFY(IsValidVirtualSink(sink)))
         return false;
@@ -1075,7 +1075,7 @@ bool PulseAudioMixer::isSinkAudible(EVirtualSink sink)
 }
 
 void
-PulseAudioMixer::openCloseSink (EVirtualSink sink, bool openNotClose)
+PulseAudioMixer::openCloseSink (EVirtualAudiodSink sink, bool openNotClose)
 {
     if (!VERIFY(IsValidVirtualSink(sink)))
         return;
@@ -1138,7 +1138,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
         {
             g_debug("PulseAudioMixer::_pulseStatus: Pulse says: '%c %i %i'",\
                                   cmd, isink, info);
-            EVirtualSink sink = EVirtualSink(isink);
+            EVirtualAudiodSink sink = EVirtualAudiodSink(isink);
                 EVirtualSource source = EVirtualSource(isink);
             switch (cmd)
             {
@@ -1258,7 +1258,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
     }
 }
 
-void PulseAudioMixer::outputStreamOpened (EVirtualSink sink)
+void PulseAudioMixer::outputStreamOpened (EVirtualAudiodSink sink)
 {
     if (IsValidVirtualSink(sink))
         openCloseSink (sink, true);
@@ -1267,7 +1267,7 @@ void PulseAudioMixer::outputStreamOpened (EVirtualSink sink)
     mOutputStreamsCurrentlyOpenedCount++;
 }
 
-void PulseAudioMixer::outputStreamClosed (EVirtualSink sink)
+void PulseAudioMixer::outputStreamClosed (EVirtualAudiodSink sink)
 {
     mOutputStreamsCurrentlyOpenedCount--;
     if (mOutputStreamsCurrentlyOpenedCount <= 0)
@@ -1389,7 +1389,7 @@ PulseAudioMixer::_sinkStatus(LSHandle *lshandle, LSMessage *message)
 
     std::string reply;
 
-    EVirtualSink sink = eVirtualSink_All;
+    EVirtualAudiodSink sink = eVirtualSink_All;
     std::string sinkName;
     if (msg.get("sink", sinkName) && sinkName != "all")
     {
@@ -1419,9 +1419,9 @@ PulseAudioMixer::_sinkStatus(LSHandle *lshandle, LSMessage *message)
     else    // return all sinks!
     {
         pbnjson::JValue answer = createJsonReply(true);
-        for (EVirtualSink sink = eVirtualSink_First;
+        for (EVirtualAudiodSink sink = eVirtualSink_First;
               sink <= eVirtualSink_Last;
-              sink = EVirtualSink(sink + 1))
+              sink = EVirtualAudiodSink(sink + 1))
         {
             pbnjson::JValue sinkstate = pbnjson::Object();
             sinkstate.put("sink", systemdependantvirtualsinkmap[sink].virtualsinkname);
@@ -1530,7 +1530,7 @@ static int IdToDtmf(const char* snd) {
     }
 }
 
-bool PulseAudioMixer::playSystemSound(const char *snd, EVirtualSink sink)
+bool PulseAudioMixer::playSystemSound(const char *snd, EVirtualAudiodSink sink)
 {
     PMTRACE_FUNCTION;
     if (strncmp(snd, "dtmf_", 5) == 0) {
@@ -1543,7 +1543,7 @@ bool PulseAudioMixer::playSystemSound(const char *snd, EVirtualSink sink)
     return mPulseLink.play(snd, sink);
 }
 
-void  PulseAudioMixer::playOneshotDtmf(const char *snd, EVirtualSink sink)
+void  PulseAudioMixer::playOneshotDtmf(const char *snd, EVirtualAudiodSink sink)
 {
     PMTRACE_FUNCTION;
     playOneshotDtmf(snd, virtualSinkName(sink, false));
@@ -1561,7 +1561,7 @@ void  PulseAudioMixer::playOneshotDtmf(const char *snd, const char* sink)
     mPulseLink.play(mCurrentDtmf, sink);
 }
 
-void  PulseAudioMixer::playDtmf(const char *snd, EVirtualSink sink)
+void  PulseAudioMixer::playDtmf(const char *snd, EVirtualAudiodSink sink)
 {
     gAudioDevice.prepareForPlayback();
 

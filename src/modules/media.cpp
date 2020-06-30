@@ -607,7 +607,7 @@ MediaScenarioModule::programState ()
 }
 
 void
-MediaScenarioModule::_startSinkPlayback (EVirtualSink sink)
+MediaScenarioModule::_startSinkPlayback (EVirtualAudiodSink sink)
 {
 
     programMediaVolumes(false, false, false);
@@ -621,7 +621,7 @@ MediaScenarioModule::_startSinkPlayback (EVirtualSink sink)
 }
 
 void
-MediaScenarioModule::_endSinkPlayback (EVirtualSink sink)
+MediaScenarioModule::_endSinkPlayback (EVirtualAudiodSink sink)
 {
     g_debug ("MediaScenarioModule::_endSinkPlayback");
     //TO BE IMPLEMENTED
@@ -694,7 +694,7 @@ void MediaScenarioModule::sendAckToPowerd(bool isWakeup)
 }
 
 void
-MediaScenarioModule::onSinkChanged (EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType)
+MediaScenarioModule::onSinkChanged (EVirtualAudiodSink sink, EControlEvent event, ESinkType p_eSinkType)
 {
     g_debug("MediaScenarioModule::onSinkChanged: sink %i-%s %s %d", sink,
     virtualSinkName(sink), controlEventName(event),(int)p_eSinkType);

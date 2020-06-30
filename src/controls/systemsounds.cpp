@@ -41,7 +41,7 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
         return true;
 
     const gchar * reply = STANDARD_JSON_SUCCESS;
-    EVirtualSink sink = efeedback;
+    EVirtualAudiodSink sink = efeedback;
     std::string    name, sinkName;
     bool bPlay = true;
     bool bOverride = false;

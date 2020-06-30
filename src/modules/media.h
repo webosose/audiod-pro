@@ -30,7 +30,7 @@ public:
     ~MediaScenarioModule() {};
     MediaScenarioModule(int defaultvolume);
     static void MediaInterfaceExit();
-    virtual void    onSinkChanged(EVirtualSink sink, EControlEvent event, ESinkType p_eSinkType);
+    virtual void    onSinkChanged(EVirtualAudiodSink sink, EControlEvent event, ESinkType p_eSinkType);
     virtual void    programControlVolume();
     virtual void    programState();
     virtual void    resumeA2DP();
@@ -54,7 +54,7 @@ public:
     virtual bool someAlertIsPlaying();
     bool            enableRingtoneRouting(bool enable);
     int                adjustToHeadsetVolume(int volume);
-    EVirtualSink    mPreviousSink;
+    EVirtualAudiodSink    mPreviousSink;
 
     virtual void sendAckToPowerd(bool isWakeUp);
     void setCurrentState(int value);
@@ -89,15 +89,15 @@ protected:
     bool mAlertsRoutingActive;
     guint mA2DPUpdateTimerID;
     virtual void _updateRouting();
-    virtual void _startSinkPlayback(EVirtualSink sink);
-    virtual void _endSinkPlayback(EVirtualSink sink);
+    virtual void _startSinkPlayback(EVirtualAudiodSink sink);
+    virtual void _endSinkPlayback(EVirtualAudiodSink sink);
     virtual bool _isWirelessStreamActive();
     static gboolean _A2DPDelayedUpdate(gpointer data);
 };
 
 MediaScenarioModule * getMediaModule();
 
-inline bool isMediaSink(EVirtualSink sink)
+inline bool isMediaSink(EVirtualAudiodSink sink)
 {
     return sink == emedia ||
            sink == eflash ||
@@ -106,7 +106,7 @@ inline bool isMediaSink(EVirtualSink sink)
            sink == enavigation;
 }
 
-inline bool isWirelessStreamedSink(EVirtualSink sink)
+inline bool isWirelessStreamedSink(EVirtualAudiodSink sink)
 {
     return sink == emedia || sink == eflash || sink == edefault1 || sink == edefault2 || sink == enavigation;
 }

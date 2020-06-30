@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ class umiaudiomixer
 
     /*To store the status if the starem is currently active*/
 
-    std::vector<EVirtualSink> mVectActiveStreams;
+    std::vector<EVirtualAudiodSink> mVectActiveStreams;
 
     /*Constructor*/
     umiaudiomixer();
@@ -91,16 +91,16 @@ class umiaudiomixer
     bool getConnectionStatus(LSFilterFunc cb, envelopeRef *message);
 
     /*To send on sink changed status to all the pulse audiod and umi scenario modules*/
-    void onSinkChangedReply(EVirtualSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType);
+    void onSinkChangedReply(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType);
 
     /*To inform scenario modules if the mixer interafce is ready to use, in tis case it audiooutputd luna service status*/
     bool readyToProgram ();
 
     /*To keep track of active stream types*/
-    void updateStreamStatus(EVirtualSink eVirtualSink, E_CONNSTATUS eConnStatus);
+    void updateStreamStatus(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus);
 
     /*To get the status if the starem is currently active*/
-    bool isStreamActive(EVirtualSink eVirtualSink);
+    bool isStreamActive(EVirtualAudiodSink eVirtualSink);
 
     /*To update IsReadyToProgram*/
     void setMixerReadyStatus(bool eStatus);

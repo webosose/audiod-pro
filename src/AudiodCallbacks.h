@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,20 +29,20 @@ class AudiodCallbacks : public AudiodCallbacksInterface
 public:
     /// Methods called by HW/SW implementation layers
     virtual void        onAudioMixerConnected();
-    virtual void        onSinkChanged(EVirtualSink sink, EControlEvent event,ESinkType sinkType);
+    virtual void        onSinkChanged(EVirtualAudiodSink sink, EControlEvent event,ESinkType sinkType);
     virtual void        onInputStreamActiveChanged(bool active);
 
     // Modules can register to be notified via onSinkChanged()
     // that a sink was opened or closed.
     void                registerModuleCallback(GenericScenarioModule * module,
-                                               EVirtualSink sink,
+                                               EVirtualAudiodSink sink,
                                                 bool notifyFirst = false);
     void                unregisterModuleCallback(GenericScenarioModule * module);
 
 private:
     typedef std::vector<GenericScenarioModule *> CallbackVector;
 
-    CallbackVector        mSinkCallbackModules[eumiCount];
+    CallbackVector        mSinkCallbackModules[eVirtualUMISink_Count];
 };
 
 

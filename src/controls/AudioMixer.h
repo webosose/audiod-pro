@@ -21,8 +21,53 @@
 #include <lunaservice.h>
 
 #include <pulse/module-palm-policy.h>
-//#include "AudioDevice.h"
 #include "ConstString.h"
+
+enum EVirtualUMISink
+{
+    eUmiLivetv = eVirtualSink_Count+1,
+    eUmiMediaMusic,
+    eUmiMedia,
+    eUmiMusic,
+    eUmiGallery,
+    eUmiOverlay,
+    eVirtualUMISink_Count,
+    eVirtualUMISink_First = eUmiLivetv,
+    eVirtualUMISink_Last = eUmiOverlay,
+    eVirtualUMISink_All = eVirtualUMISink_Count,     //Needed if modules want to subscribe all UMI sinks
+    eAllSink = eVirtualUMISink_Count                 //Needed if modules want to subscribe all pulse and UMI sinks
+};
+
+template <typename EnumT, typename BaseEnumT>
+class InheritEnum
+{
+    public:
+        InheritEnum()
+        {
+        }
+
+        InheritEnum(EnumT e):enum_(e)
+        {
+        }
+
+        InheritEnum(BaseEnumT e):enum_(static_cast<EnumT>(e))
+        {
+        }
+
+        explicit InheritEnum( int val):enum_(static_cast<EnumT>(val))
+        {
+        }
+
+        operator EnumT() const
+        {
+            return enum_;
+        }
+
+        private:
+            EnumT enum_;
+};
+
+typedef InheritEnum<EVirtualUMISink, EVirtualSink> EVirtualAudiodSink;
 
 enum EPhoneEvent
 {
@@ -56,40 +101,40 @@ public:
 
     void    clear()                    { mSet = 0; }
 
-    void    add(EVirtualSink sink)     { mSet |= mask(sink); }
-    void    remove(EVirtualSink sink)  { mSet &= ~mask(sink); }
+    void    add(EVirtualAudiodSink sink)     { mSet |= mask(sink); }
+    void    remove(EVirtualAudiodSink sink)  { mSet &= ~mask(sink); }
 
     /// does the set contain this sink?
-    bool    contain(EVirtualSink sink) const
+    bool    contain(EVirtualAudiodSink sink) const
                 { return (mSet & mask(sink)) != 0; }
 
     /// does the set contain any of these two sinks?
-    bool    containAnyOf(EVirtualSink sink1, EVirtualSink sink2) const
+    bool    containAnyOf(EVirtualAudiodSink sink1, EVirtualAudiodSink sink2) const
                 { return (mSet & (mask(sink1) | mask(sink2))) != 0; }
 
     /// does the set contain any of these three sinks?
-    bool    containAnyOf( EVirtualSink sink1,
-                          EVirtualSink sink2,
-                          EVirtualSink sink3) const
+    bool    containAnyOf( EVirtualAudiodSink sink1,
+                          EVirtualAudiodSink sink2,
+                          EVirtualAudiodSink sink3) const
                 { return (mSet & ( mask(sink1) |
                                    mask(sink2) |
                                    mask(sink3))) != 0; }
 
     /// does the set contain any of these four sinks?
-    bool    containAnyOf( EVirtualSink sink1,
-                          EVirtualSink sink2,
-                          EVirtualSink sink3,
-                          EVirtualSink sink4) const
+    bool    containAnyOf( EVirtualAudiodSink sink1,
+                          EVirtualAudiodSink sink2,
+                          EVirtualAudiodSink sink3,
+                          EVirtualAudiodSink sink4) const
                 { return (mSet & ( mask(sink1) |
                                    mask(sink2) |
                                    mask(sink3) |
                                     mask(sink4))) != 0; }
 
-    bool    containAnyOf( EVirtualSink sink1,
-                          EVirtualSink sink2,
-                          EVirtualSink sink3,
-                          EVirtualSink sink4,
-                          EVirtualSink sink5) const
+    bool    containAnyOf( EVirtualAudiodSink sink1,
+                          EVirtualAudiodSink sink2,
+                          EVirtualAudiodSink sink3,
+                          EVirtualAudiodSink sink4,
+                          EVirtualAudiodSink sink5) const
                 { return (mSet & ( mask(sink1) |
                                    mask(sink2) |
                                    mask(sink3) |
@@ -101,19 +146,19 @@ public:
     bool    operator!=(const VirtualSinkSet & rhs) const { return mSet != rhs.mSet; }
 
 private:
-    int        mask(EVirtualSink sink) const         { return 1 << sink; }
+    int        mask(EVirtualAudiodSink sink) const         { return 1 << sink; }
 
     int        mSet;
 };
 
-inline bool IsValidVirtualSink(EVirtualSink sink)
+inline bool IsValidVirtualSink(EVirtualAudiodSink sink)
    { return sink >= eVirtualSink_First && sink <= eVirtualSink_Last; }
 
 inline bool IsValidVirtualSource(EVirtualSource source)
     { return source >= eVirtualSource_First && source <= eVirtualSource_Last; }
 
 // Low latency sinks are never muted. Their volume should always be set properly...
-inline bool isNeverMutedSink(EVirtualSink sink)
+inline bool isNeverMutedSink(EVirtualAudiodSink sink)
 {
     return sink == eDTMF || sink == efeedback || sink == eeffects || sink == ecallertone;
 }
@@ -146,7 +191,7 @@ public:
     virtual void        onAudioMixerConnected() = 0;
 
     /// An audio sink was opened or closed: adjust volumes as necessary
-    virtual void        onSinkChanged(EVirtualSink sink, EControlEvent event,ESinkType p_eSinkType) = 0;
+    virtual void        onSinkChanged(EVirtualAudiodSink sink, EControlEvent event,ESinkType p_eSinkType) = 0;
 
     /// Notification that a first input stream was opened,
     // or that the last input stream was closed
@@ -154,10 +199,10 @@ public:
 };
 
 const char * controlEventName(EControlEvent event);
-const char * virtualSinkName(EVirtualSink sink, bool prettyNameNotInternal = true);
+const char * virtualSinkName(EVirtualAudiodSink sink, bool prettyNameNotInternal = true);
 const char * virtualSourceName(EVirtualSource source,
                                bool prettyNameNotInternal = true);
-EVirtualSink getSinkByName(const char * name);
+EVirtualAudiodSink getSinkByName(const char * name);
 
 /*
  * AudioMixer abstracts Audiod's view of the subsystem that implements audio mixing.
@@ -189,17 +234,17 @@ public:
 
     /// Program volume of a sink. Will ignore volume
     // of high latency sinks not playing and mute them.
-    virtual bool            programVolume(EVirtualSink sink, int volume,
+    virtual bool            programVolume(EVirtualAudiodSink sink, int volume,
                                            bool ramp = false) = 0;
 
     /// Program volume of a source.
     virtual bool            programMute(EVirtualSource source, int mute) = 0;
 
     /// Same as program volume, but ramped.
-    virtual bool            rampVolume(EVirtualSink sink, int endVolume) = 0;
+    virtual bool            rampVolume(EVirtualAudiodSink sink, int endVolume) = 0;
 
     /// Program destination of a sink
-    virtual bool            programDestination(EVirtualSink sink,
+    virtual bool            programDestination(EVirtualAudiodSink sink,
                                                EPhysicalSink destination) = 0;
     /// Program destination of a source
     virtual bool            programDestination(EVirtualSource source,
@@ -218,7 +263,7 @@ public:
     virtual VirtualSinkSet    getActiveStreams() = 0;
 
     /// Get how many streams are active for a particular sink.
-    virtual int                getStreamCount(EVirtualSink sink) = 0;
+    virtual int                getStreamCount(EVirtualAudiodSink sink) = 0;
 
     /// Count how many output streams are opened
     virtual int                getOutputStreamOpenedCount () = 0;
@@ -228,7 +273,7 @@ public:
 
     /// Find out if a particular sink is audible.
     // Something must be playing & the volume must be non-null
-    virtual bool            isSinkAudible(EVirtualSink sink) = 0;
+    virtual bool            isSinkAudible(EVirtualAudiodSink sink) = 0;
 
     /// Suspend all streams (when entering power saving mode).
     virtual bool            suspendAll() = 0;
@@ -237,7 +282,7 @@ public:
     virtual bool            updateRate(int rate) = 0;
 
     /// Play a low latency system sound using a particular sink
-    virtual bool            playSystemSound(const char *snd, EVirtualSink sink) = 0;
+    virtual bool            playSystemSound(const char *snd, EVirtualAudiodSink sink) = 0;
 
     /// For faster first play, on-demand sounds can be pre-loaded
     virtual void            preloadSystemSound(const char * snd) = 0;
@@ -248,9 +293,9 @@ public:
     /// set volume on a particular diaplyID
     virtual bool            setVolume(int display, int volume) = 0;
 
-    virtual void            playDtmf(const char *snd, EVirtualSink sink) = 0;
+    virtual void            playDtmf(const char *snd, EVirtualAudiodSink sink) = 0;
 
-    virtual void            playOneshotDtmf(const char *snd, EVirtualSink sink) = 0 ;
+    virtual void            playOneshotDtmf(const char *snd, EVirtualAudiodSink sink) = 0 ;
 
     virtual void            stopDtmf()= 0;
 
@@ -258,11 +303,6 @@ public:
     virtual bool            programHeadsetRoute(int route) = 0;
     virtual bool            programUnloadRTP() = 0;
     virtual bool            loadUSBSinkSource(char cmd, int cardno, int deviceno, int status) = 0;
-
-#ifdef HAVE_BT_SERVICE_V1
-    virtual void setBTvolumeSupport(bool value) = 0;
-    virtual void sendBTDeviceType(bool type, bool hfpStatus) = 0;
-#endif
     virtual bool suspendSink(int sink) = 0;
     virtual void setNREC(bool value) = 0;
     virtual bool programLoadBluetooth (const char *address, const char *profile) = 0;

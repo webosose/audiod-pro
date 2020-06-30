@@ -114,11 +114,6 @@ aux_source_directory(pmtrace pmtrace_files)
 #add_definitions(-DHAVE_BT_SERVICE_V1)
 #add_definitions(-DAUDIOD_PALM_LEGACY)
 #add_definitions(-DAUDIOD_TEST_API)
-#add_definitions(-DDTMF_SUPPORTED)
-#add_definitions(-DVIBRATE_SUPPORTED)
-#add_definitions(-DPHONE_SUPPORTED)
-#add_definitions(-DTIMER_SUPPORTED)
-#add_definitions(-DVVM_SUPPORTED)
 
 if (AUDIOD_PALM_LEGACY)
     add_definitions(-DAUDIOD_PALM_LEGACY)
@@ -127,26 +122,6 @@ endif(AUDIOD_PALM_LEGACY)
 if (AUDIOD_TEST_API)
     add_definitions(-DAUDIOD_TEST_API)
 endif(AUDIOD_TEST_API)
-
-if (DTMF_SUPPORTED)
-    add_definitions(-DDTMF_SUPPORTED=0)
-endif(DTMF_SUPPORTED)
-
-if (VIBRATE_SUPPORTED)
-    add_definitions(-DVIBRATE_SUPPORTED=0)
-endif(VIBRATE_SUPPORTED)
-
-if (PHONE_SUPPORTED)
-    add_definitions(-DPHONE_SUPPORTED=0)
-endif(PHONE_SUPPORTED)
-
-if (TIMER_SUPPORTED)
-    add_definitions(-DTIMER_SUPPORTED=0)
-endif(TIMER_SUPPORTED)
-
-if (VVM_SUPPORTED)
-    add_definitions(-DVVM_SUPPORTED=0)
-endif(VVM_SUPPORTED)
 
 SET (services_files
         src/services/udev.cpp
