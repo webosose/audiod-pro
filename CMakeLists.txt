@@ -168,6 +168,7 @@ SET (modules_files
     add_definitions(-DDEVICE_ENUM=eDevice_unknown)
     add_definitions(-DSYSTEMSOUNDS_PATH="/media/internal/systemsounds/")
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
+    install(FILES files/config/audiod_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}
