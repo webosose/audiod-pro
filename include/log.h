@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,12 @@
 
 #include <PmLogLib.h>
 #include <glib.h>
+
+//get audiod pm log context
+PmLogContext getPmLogContext();
+
+//set audiod pm log context
+PmLogErr setPmLogContext(const char* logContextName);
 
 enum ELogDestination
 {
@@ -103,5 +109,30 @@ public:
 private:
     const char *    mIndent;
 };
+
+//This is for PmLog implementation
+extern PmLogContext audiodLogContext;
+#define INIT_KVCOUNT                0
+
+#define PM_LOG_CRITICAL(msgid, kvcount, ...)  PmLogCritical(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define PM_LOG_ERROR(msgid, kvcount, ...)     PmLogError(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define PM_LOG_WARNING(msgid, kvcount, ...)   PmLogWarning(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define PM_LOG_INFO(msgid, kvcount, ...)      PmLogInfo(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define PM_LOG_DEBUG(...)                     PmLogDebug(getPmLogContext(), ##__VA_ARGS__)
+
+//If log level is higher than DEBUG(lowest), you need to use Message ID.
+//Start up and shutdown message ID's
+#define MSGID_STARTUP                                  "AUDIOD_STARTUP"                    //AudioD start up logs
+#define MSGID_SHUTDOWN                                 "AUDIOD_SHUTDOWN"                   //AudioD shutdown logs
+#define MSGID_INIT                                     "AUDIOD_INIT"                       //AudioD inialization logs like control init, module init etc
+
+//Luna related message ID's
+#define MSGID_LUNA_SEND_FAILED                         "LUNA_SEND_FAILED"                  //Failed to send luna command
+#define MSGID_LUNA_CREATE_JSON_FAILED                  "LUNA_CREATE_JSON_FAILED"           //Failed to create json payload
+#define MSGID_LUNA_FAILED_TO_PARSE_PARAMETERS          "LUNA_FAILED_TO_PARSE_PARAMETERS"   //Failed to parse luna parameters
+
+//Json related message ID's
+#define MSGID_MALFORMED_JSON                           "MALFORMED_JSON"                     //Malformed json data
+#define MSGID_JSON_PARSE_ERROR                         "JSON_PARSE_ERROR"                   //Error while parsing json data
 
 #endif // LOG_H_

@@ -50,6 +50,9 @@
 static GMainLoop * gMainLoop = NULL;
 static LSHandle *gLSHandle = NULL;
 
+static const char* const logContextName = "AudioD";
+static const char* const logPrefix= "[audiod]";
+
 void
 term_handler(int signal)
 {
@@ -163,7 +166,14 @@ main(int argc, char **argv)
 
     g_log_set_default_handler(logFilter, NULL);
 
-    //g_message("Starting audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.",
+    PmLogErr error = setPmLogContext(logContextName);
+    if (error != kPmLogErr_None)
+    {
+        std::cerr << logPrefix << "Failed to setup up pmlog context " << logContextName << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    //PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.",
                                           //*gAudioDevice.getName(), BUILD_INFO);
 
     setpriority(PRIO_PROCESS,getpid(),niceme);
@@ -183,7 +193,7 @@ main(int argc, char **argv)
      */
     if(RegisterPalmService() == false)
         return -1;
-    g_message("Register [com.webos.service.audio] Successful");
+    PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Register [com.webos.service.audio] Successful");
 
 
     std::stringstream configPath;
@@ -191,24 +201,24 @@ main(int argc, char **argv)
     MixerInit mObjMixerInit(configPath);
     if(mObjMixerInit.readMixerConfig())
     {
-      mObjMixerInit.initMixerInterface();
+        mObjMixerInit.initMixerInterface();
     }
     else
     {
-      g_message("Could not reaad mixer config json file");
+        PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT, "Could not reaad mixer config json file");
     }
     oneInitForAll (gMainLoop, GetPalmService());
     // Verify HW initialization, but after all registered inits,
     // static initializations & shared properties.
     VERIFY(gAudioDevice.post_init());
-    g_debug("Starting main loop!");
+    PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting main loop!");
     g_main_loop_run(gMainLoop);
 
     g_main_loop_unref(gMainLoop);
 
     oneFreeForAll();
 
-    g_message ("audiod terminated");
+    PM_LOG_INFO(MSGID_SHUTDOWN, INIT_KVCOUNT, "audiod terminated");
 
     exit(0);
 }
