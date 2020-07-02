@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,6 +54,22 @@ guint64 getCurrentTimeInMs ()
     struct timespec now;
     ::clock_gettime(CLOCK_MONOTONIC, &now);
     return guint64(now.tv_sec) * 1000ULL + guint64(now.tv_nsec) / 1000000ULL;
+}
+
+void registerAudioModule(ModuleInitFunction function)
+{
+    g_debug ("%s", __FUNCTION__);
+    if (NULL == sServiceStartList)
+    {
+       sServiceStartList = (GHookList*) malloc (sizeof (GHookList));
+       g_hook_list_init(sServiceStartList, sizeof (GHook));
+    }
+
+    GHook *hook = g_hook_alloc (sServiceStartList);
+    hook->func = (gpointer) hookStart;
+    hook->data = (gpointer) function;
+
+    g_hook_append(sServiceStartList, hook);
 }
 
 void registerInitFunction (InitFunction function)

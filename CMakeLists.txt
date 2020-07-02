@@ -137,6 +137,8 @@ SET (modules_files
         src/umi/umiDispatcher.cpp
         src/controls/umiaudiomixer.cpp
         src/MixerInit.cpp
+        src/audioPolicyManager.cpp
+        src/moduleInitializer.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")
@@ -144,6 +146,7 @@ SET (modules_files
     add_definitions(-DSYSTEMSOUNDS_PATH="/media/internal/systemsounds/")
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
     install(FILES files/config/audiod_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
+    install(FILES files/config/audiod_module_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}

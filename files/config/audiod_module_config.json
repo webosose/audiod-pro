@@ -1,0 +1,15 @@
+//These are the modules that audiod will initialize on start up.
+//When a module is added in the load_module array, function should be defined in respective module with corresponding module name
+//eg:dynamic_policy_handler
+{
+     "load_module":[
+                      "load_luna_event_subscriber",
+                      "load_audio_policy_manager",
+                      "load_bluetooth_manager",
+                      "load_system_sounds_manager",
+                      "load_playback_manager",
+                      "load_master_volume_manager",
+                      "load_udev_event_manager",
+                      "load_connection_manager"
+    ]
+}

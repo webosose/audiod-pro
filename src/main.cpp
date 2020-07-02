@@ -34,7 +34,7 @@
 #include "messageUtils.h"
 #include "MixerInit.h"
 #include "main.h"
-
+#include "moduleInitializer.h"
 
 #define CONFIG_DIR_PATH "/etc/palm/audiod"
 
@@ -207,6 +207,13 @@ main(int argc, char **argv)
     {
         PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT, "Could not reaad mixer config json file");
     }
+    std::stringstream moduleConfigPath;
+    moduleConfigPath << CONFIG_DIR_PATH << "/" << "audiod_module_config.json";
+    ModuleInitializer mObjModuleInit(moduleConfigPath);
+    if (mObjModuleInit.registerAudioModules())
+        g_message("audio modules registered successfully");
+    else
+        g_error("could not register audio modules");
     oneInitForAll (gMainLoop, GetPalmService());
     // Verify HW initialization, but after all registered inits,
     // static initializations & shared properties.
