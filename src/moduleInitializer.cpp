@@ -19,13 +19,16 @@
 ModuleInitializer::ModuleInitializer(const std::stringstream& audioModuleConfigPath):\
                                   mAudioModuleConfigPath(audioModuleConfigPath.str())
 {
-    g_debug("ModuleIntializer constructor");
+    PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "ModuleInitializer constructor");
+    ModuleManager* moduleManagerObj  = ModuleManager::getModuleManagerInstance();
+    if (moduleManagerObj)
+        PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "ModuleManager is initialized");
     initializeModuleInfo();
 }
 
 ModuleInitializer::~ModuleInitializer()
 {
-    g_debug("ModuleInitializer destructor");
+    PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "ModuleInitializer destructor");
     for (const auto& it : mSetAudioModules)
     {
         if (it == "load_audio_policy_manager")
@@ -35,7 +38,7 @@ ModuleInitializer::~ModuleInitializer()
 
 void ModuleInitializer::initializeModuleInfo()
 {
-    g_debug("initializeModuleInfo");
+    PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "initializeModuleInfo");
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_audio_policy_manager", load_audio_policy_manager));
     //these should be enabled when the modules are implemented
@@ -55,21 +58,21 @@ void ModuleInitializer::initializeModuleInfo()
 
 bool ModuleInitializer::registerAudioModules()
 {
-    g_debug("loadAudioModules");
+    PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "loadAudioModules");
     JValue configJson = JDomParser::fromFile(mAudioModuleConfigPath.c_str(),JSchema::AllSchema());
     if (!configJson.isValid() || !configJson.isObject())
     {
-        g_debug("failed to parse file using defaults. File: %s. Error: %s",\
+        PM_LOG_ERROR(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "failed to parse file using defaults. File: %s. Error: %s",\
             mAudioModuleConfigPath.c_str(), configJson.errorString().c_str());
         return false;
     }
     if (configJson.hasKey("load_module"))
     {
-        g_debug("found load_module key");
+        PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "found load_module key");
         JValue moduleInfo = configJson["load_module"];
         if (!moduleInfo.isArray())
         {
-            g_debug("moduleInfo is not an array");
+            PM_LOG_ERROR(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "moduleInfo is not an array");
             return false;
         }
         else
@@ -83,7 +86,7 @@ bool ModuleInitializer::registerAudioModules()
                 std::map<std::string, ModuleInitFunction>::iterator it = moduleMap.find(strModule);
                 if (it != moduleMap.end())
                 {
-                    g_debug("loadAudioModules: registering module:%s", strModule.c_str());
+                    PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "loadAudioModules: registering module:%s", strModule.c_str());
                     registerAudioModule(it->second);
                 }
             }
@@ -92,7 +95,7 @@ bool ModuleInitializer::registerAudioModules()
     }
     else
     {
-        g_debug("load_module key not found");
+        PM_LOG_ERROR(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "load_module key not found");
         return false;
     }
 }

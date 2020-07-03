@@ -21,6 +21,49 @@
 #include <glib.h>
 #include <lunaservice.h>
 #include "AudioDevice.h"
+#include <pulse/module-palm-policy.h>
+
+enum EUMISink
+{
+    eUmiSink
+};
+
+template <typename EnumT, typename BaseEnumT>
+class ExtendEnum
+{
+    public:
+        ExtendEnum() {}
+
+        ExtendEnum(EnumT e):enum_(e) {}
+
+        ExtendEnum(BaseEnumT e):enum_(static_cast<EnumT>(e)) {}
+
+        explicit ExtendEnum( int val):enum_(static_cast<EnumT>(val)) {}
+
+        operator EnumT() const { return enum_; }
+
+    private:
+            EnumT enum_;
+};
+
+typedef ExtendEnum<EUMISink, EVirtualSink> EVirtualAudioSink;
+
+namespace utils
+{
+    typedef enum ESinkStatus
+    {
+        eSinkNone    = 0,
+        eSinkOpened  = 1,
+        eSinkClosed  = 2
+    }ESINK_STATUS;
+
+    typedef enum EMixerType
+    {
+        eMixerNone,
+        ePulseMixer,
+        eUmiMixer
+    }EMIXER_TYPE;
+}
 
 class LSMessageJsonParser;
 
