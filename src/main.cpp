@@ -26,9 +26,7 @@
 #include <lunaservice.h>
 
 #include "log.h"
-#include "media.h"
 #include "state.h"
-#include "AudioDevice.h"
 #include "AudioMixer.h"
 #include "utils.h"
 #include "messageUtils.h"
@@ -122,6 +120,7 @@ main(int argc, char **argv)
 
     if (argc > 1 && strcmp(argv[1], "--version") == 0)
     {
+        //Will be removed or updated once DAP design is updated
         //printf("audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.\n",
                                          //*gAudioDevice.getName(), BUILD_INFO);
         return 0;
@@ -147,7 +146,8 @@ main(int argc, char **argv)
             addLogDestination(eLogDestination_Terminal);
             break;
         case 'r':
-            gAudioDevice.setConfigRegisterSetDirectory(optarg);
+            //Will be removed or updated once DAP design is updated
+            //gAudioDevice.setConfigRegisterSetDirectory(optarg);
             break;
         case 'n':
             niceme = atoi(optarg);
@@ -172,7 +172,7 @@ main(int argc, char **argv)
         std::cerr << logPrefix << "Failed to setup up pmlog context " << logContextName << std::endl;
         exit(EXIT_FAILURE);
     }
-
+    //Will be removed or updated once DAP design is updated
     //PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.",
                                           //*gAudioDevice.getName(), BUILD_INFO);
 
@@ -183,7 +183,8 @@ main(int argc, char **argv)
 
     // Initialize HW and verify, but before all registered inits,
     // except for static initializations & shared properties.
-    VERIFY(gAudioDevice.pre_init());
+    //Will be removed or updated once DAP design is updated
+    //VERIFY(gAudioDevice.pre_init());
 
     gMainLoop = g_main_loop_new(NULL, FALSE);
 
@@ -217,7 +218,8 @@ main(int argc, char **argv)
     oneInitForAll (gMainLoop, GetPalmService());
     // Verify HW initialization, but after all registered inits,
     // static initializations & shared properties.
-    VERIFY(gAudioDevice.post_init());
+    //Will be removed or updated once DAP design is updated
+    //VERIFY(gAudioDevice.post_init());
     PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting main loop!");
     g_main_loop_run(gMainLoop);
 

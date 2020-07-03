@@ -22,12 +22,11 @@
 #include <pulse/module-palm-policy-tables.h>
 
 #include "PulseAudioMixer.h"
-#include "AudioDevice.h"
+#include "state.h"
 #include "utils.h"
 #include "messageUtils.h"
 #include "log.h"
 #include "main.h"
-#include "media.h"
 #include "volumeSettings.h"
 #include <audiodTracer.h>
 
@@ -185,7 +184,9 @@ static int _add_dB (int current, int dB_diff)
  */
 int PulseAudioMixer::adjustVolume(int percent, int dB_diff)
 {
-    if (!VERIFY(percent >= 0 && percent <= 100))
+    int result;
+    //Will be removed or updated once DAP design is updated
+    /*if (!VERIFY(percent >= 0 && percent <= 100))
         return percent;
 
     int tableIndex = gAudioDevice.getHeadsetState() != eHeadsetState_None ? 1 : 0;
@@ -240,7 +241,7 @@ int PulseAudioMixer::adjustVolume(int percent, int dB_diff)
         result = 1;
 
     g_debug("adjust dB Volume: %dp %+d dB = %dp (%+dp)", \
-                                 percent, dB_diff, result, result - percent);
+                                 percent, dB_diff, result, result - percent);*/
     return result;
 }
 
@@ -282,7 +283,8 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
     if (NULL == mChannel)
         return false;
 
-    EHeadsetState headset = gAudioDevice.getHeadsetState();
+    //Will be removed or updated once DAP design is updated
+    //EHeadsetState headset = gAudioDevice.getHeadsetState();
 
     bool    sendCmd = true;
     switch (cmd)
@@ -296,10 +298,13 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
 
             if (VERIFY(IsValidVirtualSink((EVirtualAudiodSink)sink)))
             {
+            //Will be removed or updated once DAP design is updated
+            /*
                 sendCmd = (mPulseStateVolume[sink] != value ||
                            mPulseStateVolumeHeadset[sink] != headset);
                 mPulseStateVolume[sink] = value;
                 mPulseStateVolumeHeadset[sink] = headset;
+            */
             }
             break;
         case 'h':
@@ -345,6 +350,8 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
         // or the name of that sink to be listed in the trace.
         // So we make the substitution here and here only.
         const char * sinkName = "";
+        //Will be removed or updated once DAP design is updated
+        /*
         if (cmd == 'l' || cmd == 's' || cmd == 'x')
         {
             sprintf(buffer, "%c 0 %i %i", cmd, value, headset);// ignore sink
@@ -376,7 +383,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
             sprintf(buffer, "%c %i %i %i", cmd, sink, value, headset);
             sinkName = virtualSinkName((EVirtualAudiodSink)sink);    // sink means something
         }
-
+        */
         g_debug ("%s: sending message '%s' %s", __FUNCTION__, buffer, sinkName);
         int sockfd = g_io_channel_unix_get_fd (mChannel);
         ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
@@ -1145,12 +1152,14 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
 
               case 'a':
                    g_message ("Got A2DP sink running message from PA");
-                   getMediaModule()->resumeA2DP();
+                   //Will be removed or updated once DAP design is updated
+                   //getMediaModule()->resumeA2DP();
                    break;
 
                case 'b':
                    g_message ("Got A2DP sink Suspend message from PA");
-                   getMediaModule()->pauseA2DP();
+                   //Will be removed or updated once DAP design is updated
+                   //getMediaModule()->pauseA2DP();
                    break;
 
                case 'o':
@@ -1172,7 +1181,10 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     {
                         outputStreamClosed (sink);
                         if(eeffects == sink || eDTMF == sink)
-                            gAudioDevice.disableHW();
+                        {
+                            //Will be removed or updated once DAP design is updated
+                            //gAudioDevice.disableHW();
+                        }
 
                         g_log(G_LOG_DOMAIN, LOG_LEVEL_SINK(sink), \
                          "%s: sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
@@ -1218,17 +1230,20 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     inputStreamClosed (source);
                     break;
                 case 'x':
-                    gAudioDevice.prepareForPlayback ();
+                    //Will be removed or updated once DAP design is updated
+                    //gAudioDevice.prepareForPlayback ();
                     break;
                 case 'y':
                     //prepare hw for capture
                     break;
                 /* powerd related msg */
                 case 'H':
-                    getMediaModule()->sendAckToPowerd(true);
+                    //Will be removed or updated once DAP design is updated
+                    //getMediaModule()->sendAckToPowerd(true);
                     break;
                 case 'R':
-                    getMediaModule()->sendAckToPowerd(false);
+                    //Will be removed or updated once DAP design is updated
+                    //getMediaModule()->sendAckToPowerd(false);
                     break;
                 case 't':
                     if (5 == sscanf (buffer, "%c %i %i %28s %d", &cmd, &isink, &info, ip, &port))
@@ -1263,7 +1278,10 @@ void PulseAudioMixer::outputStreamOpened (EVirtualAudiodSink sink)
     if (IsValidVirtualSink(sink))
         openCloseSink (sink, true);
     if (mOutputStreamsCurrentlyOpenedCount == 0)
-        gAudioDevice.setActiveOutput (true);
+    {
+        //Will be removed or updated once DAP design is updated
+        //gAudioDevice.setActiveOutput (true);
+    }
     mOutputStreamsCurrentlyOpenedCount++;
 }
 
@@ -1271,7 +1289,10 @@ void PulseAudioMixer::outputStreamClosed (EVirtualAudiodSink sink)
 {
     mOutputStreamsCurrentlyOpenedCount--;
     if (mOutputStreamsCurrentlyOpenedCount <= 0)
-        gAudioDevice.setActiveOutput (false);
+    {
+        //Will be removed or updated once DAP design is updated
+        //gAudioDevice.setActiveOutput (false);
+    }
 
     if (mOutputStreamsCurrentlyOpenedCount < 0)
     {
@@ -1314,7 +1335,8 @@ void PulseAudioMixer::inputStreamOpened (EVirtualSource source)
                 {
                     g_message("Suspending A2DP Sink");
                     gAudioMixer.suspendSink(eA2DPSink);
-                    getMediaModule()->pauseA2DP();
+                    //Will be removed or updated once DAP design is updated
+                    //getMediaModule()->pauseA2DP();
                 }
             }
             g_message("Unmuting source %d",source);
@@ -1324,7 +1346,8 @@ void PulseAudioMixer::inputStreamOpened (EVirtualSource source)
         if (gState.getOnActiveCall() && source == evoicecallsource)
         {
             gAudioMixer.programMute(source, false);
-            gAudioDevice.setPhoneRecording(true);
+            //Will be removed or updated once DAP design is updated
+            //gAudioDevice.setPhoneRecording(true);
         }
     }
     if (source != evoiceactivator)
@@ -1337,31 +1360,6 @@ void PulseAudioMixer::inputStreamClosed (EVirtualSource source)
 {
     if (source != evoiceactivator)
         mInputStreamsCurrentlyOpenedCount--;
-
-    if (mInputStreamsCurrentlyOpenedCount <= 0 && mCallbacks) {
-        g_message("Closing Recording");
-        if (!gState.getOnActiveCall() || gAudioDevice.isRecording()) {
-
-            if (source != evoiceactivator)
-                gState.setRecordStatus(false);
-
-            if (gState.getHfpStatus() && source == eqvoice) {
-                g_message("Closing SCO for QVoice");
-                gState.setQvoiceStartedStatus(false);
-                LSHandle *sh = GetPalmService();
-                if (sh)
-                    gState.btCloseSCO(sh);
-                else
-                    g_critical("Error : Could not get LSHandle");
-            }
-            mCallbacks->onInputStreamActiveChanged(false);
-        }
-
-        if (gState.getOnActiveCall() && source == evoicecallsource) {
-            gAudioMixer.programMute(source, true);
-            gAudioDevice.setPhoneRecording(false);
-        }
-    }
 
     if (mInputStreamsCurrentlyOpenedCount < 0)
     {
@@ -1551,31 +1549,27 @@ void  PulseAudioMixer::playOneshotDtmf(const char *snd, EVirtualAudiodSink sink)
 
 void  PulseAudioMixer::playOneshotDtmf(const char *snd, const char* sink)
 {
-    PMTRACE_FUNCTION;
     g_message("PulseAudioMixer::playOneshotDtmf");
-    int tone;
-    if ((tone=IdToDtmf(snd))<0) return;
-    if (mCurrentDtmf) stopDtmf();
-    mCurrentDtmf = new PulseDtmfGenerator((Dtmf)tone, SHORT_DTMF_LENGTH);
-    gAudioDevice.prepareHWForPlayback();
-    mPulseLink.play(mCurrentDtmf, sink);
 }
 
 void  PulseAudioMixer::playDtmf(const char *snd, EVirtualAudiodSink sink)
 {
-    gAudioDevice.prepareForPlayback();
+    //Will be removed or updated once DAP design is updated
+    //gAudioDevice.prepareForPlayback();
 
     playDtmf(snd, virtualSinkName(sink, false));
 }
 
-void  PulseAudioMixer::playDtmf(const char *snd, const char* sink) {
+void  PulseAudioMixer::playDtmf(const char *snd, const char* sink)
+{
     g_message("PulseAudioMixer::playDtmf");
     int tone;
     if ((tone=IdToDtmf(snd))<0) return;
     if (mCurrentDtmf && tone==mCurrentDtmf->getTone()) return;
     stopDtmf();
     mCurrentDtmf = new PulseDtmfGenerator((Dtmf)tone, 0);
-    gAudioDevice.prepareForPlayback();
+    //Will be removed or updated once DAP design is updated
+    //gAudioDevice.prepareForPlayback();
     mPulseLink.play(mCurrentDtmf, sink);
 }
 

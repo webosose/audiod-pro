@@ -96,7 +96,6 @@ include_directories(src/umi)
 include_directories(src/umi/soundSettings)
 include_directories(src/controls)
 include_directories(src/controls/pulse)
-include_directories(src/modules)
 include_directories(include/public/)
 
 #Please check these header files again
@@ -131,7 +130,6 @@ SET (services_files
 )
 
 SET (modules_files
-        src/modules/media.cpp
         src/umi/soundSettings/volumeSettings.cpp
         src/umi/soundSettings/soundSettings.cpp
         src/umi/umiDispatcher.cpp

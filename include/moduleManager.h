@@ -18,6 +18,7 @@
 #define _MODULE_MANAGER_H_
 
 #include "utils.h"
+#include "log.h"
 #include <list>
 
 class ModuleManager

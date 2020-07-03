@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 #ifndef _STATE_H_
 #define _STATE_H_
 #include "umiaudiomixer.h"
-#include "scenario.h"
 #include "IPC_SharedAudiodDefinitions.h"
+#include <map>
 
 enum ESliderState
 {
@@ -94,13 +94,15 @@ public:
     State();
 
     /// Get the module that controls the volume, never 0
-    GenericScenarioModule * getCurrentVolumeModule ();
+    //Will be removed or updated once DAP design is updated
+    //GenericScenarioModule * getCurrentVolumeModule ();
     /// Get the module, if any, that has priority
     // access to the volume control by explicit request. MAYBE 0!
     /// Control may have been acquired using State::
     //setLockedVolumeModule or ScenarioModule::setVolumeOverride
-    GenericScenarioModule * getExplicitVolumeControlModule ();
-    bool setLockedVolumeModule (ScenarioModule *module);
+    //Will be removed or updated once DAP design is updated
+    //GenericScenarioModule * getExplicitVolumeControlModule ();
+    //bool setLockedVolumeModule (ScenarioModule *module);
 
     bool getOnActiveCall ();
     void setOnActiveCall (bool state, ECallMode mode);
@@ -241,7 +243,8 @@ public:
     bool respondProfileRequest(LSHandle * sh, LSMessage * message, bool subscribed);
     bool getLoopbackStatus();
     void setLoopbackStatus(bool status);
-    bool checkPhoneScenario(ScenarioModule *phone) ;
+    //Will be removed or updated once DAP design is updated
+    //bool checkPhoneScenario(ScenarioModule *phone) ;
 
     /*Initializing umi mixer*/
     void umiMixerInit(GMainLoop *loop, LSHandle *handle);
@@ -259,7 +262,8 @@ private:
     ESliderState        mSliderState;
     ETTYMode            mTTYMode;
     bool                mHAC;
-    ScenarioModule *    mLockedVolumeModule;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule *    mLockedVolumeModule;
     bool                mUseUdevForHeadsetEvents;
     bool                mIncomingCallActive;
     bool                mIncomingCarrierCallActive;

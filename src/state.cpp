@@ -22,17 +22,11 @@
 #include "utils.h"
 #include "messageUtils.h"
 #include "module.h"
-#include "media.h"
-#include "update.h"
-#include "AudioDevice.h"
 #include "AudioMixer.h"
 #include "log.h"
 #include "main.h"
 #include "../include/IPC_SharedAudiodProperties.cpp"
-#include "AudiodCallbacks.h"
 #include "VolumeControlChangesMonitor.h"
-#include "scenario.h"
-#include "genericScenarioModule.h"
 #include <pulse/simple.h>
 
 
@@ -141,7 +135,8 @@ class SetAudiodCommandBehavior : public  IPC_SetPropertyBehavior<EAudiodCommand>
 
         case eAudiodCommand_UnmuteMedia:
             g_debug("Audiod Cmd: Unmuting media, if any!");
-            getMediaModule()->programMediaVolumes(false, true, false);
+            //Will be removed or updated once DAP design is updated
+            //getMediaModule()->programMediaVolumes(false, true, false);
             break;
 
         default:
@@ -166,7 +161,7 @@ State::State()
     mSliderState = eSlider_Closed;
     mTTYMode = eTTYMode_Off;
     mHAC = false;
-    mLockedVolumeModule = 0;
+    //mLockedVolumeModule = 0;
     mUseUdevForHeadsetEvents = false;
     mIncomingCallActive = false;
     mIncomingCarrierCallActive = false;
@@ -225,7 +220,8 @@ void State::init()
     }
 }
 
-bool State::setLockedVolumeModule (ScenarioModule *module)
+//Will be removed or updated once DAP design is updated
+/*bool State::setLockedVolumeModule (ScenarioModule *module)
 {
     if (module && mLockedVolumeModule)
         return false;
@@ -245,31 +241,7 @@ bool State::setLockedVolumeModule (ScenarioModule *module)
     mLockedVolumeModule = module;
 
     return true;
-}
-
-// determines if a module controls the volume by some explicit request
-GenericScenarioModule * State::getExplicitVolumeControlModule ()
-{
-    if (mLockedVolumeModule)
-        return mLockedVolumeModule;
-
-    GenericScenarioModule * currentModule = GenericScenarioModule::getCurrent();
-
-    if (currentModule && currentModule->getVolumeOverride() > 0)
-        return currentModule;
-
-    return 0;
-}
-
-// determines which module controls the volume
-GenericScenarioModule * State::getCurrentVolumeModule ()
-{
-    GenericScenarioModule * controllingModule = State::getExplicitVolumeControlModule();
-    if (controllingModule)
-        return controllingModule;
-
-    return GenericScenarioModule::getCurrent();
-}
+}*/
 
 bool State::getScoUp ()
 {
@@ -340,22 +312,6 @@ bool State::getLoopbackStatus ()
     return gState.mLoopback;
 }
 
-bool State::checkPhoneScenario (ScenarioModule * phone)
-{
-    bool isEnabled = false;
-
-    if(nullptr != phone)
-    {
-        GenericScenario * tempScenario = phone->getScenario(cPhone_BackSpeaker);
-        if(nullptr !=tempScenario)
-        {
-             isEnabled = tempScenario->mEnabled;
-        }
-    }
-
-    return isEnabled;
-}
-
 void State::setRingerOn (bool ringerOn)
 {
     //will be modified once DAP design is adapted
@@ -396,23 +352,6 @@ void  State::updateIsRecording()
     static guint64    sKeepRecordingUntil = 0;
 
     bool shouldRecord = isRecording();
-
-    guint64    now = getCurrentTimeInMs();
-    if (shouldRecord != gAudioDevice.isRecording())
-    {
-        if (!shouldRecord && sKeepRecordingUntil == 0)
-        {
-            sKeepRecordingUntil = now + 1000;
-            g_timeout_add_full(G_PRIORITY_HIGH_IDLE, 1000,
-                                    _updateIsRecordingCallback, NULL, NULL);
-        }
-        else if (shouldRecord || now >= sKeepRecordingUntil)
-        {
-            gAudioDevice.setRecording(shouldRecord);
-            sKeepRecordingUntil = 0;
-        }
-    }else
-        sKeepRecordingUntil = 0;
 }
 
 bool State::isRecording ()
@@ -767,7 +706,8 @@ void State::umiMixerInit(GMainLoop *loop, LSHandle *handle)
   mObjUmiMixerInstance = umiaudiomixer::getUmiMixerInstance();
   if (nullptr!=mObjUmiMixerInstance)
   {
-    mObjUmiMixerInstance->initUmiMixer(loop, handle, &gAudiodCallbacks);
+      //Will be removed or updated once DAP design is updated
+      //mObjUmiMixerInstance->initUmiMixer(loop, handle, &gAudiodCallbacks);
   }
   else
   {
@@ -778,10 +718,12 @@ void State::umiMixerInit(GMainLoop *loop, LSHandle *handle)
 int
 ControlInterfaceInit(GMainLoop *loop, LSHandle *handle)
 {
-    gAudioMixer.init(loop, handle, &gAudiodCallbacks);
+    //Will be removed or updated once DAP design is updated
+    //gAudioMixer.init(loop, handle, &gAudiodCallbacks);
     gState.umiMixerInit(loop, handle);
-    if (ScenarioModule * module = dynamic_cast <ScenarioModule*> (GenericScenarioModule::getCurrent()))
-        module->programHardwareState ();
+    //Will be removed or updated once DAP design is updated
+    /*if (ScenarioModule * module = dynamic_cast <ScenarioModule*> (GenericScenarioModule::getCurrent()))
+        module->programHardwareState ();*/
 
     return 0;
 }
@@ -797,15 +739,8 @@ cancelSubscriptionCallback(LSMessage * message, LSMessageJsonParser & msgParser)
         bool foregroundApp;
         if (msgParser.get("foregroundApp", foregroundApp) && foregroundApp)
         {
-            ScenarioModule * media =  getMediaModule();
-            if (media->mCategory == LSMessageGetCategory(message))
-            {
-                media->setVolumeOverride(false);
-            }
+            ////Will be removed or updated once DAP design is updated
         }
-
-        if (!foregroundApp)
-            gState.setLockedVolumeModule (NULL);
     }
 }
 
@@ -1176,11 +1111,6 @@ _getVolumeBalance(LSHandle *lshandle,
 		return true;
 
 	balance = gState.getSoundBalance();
-
-	if (balance < cBalance_Min || balance > cBalance_Max) {
-		reply = STANDARD_JSON_ERROR(3,
-                           "balance not in the range  (invalid scenario name?)");
-	} else
 	reply = string_printf("{\"returnValue\":true,\"balanceVolume\":%i}",
                              balance);
 	CLSError lserror;
@@ -1189,8 +1119,6 @@ _getVolumeBalance(LSHandle *lshandle,
 
 	return true;
 }
-
-
 
 int  State::getSoundBalance()
  {
@@ -1207,44 +1135,7 @@ bool State::setSoundBalance(int balance){
 bool
 _setVolumeBalance(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    const char * schema = SCHEMA_1(REQUIRED(balance, integer));
-    LSMessageJsonParser    msg(message, schema);
-    const char * reply = STANDARD_JSON_SUCCESS;
-    const char* new_balance = "balance";
-
-    int balance;
-
-    if (!msg.parse(__FUNCTION__, lshandle))
-    {
-       reply = STANDARD_JSON_ERROR(3, "profile setting failed: missing parameters ?");
-       goto error;
-    }
-
-    if (!msg.get(new_balance, balance))
-    {
-        reply = MISSING_PARAMETER_ERROR(balance, integer);
-        goto error;
-    }
-
-    if (balance < cBalance_Min|| balance > cBalance_Max)
-    {
-        reply = STANDARD_JSON_ERROR(3, "Value is outside the boundary(-10 and +10)");
-        goto error;
-    }
-
-    if (gState.getSoundBalance() != balance)
-    {
-        g_debug("Volume balance current = %d and new =%d",gState.getSoundBalance(),balance);
-        gState.setSoundBalance(balance);
-        gAudioMixer.programBalance(balance);
-    }
-
-error:
-
-    CLSError lserror;
-    if (!LSMessageReply(lshandle, message, reply, &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
-
+    //Will be removed or updated once DAP design is updated
     return true;
 }
 static bool
@@ -1267,12 +1158,14 @@ _loopback(LSHandle *lshandle, LSMessage *message, void *ctx)
     } else if (loopback == "BT_ON" || loopback == "BT_OFF") {
         if (gState.getHfpStatus()){
             if(loopback == "BT_ON"){
-                getMediaModule()->pauseA2DP();
+                //Will be removed or updated once DAP design is updated
+                //getMediaModule()->pauseA2DP();
                 gState.btOpenSCO(lshandle);
                 gState.setLoopbackStatus(true);
             }
             else {
-                getMediaModule()->resumeA2DP();
+                //Will be removed or updated once DAP design is updated
+                //getMediaModule()->resumeA2DP();
                 gState.btCloseSCO(lshandle);
                 gState.setLoopbackStatus(false);
             }
@@ -1407,8 +1300,10 @@ State::setPreferenceRequest(LSHandle *lshandle, LSMessage *message, void *ctx)
                     g_debug("Boolean");
                     found = true;
 
-                    if (msg.get("BeatsOnForHeadphones", boolValue)){
-                        gAudioDevice.setBeatsOnForHeadphones(boolValue);
+                    if (msg.get("BeatsOnForHeadphones", boolValue))
+                    {
+                        //Will be removed or updated once DAP design is updated
+                        //gAudioDevice.setBeatsOnForHeadphones(boolValue);
                     }
 
                 }
@@ -1604,8 +1499,9 @@ static bool _unloadRTPModule(LSHandle *lshandle, LSMessage *message, void *ctx)
 
 
     gState.setRTPLoaded(false);
-    if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))
-            module->programSoftwareMixer(true);
+    //Will be removed or updated once DAP design is updated
+    /*if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))
+            module->programSoftwareMixer(true);*/
 
     reply.put("returnValue", true);
 

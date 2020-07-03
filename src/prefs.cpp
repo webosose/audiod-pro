@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@
 #include <lunaprefs.h>
 #include "messageUtils.h"
 #include "state.h"
-#include "scenario.h"
 #include "log.h"
 #include "IPC_SharedAudiodProperties.h"
 #include "main.h"
-#include "genericScenarioModule.h"
 
 bool State::storePreferences()
 {
@@ -205,110 +203,13 @@ bool State::restorePreferences()
     return true;
 }
 
-void GenericScenarioModule::storePreferences()
-{
-    LPAppHandle prefHandle = NULL;
-
-     if(!VERIFY(LPAppGetHandle(AUDIOD_SERVICE_PATH, &prefHandle) == LP_ERR_NONE) ||
-                                                           !VERIFY(prefHandle))
-     {
-         LPAppFreeHandle(prefHandle, false);
-         return;
-     }
-
-    pbnjson::JValue pref = pbnjson::Object();
-
-    char    label[80];
-    for (ScenarioMap::iterator iter = mScenarioTable.begin();
-                                         iter != mScenarioTable.end(); ++iter)
-    {
-        GenericScenario * scenario = iter->second;
-        snprintf(label, G_N_ELEMENTS(label), "%s_volume", scenario->getName());
-        pref.put(label, mCurrentScenario->getVolume());
-    }
-
-    snprintf(label, G_N_ELEMENTS(label), "%s_preferences", this->getCategory());
-    std::string    prefString = jsonToString(pref);
-    g_debug("Storing '%s': %s", label, prefString.c_str());
-    CHECK(LPAppSetValue(prefHandle, label, prefString.c_str()) == LP_ERR_NONE);
-
-    VERIFY(LPAppFreeHandle(prefHandle, true) == LP_ERR_NONE);
-
-    mStoreTimerID = 0;
-}
-
-void GenericScenarioModule::restorePreferences()
-{
-    LPAppHandle prefHandle = NULL;
-
-    if (!VERIFY(LPAppGetHandle(AUDIOD_SERVICE_PATH, &prefHandle) == LP_ERR_NONE) ||
-                                                           !VERIFY(prefHandle))
-    {
-        LPAppFreeHandle(prefHandle, false);
-        return;
-    }
-
-    char    label[256];
-    snprintf(label, G_N_ELEMENTS(label), "%s_preferences", this->getCategory());
-
-    char * json = 0;
-    if (LPAppCopyValue(prefHandle, label, &json) == LP_ERR_NONE && json)
-    {
-        g_debug("Restoring '%s': %s", label, json);
-        JsonMessageParser    msg(json, SCHEMA_ANY);
-        if (CHECK(msg.parse(__FUNCTION__)))
-        {
-            for (ScenarioMap::iterator iter = mScenarioTable.begin();
-                                           iter != mScenarioTable.end(); ++iter)
-            {
-                GenericScenario * scenario = iter->second;
-                snprintf(label, G_N_ELEMENTS(label), "%s_volume", scenario->getName());
-                int value;
-                if (msg.get(label, value))
-                    mCurrentScenario->setVolume(value);
-            }
-        }
-        g_free(json);
-    }
-    else    // fallback on pre-Blowfish persistence code,
-            // in case we need to read pre-blowfish settings
-    {
-        for (ScenarioMap::iterator iter = mScenarioTable.begin();
-                                          iter != mScenarioTable.end(); ++iter)
-        {
-            GenericScenario * scenario = iter->second;
-            std::string volumeKey = string_printf("%s_volume", scenario->getName());
-            int volume;
-            if (_restorePreference(prefHandle, volumeKey.c_str(), "volume", volume))
-                scenario->setVolume(volume);
-        }
-    }
-
-    // close handle and discard stuff
-    LPAppFreeHandle(prefHandle, false);
-}
-
 static
 gboolean _storePreferencesCallback(gpointer data)
 {
-    ScenarioModule * module = (ScenarioModule *) data;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule * module = (ScenarioModule *) data;
 
-    module->storePreferences();
+    module->storePreferences();*/
 
     return FALSE;
-}
-
-void
-GenericScenarioModule::scheduleStorePreferences()
-{
-    if (0 == mStoreTimerID)
-    {
-        // update preferences in X seconds
-        // unless another request is already scheduled
-        mStoreTimerID = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT_IDLE,
-                VOLUME_STORE_DELAY / 1000,
-                _storePreferencesCallback,
-                this,
-                NULL);
-    }
 }

@@ -24,6 +24,7 @@
 #include <map>
 #include <set>
 #include "utils.h"
+#include "log.h"
 #include <glib.h>
 #include <lunaservice.h>
 #include <pbnjson/cxx/JDomParser.h>

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 #ifndef VOLUMECONTROLCHANGESMONITOR_H_
 #define VOLUMECONTROLCHANGESMONITOR_H_
 
-class GenericScenarioModule;
-
 // When changing volume control, use this class to make sure appropriate
 // action is taken when control changes
 // BT needs to know when the media module explicitly
@@ -34,7 +32,7 @@ public:
     static void mediaModuleControllingVolumeChanged();
 
 private:
-    GenericScenarioModule *    mPreviouslyControllingModule;
+    //GenericScenarioModule *    mPreviouslyControllingModule;
 };
 
 #endif /* VOLUMECONTROLCHANGESMONITOR_H_ */

@@ -19,11 +19,9 @@
 #include <cstring>
 #include <glib.h>
 #include <syslog.h>
-
-#include "scenario.h"
+#include "ConstString.h"
 #include "utils.h"
 #include "messageUtils.h"
-#include "media.h"
 
 #define BLUETOOTH_SERVICE       "com.webos.service.bluetooth2"
 #define BT_DEVICE_GET_STATUS    "luna://com.webos.service.bluetooth2/device/getStatus"
@@ -35,18 +33,16 @@ static std::string connectedDevice;
 
 static void _setBlueToothA2DPActive (bool state, char *address, char *profile)
 {
-    ScenarioModule * media = getMediaModule();
-
     g_message ("_setBlueToothA2DPActive : state = %d, address = %s, profile = %s", state, address, profile);
     if (state)
     {
-        gAudioMixer.programLoadBluetooth(address, profile);
-        media->enableScenario(cMedia_A2DP);
+        //Will be removed or updated once DAP design is updated
+        //gAudioMixer.programLoadBluetooth(address, profile);
     }
     else
     {
-        media->disableScenario(cMedia_A2DP);
-        gAudioMixer.programUnloadBluetooth(profile);
+        //Will be removed or updated once DAP design is updated
+        //gAudioMixer.programUnloadBluetooth(profile);
     }
 }
 
@@ -67,7 +63,6 @@ static bool btA2DPGetStatusCallback (LSHandle *lshandle, LSMessage *message, voi
     bool returnValue = false;
     bool connected = false;
     bool streamStatus = false;
-    getMediaModule()->setCurrentState(false);
     msg.get("returnValue", returnValue);
 
     if (returnValue)

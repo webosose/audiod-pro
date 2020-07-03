@@ -23,8 +23,6 @@
 #include "utils.h"
 #include "messageUtils.h"
 #include "module.h"
-#include "AudiodCallbacks.h"
-#include "umiScenarioModule.h"
 #include "umiDispatcher.h"
 #include "main.h"
 
@@ -46,20 +44,6 @@ void Dispatcher :: notifyGetStatusSubscribers()
 Dispatcher :: ~Dispatcher()
 {
     g_debug ("Dispatcher destructor");
-}
-
-UMIScenarioModule * Dispatcher :: getModule (std::string &name)
-{
-    g_debug ("Get %s UMI module object", name.c_str());
-    DispatchstreamMap::iterator iter = dispatcher_map.find(name.c_str());
-    return (iter != dispatcher_map.end()) ? iter->second : nullptr;
-}
-
-bool Dispatcher :: registerModule (std::string name, UMIScenarioModule *obj)
-{
-    dispatcher_map[name.c_str()] = obj;
-    g_debug ("%s UMI module has been registered", name.c_str());
-    return true;
 }
 
 bool Dispatcher :: _mute(LSHandle *lshandle, LSMessage *message, void *ctx) {
@@ -87,115 +71,16 @@ bool Dispatcher :: _mute(LSHandle *lshandle, LSMessage *message, void *ctx) {
 
 bool Dispatcher :: _connectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_6(PROP(source, string),
-    PROP(sourcePort, integer), PROP(sink, string), PROP(audioType,string),
-    PROP(outputMode,string), PROP(context,string))
-    REQUIRED_5(source, sourcePort, sink, outputMode, audioType)));
-
-    if(!msg.parse(__FUNCTION__,lshandle))
-        return true;
-    std::string audioType;
-    msg.get("audioType",audioType);
-    g_debug("Dispatcher::_connectAudioOut:: Audio connect request");
-    UMIScenarioModule *module = nullptr;
-    if (nullptr != ctx)
-        module = static_cast <Dispatcher *> (ctx) -> getModule (audioType);
-    if (!VERIFY (module))
-    {
-        CLSError lserror;
-        std::string reply = STANDARD_JSON_SUCCESS;
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_AUDIO_TYPE, "Internal error");
-        if (!LSMessageRespond(message, reply.c_str(), &lserror))
-        {
-            lserror.Print(__FUNCTION__, __LINE__);
-        }
-    }
-    else
-    {
-        g_debug ("Calling connect for audiotype : %s", audioType.c_str());
-        module->connectAudioOut (lshandle, message, ctx);
-    }
     return true;
 }
 
 bool Dispatcher :: _disconnectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_5(PROP(source, string),
-    PROP(sourcePort, integer), PROP(sink, string), PROP(audioType,string), PROP(context,string))
-    REQUIRED_4(source, sourcePort, sink, audioType)));
-
-    if(!msg.parse(__FUNCTION__,lshandle))
-        return true;
-
-    std::string audioType;
-    msg.get("audioType",audioType);
-    g_debug("Dispatcher::_disconnectAudioOut:: Audio disconnect request");
-    UMIScenarioModule *module = nullptr;
-    if (nullptr != ctx)
-        module = static_cast <Dispatcher *> (ctx)-> getModule (audioType);
-    if (!VERIFY (module))
-    {
-        CLSError lserror;
-        std::string reply = STANDARD_JSON_SUCCESS;
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_AUDIO_TYPE, "Internal error");
-        if (!LSMessageRespond(message, reply.c_str(), &lserror))
-        {
-            lserror.Print(__FUNCTION__, __LINE__);
-        }
-    }
-    else
-    {
-        g_debug ("Calling disconnect for audiotype : %s", audioType.c_str());
-        module->disconnectAudioOut (lshandle, message, ctx);
-    }
     return true;
 }
 
 bool Dispatcher :: getAudioOutputStatus(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    envelopeRef *handle = nullptr;
-
-    if (nullptr != message)
-    {
-        handle = new envelopeRef();
-        if(nullptr != handle)
-        {
-            handle->message = message;
-        }
-        LSMessageRef(message);
-    }
-    umiaudiomixer * mixerHandle = umiaudiomixer::getUmiMixerInstance();
-    std::string reply = STANDARD_JSON_SUCCESS;
-    bool returnvalue = false;
-    if(nullptr != mixerHandle)
-    {
-        if (mixerHandle -> getConnectionStatus(_getAudioOutputStatusCallback, handle))
-        {
-            returnvalue = true;
-        }
-        else
-        {
-            g_debug("get connect status umimixer call failed");
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
-        }
-    }
-    else
-    {
-        g_debug("Audio get connect status :mixerHdl is NULL");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
-    }
-    if (false == returnvalue)
-    {
-        CLSError lserror;
-        if (nullptr != message)
-            if (!LSMessageRespond(message, reply.c_str(), &lserror))
-                lserror.Print(__FUNCTION__, __LINE__);
-        if (nullptr != handle)
-        {
-            delete handle;
-            handle = nullptr;
-        }
-    }
     return true;
 }
 

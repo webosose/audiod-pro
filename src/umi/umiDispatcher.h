@@ -1,4 +1,4 @@
-// Copyright (c) 2018 LG Electronics, Inc.
+// Copyright (c) 2018-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,17 +20,16 @@
 #include <map>
 #include <string>
 
-#include "umiScenarioModule.h"
-
 #define UMI_CATEGORY_NAME                "/UMI"
 #define GET_STATUS_CATEGORY_AND_KEY      "/UMI/getStatus"
 
 class Dispatcher
 {
     private :
-        typedef  std::map< std::string, UMIScenarioModule * > DispatchstreamMap;
-        DispatchstreamMap dispatcher_map;
-        UMIScenarioModule * getModule (std::string &name);
+        //Will be removed or updated once DAP design is updated
+        //typedef  std::map< std::string, UMIScenarioModule * > DispatchstreamMap;
+        //DispatchstreamMap dispatcher_map;
+        //UMIScenarioModule * getModule (std::string &name);
         bool getAudioOutputStatus (LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _connectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _disconnectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx);
@@ -39,7 +38,7 @@ class Dispatcher
         static bool _getAudioOutputStatusCallback (LSHandle *sh, LSMessage *reply, void *ctx);
     public :
         static LSMethod DispatcherMethods[];
-        bool registerModule (std::string name, UMIScenarioModule *obj);
+        //bool registerModule (std::string name, UMIScenarioModule *obj);
         static Dispatcher * getDispatcher ();
         void notifyGetStatusSubscribers ();
         ~Dispatcher ();

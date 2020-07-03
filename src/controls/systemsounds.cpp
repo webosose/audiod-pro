@@ -21,7 +21,6 @@
 #include <glib.h>
 #include <stdio.h>
 
-#include "AudioDevice.h"
 #include "AudioMixer.h"
 #include "state.h"
 #include "utils.h"
@@ -48,10 +47,11 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
     char *filename = NULL;
     FILE *fp = NULL;
 
-    if (gAudioDevice.isSuspended()) {
+    //Will be removed or updated once DAP design is updated
+    /*if (gAudioDevice.isSuspended()) {
         reply = STANDARD_JSON_ERROR(4, "Audio suspended");
         goto error;
-    }
+    }*/
 
     if (!msg.get("name", name))
     {

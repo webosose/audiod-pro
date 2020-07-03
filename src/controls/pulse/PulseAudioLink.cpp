@@ -16,7 +16,8 @@
 
 
 #include "PulseAudioLink.h"
-#include "AudioDevice.h"
+#include "log.h"
+#include "state.h"
 #include "utils.h"
 #include <math.h>
 #include <unistd.h>
@@ -119,7 +120,7 @@ static void PlaySampleDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userd
     PlaySampleDeferData* data  = (PlaySampleDeferData*)userdata;
 
     // prepare HW for playing audio. Will unmute Pixie in particular...
-    gAudioDevice.prepareForPlayback();
+    //gAudioDevice.prepareForPlayback();  //Will be removed or updated once DAP design is updated
 
     // confidentiality: don't log dtmf tone names to hide phone numbers & pass codes!
     const char * name = data->samplename;
@@ -129,7 +130,10 @@ static void PlaySampleDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userd
 
     // prepare HW for playing audio. will unmute speaker in=f in music+headset case
     if(strstr (name, "alert_"))
-        gAudioDevice.prepareHWForPlayback();
+    {
+        //Will be removed or updated once DAP design is updated
+        //gAudioDevice.prepareHWForPlayback();
+    }
 
     pa_operation * op = pa_context_play_sample(data->pacontext,
                                                data->samplename,

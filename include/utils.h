@@ -20,7 +20,6 @@
 
 #include <glib.h>
 #include <lunaservice.h>
-#include "AudioDevice.h"
 #include <pulse/module-palm-policy.h>
 
 enum EUMISink

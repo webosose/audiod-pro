@@ -14,21 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "scenario.h"
 #include "module.h"
-#include "update.h"
 #include "utils.h"
 #include "messageUtils.h"
 #include "volume.h"
-#include "media.h"
 #include "state.h"
 #include "main.h"
 #include "log.h"
 #include "VolumeControlChangesMonitor.h"
-#include "AudioDevice.h"
 #include "PulseAudioMixer.h"
 #include "main.h"
-#include "genericScenarioModule.h"
 
 #define SUBSCRIPTION_KEY "lockVolumeKeysSubscription"
 
@@ -68,7 +63,8 @@ _setVolumeOrMicGain(LSHandle *lshandle,
     const char * parameter = VOLUME_GAIN(volumeNotMicGain);
     std::string scenario;
     int volume = -1;
-    ScenarioModule * module = (ScenarioModule*) ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule * module = (ScenarioModule*) ctx;
 
     if (!msg.get(parameter, volume))
     {
@@ -100,15 +96,6 @@ _setVolumeOrMicGain(LSHandle *lshandle,
         Default2ScenarioModule * s = getDefault2Module();
         s->setVolume(volume);
         #endif
-    }
-    else
-    {
-        if (!module->setScenarioVolumeOrMicGain(ZERO_IF_EMPTY(scenario),
-                                                     volume, volumeNotMicGain))
-        {
-            reply = STANDARD_JSON_ERROR(3, "failed to set parameter (invalid scenario name?)");
-            goto error;
-        }
     }
 
 error:
@@ -154,7 +141,8 @@ _getVolumeOrMicGain(LSHandle *lshandle,
         return true;
 
     const char * parameter = VOLUME_GAIN(volumeNotMicGain);
-    ScenarioModule * module = (ScenarioModule*) ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule * module = (ScenarioModule*) ctx;
 
     // scenario is optional. If not present,
     // we will pass 0 to mean "current scenario"
@@ -175,7 +163,9 @@ _getVolumeOrMicGain(LSHandle *lshandle,
     }
     else
         reply = STANDARD_JSON_ERROR(3,
-                           "failed to get parameter (invalid scenario name?)");
+                           "failed to get parameter (invalid scenario name?)");*/
+    //Will be removed or updated once DAP design is updated
+    std::string reply = STANDARD_JSON_SUCCESS;
 
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
@@ -216,8 +206,8 @@ _offsetVolumeOrMicGain(LSHandle *lshandle,
                                        lshandle,
                                        eLogOption_LogMessageWithCategory))
         return true;
-
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule * module = (ScenarioModule*)ctx;
 
     const char *    reply = STANDARD_JSON_SUCCESS;
     std::string        scenario;
@@ -234,14 +224,14 @@ _offsetVolumeOrMicGain(LSHandle *lshandle,
     // scenario parameter is optional
     if (!msg.get("scenario", scenario))
         scenario.clear();
-
-    if (!module->getScenarioVolumeOrMicGain(ZERO_IF_EMPTY(scenario),
+    //Will be removed or updated once DAP design is updated
+    /*if (!module->getScenarioVolumeOrMicGain(ZERO_IF_EMPTY(scenario),
                                             volume, volumeNotMicGain))
     {
            reply = STANDARD_JSON_ERROR(3,
                             "failed to set parameter (invalid scenario name?)");
         goto error;
-    }
+    }*/
 
     // unit parameter is optional
     if (!msg.get("unit", unit))
@@ -284,13 +274,14 @@ _offsetVolumeOrMicGain(LSHandle *lshandle,
         goto error;
     }
 
-    if (!module->setScenarioVolumeOrMicGain(ZERO_IF_EMPTY(scenario),
+    //Will be removed or updated once DAP design is updated
+    /*if (!module->setScenarioVolumeOrMicGain(ZERO_IF_EMPTY(scenario),
                                             volume, volumeNotMicGain))
     {
            reply = STANDARD_JSON_ERROR(3,
                            "failed to set parameter (invalid scenario name?)");
         goto error;
-    }
+    }*/
 
 error:
 
@@ -326,7 +317,8 @@ _setLatency(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.parse(__FUNCTION__, lshandle, eLogOption_LogMessageWithCategory))
         return true;
 
-    ScenarioModule * module = (ScenarioModule*) ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule * module = (ScenarioModule*) ctx;
     std::string    scenario;
     int latency;
     const char * reply = STANDARD_JSON_SUCCESS;
@@ -347,12 +339,16 @@ _setLatency(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.get("scenario", scenario))
         scenario.clear();
 
-    if (!module->setScenarioLatency(ZERO_IF_EMPTY(scenario), latency))
+    //Will be removed or updated once DAP design is updated
+    /*if (!module->setScenarioLatency(ZERO_IF_EMPTY(scenario), latency))
     {
         reply = STANDARD_JSON_ERROR(3,
                              "failed to set latency (invalid scenario name?)");
         goto error;
-    }
+    }*/
+    //Will be removed or updated once DAP design is updated
+    reply = STANDARD_JSON_SUCCESS;
+    goto error;
 
 error:
     CLSError lserror;
@@ -373,7 +369,8 @@ _getLatency(LSHandle *lshandle, LSMessage *message, void *ctx)
         return true;
 
     std::string    scenario, reply;
-    ScenarioModule * module = (ScenarioModule*) ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule * module = (ScenarioModule*) ctx;
     // scenario parameter is optional
     if (!msg.get("scenario", scenario))
         scenario.clear();
@@ -386,7 +383,8 @@ _getLatency(LSHandle *lshandle, LSMessage *message, void *ctx)
                                 scenario.c_str()), latency);
     else
         reply = STANDARD_JSON_ERROR(3,
-                             "failed to get latency (invalid scenario name?)");
+                             "failed to get latency (invalid scenario name?)");*/
+    reply = STANDARD_JSON_SUCCESS;
 
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
@@ -406,10 +404,11 @@ _enableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.parse(__FUNCTION__, lshandle, eLogOption_LogMessageWithCategory))
         return true;
 
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule * module = (ScenarioModule*)ctx;
     const gchar * reply = STANDARD_JSON_SUCCESS;
     std::string scenario;
-    GenericScenario * s = nullptr;
+    /*GenericScenario * s = nullptr;
     // scenario parameter is NOT optional
     if (!msg.get("scenario", scenario))
     {
@@ -428,7 +427,10 @@ _enableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     {
         reply = STANDARD_JSON_ERROR(3, "Could not enable requested scenario.");
         goto error;
-    }
+    }*/
+    //Will be removed or updated once DAP design is updated
+    reply = STANDARD_JSON_SUCCESS;
+    goto error;
 
 error:
     CLSError lserror;
@@ -448,10 +450,11 @@ _disableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.parse(__FUNCTION__, lshandle, eLogOption_LogMessageWithCategory))
         return true;
 
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule * module = (ScenarioModule*)ctx;
     const gchar * reply = STANDARD_JSON_SUCCESS;
     std::string scenario;
-    GenericScenario * s = nullptr;
+    /*GenericScenario * s = nullptr;
     // scenario parameter is NOT optional
     if (!msg.get("scenario", scenario))
     {
@@ -470,7 +473,10 @@ _disableScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     {
         reply = STANDARD_JSON_ERROR(3, "Could not disable requested scenario.");
         goto error;
-    }
+    }*/
+    //Will be removed or updated once DAP design is updated
+    reply = STANDARD_JSON_SUCCESS;
+    goto error;
 
 error:
     CLSError lserror;
@@ -489,8 +495,8 @@ _setCurrentScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     LSMessageJsonParser msg(message, SCHEMA_1(REQUIRED(scenario, string)));
     if (!msg.parse(__FUNCTION__, lshandle, eLogOption_LogMessageWithCategory))
         return true;
-
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule * module = (ScenarioModule*)ctx;
     const gchar * reply = STANDARD_JSON_SUCCESS;
     std::string scenario;
 
@@ -505,7 +511,10 @@ _setCurrentScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     {
         reply = STANDARD_JSON_ERROR(3, "Could not set current scenario.");
         goto error;
-    }
+    }*/
+    //Will be removed or updated once DAP design is updated
+    const gchar *reply=STANDARD_JSON_SUCCESS;
+    goto error;
 
 error:
     CLSError lserror;
@@ -524,15 +533,15 @@ _getCurrentScenario(LSHandle *lshandle, LSMessage *message, void *ctx)
     LSMessageJsonParser msg(message, SCHEMA_0);
     if (!msg.parse(__FUNCTION__, lshandle, eLogOption_LogMessageWithCategory))
         return true;
-
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule * module = (ScenarioModule*)ctx;
 
     std::string reply = string_printf ("{\"returnValue\":true,\"scenario\":\"%s\"}",
                                              module->getCurrentScenarioName());
 
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
+        lserror.Print(__FUNCTION__, __LINE__);*/
 
     return true;
 }
@@ -549,7 +558,8 @@ _listScenarios(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.parse(__FUNCTION__, lshandle, eLogOption_LogMessageWithCategory))
         return true;
 
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule * module = (ScenarioModule*)ctx;
 
     // read optional parameters with appropriate default values
     bool    enabled, disabled;
@@ -582,7 +592,7 @@ _listScenarios(LSHandle *lshandle, LSMessage *message, void *ctx)
 
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, jsonToString(reply).c_str(), &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
+        lserror.Print(__FUNCTION__, __LINE__);*/
 
     return true;
 }
@@ -590,33 +600,7 @@ _listScenarios(LSHandle *lshandle, LSMessage *message, void *ctx)
 bool
 _status(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-
-        LSMessageJsonParser msg(message, SCHEMA_1(OPTIONAL(subscribe, boolean)));
-        if (!msg.parse(__FUNCTION__, lshandle, eLogOption_LogMessageWithCategory))
-            return true;
-
-    if (!VERIFY(ctx != 0 && message != 0))
-        return true;
-    ScenarioModule * module = (ScenarioModule*)ctx;
-
-    CLSError lserror;
-    bool subscribed = false;
-
-    if (LSMessageIsSubscription (message))
-    {
-        if (!LSSubscriptionProcess (lshandle, message, &subscribed, &lserror))
-            lserror.Print(__FUNCTION__, __LINE__);
-    }
-
-    CHECK(module->sendRequestedUpdate (lshandle, message, subscribed));
-
     return true;
-}
-
-bool
-GenericScenarioModule::broadcastEvent (const char *event)
-{
-    return CHECK(sendChangedUpdate(UPDATE_BROADCAST_EVENT, event));
 }
 
 bool
@@ -630,7 +614,8 @@ _broadcastEvent(LSHandle *lshandle, LSMessage *message, void *ctx)
         return true;
 
     const char * reply = STANDARD_JSON_SUCCESS;
-    ScenarioModule *module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule *module = (ScenarioModule*)ctx;
 
     std::string    event;
     if (!msg.get("event", event))
@@ -641,24 +626,10 @@ _broadcastEvent(LSHandle *lshandle, LSMessage *message, void *ctx)
     {
         reply = STANDARD_JSON_ERROR(3, "Could not broadcast event.");
     }
-
+    */
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply, &lserror))
         lserror.Print(__FUNCTION__, __LINE__);
-
-    return true;
-}
-
-bool
-GenericScenarioModule::setMuted (bool muted)
-{
-    if (mMuted != muted)
-    {
-        mMuted = muted;
-
-        programMuted();
-        CHECK(sendChangedUpdate (UPDATE_CHANGED_MUTED));
-    }
 
     return true;
 }
@@ -674,7 +645,8 @@ _setMuted(LSHandle *lshandle, LSMessage *message, void *ctx)
         return true;
 
     const char * reply = STANDARD_JSON_SUCCESS;
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule * module = (ScenarioModule*)ctx;
 
     bool muted;
     bool success = true;
@@ -691,7 +663,7 @@ _setMuted(LSHandle *lshandle, LSMessage *message, void *ctx)
         module->setMuted(muted);
         gAudioDevice.setIncomingCallRinging(!muted);
     }
-
+    */
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply, &lserror))
         lserror.Print(__FUNCTION__, __LINE__);
@@ -715,17 +687,19 @@ _lockVolumeKeys(LSHandle *lshandle, LSMessage *message, void *ctx)
 
     VolumeControlChangesMonitor    monitor;
 
-    ScenarioModule *module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule *module = (ScenarioModule*)ctx;
 
-    g_debug("%s: locking volume keys for module %s",
-                                         __FUNCTION__, module->getCategory());
+    //g_debug("%s: locking volume keys for module %s",
+                                         //__FUNCTION__, module->getCategory());
     LogIndent    indentLogs("| ");
 
     bool foregroundApp;
     if (msg.get("foregroundApp", foregroundApp) && foregroundApp)
     {
         // this a foreground app thingy
-        module->setVolumeOverride(true);
+        //Will be removed or updated once DAP design is updated
+        //module->setVolumeOverride(true);
     }
     else
     {
@@ -734,12 +708,14 @@ _lockVolumeKeys(LSHandle *lshandle, LSMessage *message, void *ctx)
 
     if (!foregroundApp)
     {
-        if (!gState.setLockedVolumeModule(module))
+        //Will be removed or updated once DAP design is updated
+        /*if (!gState.setLockedVolumeModule(module))
         {
             g_warning ("%s: could not lock volume keys.", __FUNCTION__);
             reply = STANDARD_JSON_ERROR(3, "Could not lock volume keys.");
             goto send;
-        }
+        }*/
+        goto send;
     }
 
     if (!LSSubscriptionAdd(lshandle, SUBSCRIPTION_KEY, message, &lserror))
@@ -748,10 +724,11 @@ _lockVolumeKeys(LSHandle *lshandle, LSMessage *message, void *ctx)
 
         reply = STANDARD_JSON_ERROR(3, "Failed to subscribe to lockVolumeKeys.");
 
-        if (foregroundApp)
+        //Will be removed or updated once DAP design is updated
+        /*if (foregroundApp)
             module->setVolumeOverride (false);
         else
-            gState.setLockedVolumeModule (NULL);
+            gState.setLockedVolumeModule (NULL);*/
     }
 
 send:
@@ -762,13 +739,6 @@ send:
     return true;
 }
 
-bool
-ScenarioModule::museSet (bool enable)
-{
-    programMuse(enable);
-
-    return true;
-}
 #if defined(AUDIOD_PALM_LEGACY)
 bool
 _museSet(LSHandle *lshandle, LSMessage *message, void *ctx)
@@ -781,7 +751,8 @@ _museSet(LSHandle *lshandle, LSMessage *message, void *ctx)
         return true;
 
     const char * reply = STANDARD_JSON_SUCCESS;
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule * module = (ScenarioModule*)ctx;
 
     bool enable;
     if (!msg.get("enable", enable))
@@ -790,7 +761,8 @@ _museSet(LSHandle *lshandle, LSMessage *message, void *ctx)
     }
     else
     {
-        module->museSet (enable);
+        //Will be removed or updated once DAP design is updated
+        //module->museSet (enable);
     }
 
     CLSError lserror;
@@ -812,13 +784,15 @@ _hacSet(LSHandle *lshandle, LSMessage *message, void *ctx)
 
 
     const char * reply = STANDARD_JSON_SUCCESS;
-    ScenarioModule * module = (ScenarioModule*)ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule * module = (ScenarioModule*)ctx;
 
     bool enable;
     if (!msg.get("enable", enable))
         reply = MISSING_PARAMETER_ERROR(enable, boolean);
-    else
-        module->programHac (enable);
+    //Will be removed or updated once DAP design is updated
+    /*else
+        module->programHac (enable);*/
 
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply, &lserror))
@@ -985,8 +959,9 @@ _bluetoothAudioPropertiesSet(LSHandle *lshandle, LSMessage *message, void *ctx)
         goto error;
     }
 
-    g_debug("bluetooth carkit %d echo cancellation enable %d", carkit, enable);
-    gAudioDevice.setBTSupportEC(carkit, enable);
+    //Will be removed or updated once DAP design is updated
+    /*g_debug("bluetooth carkit %d echo cancellation enable %d", carkit, enable);
+    gAudioDevice.setBTSupportEC(carkit, enable);*/
 
 error:
     CLSError lserror;
@@ -998,44 +973,6 @@ error:
 #endif
 
 bool
-GenericScenarioModule::setVolumeOverride (bool override)
-{
-    if (override)
-        mVolumeOverride++;
-    else
-        mVolumeOverride--;
-
-    g_debug("ScenarioModule::setVolumeOverride: changing volume override of %s by %d -> %d",
-        getCategory(), (override ? 1 : -1), mVolumeOverride);
-
-    if (mVolumeOverride < 0)
-    {
-        g_warning ("%s: volume override mismatch detected for %s. Setting to 0.",
-                                                 __FUNCTION__, getCategory());
-        mVolumeOverride = 0;
-    }
-
-    return true;
-}
-
-bool
-GenericScenarioModule::registerMe (LSMethod *methods)
-{
-    bool result;
-    CLSError lserror;
-
-    result = ServiceRegisterCategory (mCategory, methods, nullptr, this);
-    if (!result)
-    {
-        lserror.Print(__FUNCTION__, __LINE__);
-        g_message("%s: Registering Service for '%s' category failed", __FUNCTION__, mCategory.c_str());
-        return false;
-    }
-
-    return true;
-}
-
-bool
 _volumeUp(LSHandle *sh, LSMessage *message, void *ctx)
 {
     const char *reply = STANDARD_JSON_SUCCESS;
@@ -1044,7 +981,8 @@ _volumeUp(LSHandle *sh, LSMessage *message, void *ctx)
     int volume = -1;
 
     LSMessageJsonParser msgParse(message, SCHEMA_ANY);
-    ScenarioModule *module = (ScenarioModule *) ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule *module = (ScenarioModule *) ctx;
 
     // add LSMessageIsSubscription for not support subscribe parameter for volumeUp, jinyo 2015-05-28
     if ((!msgParse.parse(cModuleMethod_VolumeUp)) && (LSMessageIsSubscription(message)))
@@ -1062,7 +1000,8 @@ _volumeUp(LSHandle *sh, LSMessage *message, void *ctx)
 
 
     module->setMuted(false);
-    module->setVolumeUpDown(true);
+    module->setVolumeUpDown(true);*/
+    goto error;
 
 error:
 
@@ -1083,7 +1022,8 @@ _volumeDown(LSHandle *sh, LSMessage *message, void *ctx)
     int volume = -1;
 
     LSMessageJsonParser msgParse(message, SCHEMA_ANY);
-    ScenarioModule *module = (ScenarioModule *) ctx;
+    //Will be removed or updated once DAP design is updated
+    /*ScenarioModule *module = (ScenarioModule *) ctx;
 
     // add LSMessageIsSubscription for not support subscribe parameter for volumeDown, jinyo 2015-05-28
     if ((!msgParse.parse(cModuleMethod_VolumeDown)) || (LSMessageIsSubscription(message)))
@@ -1101,7 +1041,8 @@ _volumeDown(LSHandle *sh, LSMessage *message, void *ctx)
 
 
     module->setMuted(false);
-    module->setVolumeUpDown(false);
+    module->setVolumeUpDown(false);*/
+    goto error;
 
 error:
 
@@ -1123,7 +1064,8 @@ bool _getSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx)
         return false;
     }
 
-    ScenarioModule *module = (ScenarioModule *)ctx;
+    //Will be removed or updated once DAP design is updated
+    //ScenarioModule *module = (ScenarioModule *)ctx;
 
     if (LSMessageIsSubscription(message))
     {
@@ -1134,7 +1076,8 @@ bool _getSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx)
         }
         else
         {
-            CHECK(module->sendChangedUpdate(NOTIFY_SOUNDOUT));
+            //Will be removed or updated once DAP design is updated
+            //CHECK(module->sendChangedUpdate(NOTIFY_SOUNDOUT));
         }
     }
     else
