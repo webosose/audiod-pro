@@ -21,6 +21,7 @@
 #include <glib.h>
 #include <lunaservice.h>
 #include <pulse/module-palm-policy.h>
+#include "log.h"
 
 enum EUMISink
 {
@@ -62,6 +63,15 @@ namespace utils
         ePulseMixer,
         eUmiMixer
     }EMIXER_TYPE;
+
+    typedef enum eventType
+    {
+        eEventNone,
+        eEventSinkStatus,
+        eEventServerStatusSubscription,
+        eEventKeySubscription,
+        eEventMixerStatus
+    }EVENT_TYPE_E;
 }
 
 class LSMessageJsonParser;

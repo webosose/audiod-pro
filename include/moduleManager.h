@@ -20,6 +20,8 @@
 #include "utils.h"
 #include "log.h"
 #include <list>
+#include <string>
+#include "moduleInterface.h"
 
 class ModuleManager
 {
@@ -28,13 +30,20 @@ class ModuleManager
         ModuleManager(const ModuleManager&) = delete;
         ModuleManager& operator=(const ModuleManager&) = delete;
         ModuleManager();
+        std::list<ModuleInterface*> listSinkStatusSubscribers;
+        std::list<ModuleInterface*> listMixerStatusSubscribers;
 
     public:
         ~ModuleManager();
         static ModuleManager* getModuleManagerInstance();
-        //to notify sink status
-        void eventSinkStatus(EVirtualAudioSink audioSink, \
+        //subscription events
+        void subscribeModuleEvent(ModuleInterface* module, bool first, utils::EVENT_TYPE_E eventType);
+        //Notification events start
+        //To notify sink status
+        void notifySinkStatusInfo(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
+        //To notify mixer status
+        void notifyMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
 };
 
 #endif //_MODULE_MANAGER_H_

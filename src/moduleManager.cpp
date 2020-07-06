@@ -34,10 +34,57 @@ ModuleManager::~ModuleManager()
         "ModuleManager destructor");
 }
 
-void ModuleManager::eventSinkStatus(EVirtualAudioSink audioSink, \
+void ModuleManager::subscribeModuleEvent(ModuleInterface* module, bool first, utils::EVENT_TYPE_E eventType)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "subscribeModuleEvent");
+    switch (eventType)
+    {
+        case utils::eEventSinkStatus:
+        {
+            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                    "subscribeModuleEvent:: eEventSinkStatus");
+            if (first)
+                listSinkStatusSubscribers.push_front(module);
+            else
+                listSinkStatusSubscribers.push_back(module);
+        }
+        break;
+        case utils::eEventMixerStatus:
+        {
+            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                "subscribeModuleEvent:: eEventMixerStatus");
+            if (first)
+                listMixerStatusSubscribers.push_front(module);
+            else
+                listMixerStatusSubscribers.push_back(module);
+        }
+        break;
+        default:
+        {
+            PM_LOG_WARNING(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                "subscribeModuleEvent:Unknown event");
+        }
+        break;
+    }
+}
+
+void ModuleManager::notifySinkStatusInfo(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType)
 {
     PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
-        "ModuleManager:%s sink:%d, Sink status:%d Mixer type:%d",\
-         __FUNCTION__, audioSink, sinkStatus, mixerType);
+        "ModuleManager:%s source:%s sink:%s, sinkId:%d Sink status:%d Mixer type:%d",\
+        __FUNCTION__, source.c_str(), sink.c_str(), (int)audioSink, sinkStatus, mixerType);
+    for (const auto &it : listSinkStatusSubscribers)
+        it->eventSinkStatus(source, sink, audioSink, sinkStatus, mixerType);
+}
+
+void ModuleManager::notifyMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "ModuleManager:notifyMixerStatus status:%d type:%d", mixerStatus, mixerType);
+    for (const auto &it:listMixerStatusSubscribers)
+    {
+        it->eventMixerStatus(mixerStatus, mixerType);
+    }
 }
