@@ -69,24 +69,6 @@ class InheritEnum
 
 typedef InheritEnum<EVirtualUMISink, EVirtualSink> EVirtualAudiodSink;
 
-enum EPhoneEvent
-{
-    ePhoneEvent_CallStarted,
-    ePhoneEvent_CallEnded,
-    ePhoneEvent_EmergencyCall,
-    ePhoneEvent_BusyTone,
-    ePhoneEvent_DTMFToneEnd,
-   // parameter is the DTMF key as a character, '0' to '9', '*' or '#'
-    ePhoneEvent_DTMFTone,
-    // parameter is the DTMF key as a character, '0' to '9', '*' or '#'
-    ePhoneEvent_OneShotDTMFTone,
-    ePhoneEvent_IncomingCallTone,
-    ePhoneEvent_Incoming,
-    ePhoneEvent_Disconnected,
-    ePhoneEvent_voLTEcallsupported,
-    ePhoneEvent_voLTEcallNOTsupported
-};
-
 enum EBTDeviceType
 {
     eBTDevice_NarrowBand =1,
@@ -171,9 +153,9 @@ enum EControlEvent
 };
 
 /*
-TODO : Currently there are 2 mixers (UMI mixer and Pulse audio Mixer). 
-We'll be working on common interface layer for mixers and 
-Take care of generation of them using config files and respective design pattern 
+TODO : Currently there are 2 mixers (UMI mixer and Pulse audio Mixer).
+We'll be working on common interface layer for mixers and
+Take care of generation of them using config files and respective design pattern
 */
 enum ESinkType
 {
@@ -252,28 +234,11 @@ public:
 
     /// Program a filter
     virtual bool            programFilter(int filterTable) = 0;
-    virtual bool            programLatency(int latency) = 0;
     virtual	bool           programBalance(int balance) = 0;
     virtual bool            muteAll() = 0;
 
-    /// Offset a volume by a number of dB. Calculation only.
-    virtual int                adjustVolume(int volume, int dB) = 0;
-
     /// Get active streams set to test which sinks are active.
     virtual VirtualSinkSet    getActiveStreams() = 0;
-
-    /// Get how many streams are active for a particular sink.
-    virtual int                getStreamCount(EVirtualAudiodSink sink) = 0;
-
-    /// Count how many output streams are opened
-    virtual int                getOutputStreamOpenedCount () = 0;
-
-    /// Count how many input streams are opened
-    virtual int                getInputStreamOpenedCount () = 0;
-
-    /// Find out if a particular sink is audible.
-    // Something must be playing & the volume must be non-null
-    virtual bool            isSinkAudible(EVirtualAudiodSink sink) = 0;
 
     /// Suspend all streams (when entering power saving mode).
     virtual bool            suspendAll() = 0;
@@ -299,24 +264,15 @@ public:
 
     virtual void            stopDtmf()= 0;
 
-    virtual bool            programLoadRTP(const char *type, const char *ip, int port) = 0;
     virtual bool            programHeadsetRoute(int route) = 0;
-    virtual bool            programUnloadRTP() = 0;
     virtual bool            loadUSBSinkSource(char cmd, int cardno, int deviceno, int status) = 0;
     virtual bool suspendSink(int sink) = 0;
     virtual void setNREC(bool value) = 0;
     virtual bool programLoadBluetooth (const char *address, const char *profile) = 0;
     virtual bool programUnloadBluetooth (const char *profile) = 0;
     virtual bool setRouting(const ConstString & scenario) = 0;
-    virtual bool phoneEvent(EPhoneEvent event, int parameter) = 0;
     virtual bool programCallVoiceOrMICVolume (char cmd, int volume) = 0;
-    virtual bool getBTVolumeSupport() = 0;
-    virtual void setBTDeviceType(int type) = 0;
-    virtual bool setPhoneMuted(const ConstString & scenario, bool muted) = 0;
-    virtual bool setPhoneVolume(const ConstString & scenario, int volume) =0;
     virtual int loopback_set_parameters(const char * value) =0;
-    virtual inline bool inHfpAgRole(void) = 0;
-    virtual inline void setHfpAgRole(bool HfpAgRole) = 0;
 };
 
 extern AudioMixer & gAudioMixer;

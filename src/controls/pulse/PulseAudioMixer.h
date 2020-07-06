@@ -59,33 +59,19 @@ public:
 
     /// Program a filter
     bool programFilter(int filterTable);
-    bool programLatency(int latency);
     bool programBalance(int balance);
     bool muteAll();
-
-    /// Offset a volume by a number of dB. Calculation only.
-    int  adjustVolume(int volume, int dB);
 
     /// Get active streams set to test which sinks are active.
     VirtualSinkSet getActiveStreams() { return mActiveStreams; }
 
-    /// Get how many streams are active for a particular sink.
-    int getStreamCount(EVirtualAudiodSink sink);
-
     /// Count how many output streams are opened
     void outputStreamOpened (EVirtualAudiodSink sink);
     void outputStreamClosed (EVirtualAudiodSink sink);
-    int  getOutputStreamOpenedCount ()
-                { return mOutputStreamsCurrentlyOpenedCount; }
 
     /// Count how many input streams are opened
     void inputStreamOpened (EVirtualSource source);
     void inputStreamClosed (EVirtualSource source);
-    int  getInputStreamOpenedCount () { return mInputStreamsCurrentlyOpenedCount; }
-
-    /// Find out if a particular sink is audible.
-    // Something must be playing & the volume must be non-null
-    bool isSinkAudible(EVirtualAudiodSink sink);
 
     /// Suspend all streams (when entering power saving mode).
     bool suspendAll();
@@ -115,9 +101,7 @@ public:
 
     void stopDtmf();
 
-    bool programLoadRTP(const char *type, const char *ip, int port);
     bool programHeadsetRoute (int route);
-    bool programUnloadRTP();
 
     bool externalSoundcardPathCheck (std::string filename,  int status);
     bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
@@ -126,38 +110,17 @@ public:
     bool _connectSocket();
     void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);
     void _timer();
-    bool _sinkStatus(LSHandle *lshandle, LSMessage *message);
-    bool _setFilter(LSHandle * lshandle, LSMessage * message);
-    bool _suspend(LSHandle * lshandle, LSMessage * message);
 
     GIOChannel* mChannel;
-
-#ifdef HAVE_BT_SERVICE_V1
-    void sendBTDeviceType(bool type, bool hfpStatus);
-    void setBTvolumeSupport(bool value);
-#endif
     bool suspendSink(int sink);
+    bool programSource(char cmd, int sink, int value);
+    void openCloseSink(EVirtualAudiodSink sink, bool openNotClose);
     void setNREC(bool value);
-    void sendNREC(bool value);
     bool programLoadBluetooth (const char * address , const char *profile);
     bool programUnloadBluetooth (const char *profile);
     bool setRouting(const ConstString & scenario);
-    bool phoneEvent(EPhoneEvent event, int parameter);
-    bool getBTVolumeSupport();
-    void setBTDeviceType(int type);
-    bool setPhoneVolume(const ConstString & scenario, int volume);
-    bool setPhoneMuted(const ConstString & scenario, bool muted);
     int loopback_set_parameters(const char * value);
-
-
-    inline void setHfpAgRole(bool HfpAgRole);
-    inline bool inHfpAgRole(void);
-
 private:
-    bool programSource(char cmd, int sink, int value);
-    void openCloseSink(EVirtualAudiodSink sink, bool openNotClose);
-    int  getCurrentPulseVolume(EVirtualAudiodSink sink);// get Pulse volume
-
     // Direct socket connection to Pulse
     int mTimeout;
     unsigned int mSourceID;
@@ -185,11 +148,6 @@ private:
     int mPreviousVolume;
     bool NRECvalue;
     bool BTvolumeSupport;
-    bool mIsHfpAgRole;
-
-#ifdef HAVE_BT_SERVICE_V1
-    bool voiceRxMuted;
-#endif
     AudiodCallbacksInterface* mCallbacks;
 };
 

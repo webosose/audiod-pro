@@ -47,15 +47,15 @@ class umiaudiomixer
 
     std::vector<EVirtualAudiodSink> mVectActiveStreams;
 
-    /*Constructor*/
-    umiaudiomixer();
     umiaudiomixer(const umiaudiomixer &) = delete;
     umiaudiomixer& operator=(const umiaudiomixer &) = delete;
 
-    /*Destructor*/
-    ~umiaudiomixer();
-
     public:
+    //Constructor
+    umiaudiomixer();
+
+    //Destructor
+    ~umiaudiomixer();
 
     /*Initialize umi mixer*/
     void initUmiMixer(GMainLoop * loop, LSHandle * handle, AudiodCallbacksInterface* interface);

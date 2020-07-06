@@ -1457,11 +1457,6 @@ static bool _loadRTPModule(LSHandle *lshandle, LSMessage *message, void *ctx)
         if (!LSSubscriptionProcess (lshandle, message, &subscribed, &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
     }
-
-    if(!gAudioMixer.programLoadRTP(type.c_str(), ip.c_str(), port)) {
-        reply = createJsonReply(false, UNSUPPORTED_ERROR_CODE, "Failed to send message to pulseaudio");
-        goto error;
-    }
     gState.setRTPLoaded(true);
 
     gAudioMixer.programDestination (emedia, eRtpsink);
@@ -1490,14 +1485,7 @@ static bool _unloadRTPModule(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!gState.isRTPLoaded()) {
         reply = createJsonReply(false, REPEATED_REQUEST_ERROR_CODE, "RTP module is not loaded");
         goto error;
-    } 
-
-    if(!gAudioMixer.programUnloadRTP()) {
-        reply = createJsonReply(false, UNSUPPORTED_ERROR_CODE, "Failed to send message to pulseaudio");
-        goto error;
     }
-
-
     gState.setRTPLoaded(false);
     //Will be removed or updated once DAP design is updated
     /*if (ScenarioModule * module = dynamic_cast <ScenarioModule *> (ScenarioModule::getCurrent()))

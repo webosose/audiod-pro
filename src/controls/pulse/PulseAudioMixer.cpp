@@ -131,7 +131,6 @@ PulseAudioMixer::PulseAudioMixer() : mChannel(0),
                                      voLTE(false),
                                      NRECvalue(1),
                                      BTDeviceType(eBTDevice_NarrowBand),
-                                     mIsHfpAgRole(false),
                                      mPreviousVolume(0),
                                      BTvolumeSupport(false)
 {
@@ -174,74 +173,6 @@ static int _add_dB (int current, int dB_diff)
 
     int result = (int) desired;
 
-    return result;
-}
-
-/*
- * current is the current volume from 0 to 100
- * dB_diff is the amount in dB added to the current volume
- * returns the desired volume from 0 to 100
- */
-int PulseAudioMixer::adjustVolume(int percent, int dB_diff)
-{
-    int result;
-    //Will be removed or updated once DAP design is updated
-    /*if (!VERIFY(percent >= 0 && percent <= 100))
-        return percent;
-
-    int tableIndex = gAudioDevice.getHeadsetState() != eHeadsetState_None ? 1 : 0;
-    int * table = _mapPercentToPulseVolume[tableIndex];
-    int pulse_volume = table[percent];
-    pulse_volume = _add_dB(pulse_volume, dB_diff);
-
-    int result = percent;
-
-    int lower = 0;
-    int upper = 100;
-    if (pulse_volume >= table[lower] && pulse_volume <= table[upper])
-    {
-        while (upper - lower > 1)
-        {
-            int mid = (lower + upper) / 2;
-            int diff = pulse_volume - table[mid];
-
-            if (diff == 0)
-                upper = lower = mid;
-            else if (diff < 0)
-                upper = mid;
-            else
-                lower = mid;
-        }
-        result = lower;
-        if (pulse_volume > table[lower])
-        {
-            result = lower + (dB_diff < 0 ? 0 : 1);
-            if (pulse_volume >= table[lower + 1])
-                ++result;
-            if (result > 100)
-                result = 100;
-        }
-        // defensive: catch that rounding never gets us in the wrong direction!
-        if (dB_diff < 0)
-        {
-            if (result > percent)
-                result = percent;
-        }
-        else
-        {
-            if (result < percent)
-                result = percent;
-        }
-        VERIFY(table[lower] <= pulse_volume);
-        VERIFY(table[upper] >= pulse_volume);
-    }
-
-    // arbitrarily force minimal 1% volume...
-    if (result == 0 && percent > 1)
-        result = 1;
-
-    g_debug("adjust dB Volume: %dp %+d dB = %dp (%+dp)", \
-                                 percent, dB_diff, result, result - percent);*/
     return result;
 }
 
@@ -299,12 +230,12 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
             if (VERIFY(IsValidVirtualSink((EVirtualAudiodSink)sink)))
             {
             //Will be removed or updated once DAP design is updated
-            /*
+            #if 0
                 sendCmd = (mPulseStateVolume[sink] != value ||
                            mPulseStateVolumeHeadset[sink] != headset);
                 mPulseStateVolume[sink] = value;
                 mPulseStateVolumeHeadset[sink] = headset;
-            */
+            #endif
             }
             break;
         case 'h':
@@ -351,7 +282,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
         // So we make the substitution here and here only.
         const char * sinkName = "";
         //Will be removed or updated once DAP design is updated
-        /*
+        #if 0
         if (cmd == 'l' || cmd == 's' || cmd == 'x')
         {
             sprintf(buffer, "%c 0 %i %i", cmd, value, headset);// ignore sink
@@ -383,7 +314,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
             sprintf(buffer, "%c %i %i %i", cmd, sink, value, headset);
             sinkName = virtualSinkName((EVirtualAudiodSink)sink);    // sink means something
         }
-        */
+        #endif
         g_debug ("%s: sending message '%s' %s", __FUNCTION__, buffer, sinkName);
         int sockfd = g_io_channel_unix_get_fd (mChannel);
         ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
@@ -422,37 +353,11 @@ bool PulseAudioMixer::programDestination (EVirtualAudiodSink sink,
     return programSource ('d', sink, destination);
 }
 
-void PulseAudioMixer::sendNREC(bool value)
-{
-    //will be removed once DAP design is adapted
-    /*char cmd = 'Z';
-    char buffer[SIZE_MESG_TO_PULSE] ;
-    ScenarioModule * phone = getPhoneModule();
-
-    if (!mPulseLink.checkConnection()) {
-        g_message("Pulseaudio is not running");
-        return;
-    }
-
-    if (!mChannel) {
-        g_message("There is no socket connection to pulseaudio");
-        return;
-    }
-
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %s", cmd, 0, value, phone->getCurrentScenarioName());
-
-    int sockfd = g_io_channel_unix_get_fd (mChannel);
-    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
-    if (bytes != SIZE_MESG_TO_PULSE)
-        g_warning("Error sending msg for sendNREC(%d)", bytes);*/
-}
-
 void PulseAudioMixer::setNREC(bool value)
 {
 
     if (NRECvalue != value) {
         NRECvalue = value;
-        sendNREC(NRECvalue);
     }
 }
 
@@ -463,42 +368,6 @@ bool PulseAudioMixer::suspendSink(int sink)
     g_message("PulseAudioMixer::suspendSink: a2dp sink = %d", sink);
     return programSource ('s', sink, sink);
 }
-
-#ifdef HAVE_BT_SERVICE_V1
-void PulseAudioMixer::setBTvolumeSupport(bool value)
-{
-
-    if (BTvolumeSupport != value) {
-        g_message ("setBTvolumeSupport: set to %d", value);
-        BTvolumeSupport = value;
-    }
-}
-
-void PulseAudioMixer::sendBTDeviceType (bool type, bool hfpStatus)
-{
-
-    char cmd = 'Y';
-    char buffer[SIZE_MESG_TO_PULSE] ;
-
-    if (!mPulseLink.checkConnection()) {
-        g_message("Pulseaudio is not running");
-        return;
-    }
-
-    if (!mChannel) {
-        g_message("There is no socket connection to pulseaudio");
-        return;
-    }
-
-    g_debug ("Sending BTDeviceType to pulse (type %s and hfpStatus->%d)",\
-        type?"wideband":"narrowband", hfpStatus);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d 0", cmd, type, hfpStatus);
-    int sockfd = g_io_channel_unix_get_fd (mChannel);
-    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
-    if (bytes != SIZE_MESG_TO_PULSE)
-       g_warning("Error sending msg for BTDeviceType (%d)", bytes);
-}
-#endif
 
 bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *profile)
 {
@@ -686,160 +555,6 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
     return ret;
 }
 
-bool PulseAudioMixer::programLoadRTP(const char *type, const char *ip, int port)
-{
-
-    char cmd = 't';
-    char buffer[SIZE_MESG_TO_PULSE] ;
-    bool ret  = false;
-
-    g_debug ("check for pulseaudio connection");
-    if (!mChannel) {
-        g_message("There is no socket connection to pulseaudio");
-        return ret;
-    }
-
-    g_debug ("programLoadRTP sending message ");
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s %s %d", cmd, 0, type, ip, port);
-    int sockfd = g_io_channel_unix_get_fd (mChannel);
-    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
-    if (bytes != SIZE_MESG_TO_PULSE) {
-       g_warning("Error sending msg for RTP load(%d)", bytes);
-    }
-    else {
-       g_warning("msg send for RTP load(%d)", bytes);
-       ret = true;
-    }
-    return ret;
-}
-
-bool PulseAudioMixer::programUnloadRTP()
-{
-
-    char cmd = 'g';
-    char buffer[SIZE_MESG_TO_PULSE] ;
-    bool ret  = false;
-
-    g_debug ("check for pulseaudio connection");
-    if (!mChannel) {
-        g_message("There is no socket connection to pulseaudio");
-        return ret;
-    }
-
-    g_debug ("programLoadRTP sending message ");
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, 0);
-    int sockfd = g_io_channel_unix_get_fd (mChannel);
-    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
-    if (bytes != SIZE_MESG_TO_PULSE) {
-       g_warning("Error sending msg for RTP load(%d)", bytes);
-    }
-    else {
-       g_warning("msg send for RTP Unload(%d)", bytes);
-       ret = true;
-    }
-    return ret;
-}
-
-bool PulseAudioMixer::phoneEvent(EPhoneEvent event, int parameter)
-{
-
-    bool result = true;
-
-    switch (event)
-    {
-    case ePhoneEvent_voLTEcallsupported:
-        g_debug ("%s :ePhoneEvent_voLTEcallsupported...........",__FUNCTION__);
-         voLTE = true;
-        break;
-
-    case ePhoneEvent_voLTEcallNOTsupported:
-        g_debug ("%s :ePhoneEvent_voLTEcallNOTsupported...........",__FUNCTION__);
-         voLTE = false;
-        break;
-
-    case ePhoneEvent_DTMFToneEnd:
-        // Handled by Modem
-        break;
-    case ePhoneEvent_DTMFTone:
-        if (parameter&0x80) {
-            // let modem handle it
-            result = true;
-            break;
-        }
-        parameter = parameter & 0x7F;
-        gAudioMixer.playDtmf((const char*)&parameter, eDTMF);
-        break;
-
-    case ePhoneEvent_OneShotDTMFTone:
-        if (parameter&0x80) {
-            // let modem handle it
-            result = true;
-            break;
-        }
-        parameter = parameter & 0x7F;
-        gAudioMixer.playOneshotDtmf((const char*)&parameter, eDTMF);
-    break;
-
-    default:
-        VERIFY(false);
-        break;
-    }
-
-    return result;
-}
-
-void PulseAudioMixer::setBTDeviceType(int type){
-    if (BTDeviceType != type)
-        BTDeviceType = type;
-}
-
-bool PulseAudioMixer::getBTVolumeSupport()
-{
-    return BTvolumeSupport;
-}
-
-
-inline void PulseAudioMixer::setHfpAgRole(bool HfpAgRole)
-{
-    mIsHfpAgRole = HfpAgRole;
-}
-
-inline bool PulseAudioMixer::inHfpAgRole(void)
-{
-    return mIsHfpAgRole;
-}
-
-bool PulseAudioMixer::setPhoneVolume(const ConstString & scenario, int volume)
-{
-    bool    result = false;
-    ConstString tail;
-
-    if (VERIFY(scenario.hasPrefix(PHONE_, tail))) {
-
-        if (volume >  phone_MaxVolume)
-            volume = phone_MaxVolume;
-        if ((tail == "back_speaker") || ((tail == "bluetooth_sco") && !BTvolumeSupport)) {
-            g_debug ("%s : calling to set voice volume %d during call\n",__FUNCTION__, volume);
-            mPreviousVolume = volume;
-            result = programCallVoiceOrMICVolume('a', volume);
-        }
-        else {
-            g_message ("%s : scenario %s, BT Supports Volume, Don't set on DSP",__FUNCTION__, scenario.c_str());
-            result = true;
-        }
-    }
-
-    return result;
-}
-
-bool PulseAudioMixer::setPhoneMuted(const ConstString & scenario, bool muted)
-{
-    if (muted)
-        return programCallVoiceOrMICVolume('c', phone_MinVolume);
-    else
-        return programCallVoiceOrMICVolume('c', mPreviousVolume);
-}
-
 bool PulseAudioMixer::setRouting(const ConstString & scenario){
     char cmd = 'C';
     char buffer[SIZE_MESG_TO_PULSE] ;
@@ -921,11 +636,6 @@ bool PulseAudioMixer::programDestination (EVirtualSource source,
 bool PulseAudioMixer::programFilter (int filterTable)
 {
     return programSource ('f', eVirtualSink_None, filterTable);
-}
-
-bool PulseAudioMixer::programLatency (int latency)
-{
-    return programSource ('l', eVirtualSink_None, latency);
 }
 
 bool PulseAudioMixer::muteAll ()
@@ -1067,18 +777,6 @@ void PulseAudioMixer::_timer()
         if (mTimeout > cMaxTimeout)
             mTimeout = cMinTimeout;
     }
-}
-
-int PulseAudioMixer::getStreamCount (EVirtualAudiodSink sink)
-{
-    return mPulseStateActiveStreamCount[sink];
-}
-
-bool PulseAudioMixer::isSinkAudible(EVirtualAudiodSink sink)
-{
-    if (!VERIFY(IsValidVirtualSink(sink)))
-        return false;
-    return mActiveStreams.contain(sink) && mPulseStateVolume[sink] > 0;
 }
 
 void
@@ -1330,7 +1028,7 @@ void PulseAudioMixer::inputStreamOpened (EVirtualSource source)
                         else
                             g_critical("Error : Could not get LSHandle");
                     }
-                } 
+                }
                 else if ((true == gState.getA2DPStatus()))
                 {
                     g_message("Suspending A2DP Sink");
@@ -1368,151 +1066,6 @@ void PulseAudioMixer::inputStreamClosed (EVirtualSource source)
     }
     g_message("%s: input sink closed (%d left)", __FUNCTION__, \
                                           mInputStreamsCurrentlyOpenedCount);
-}
-
-#if defined(AUDIOD_TEST_API)
-static bool
-_sinkStatus(LSHandle *lshandle, LSMessage *message, void *ctx)
-{
-    return gPulseAudioMixer._sinkStatus(lshandle, message);
-}
-#endif
-
-bool
-PulseAudioMixer::_sinkStatus(LSHandle *lshandle, LSMessage *message)
-{
-    LSMessageJsonParser    msg(message, SCHEMA_1(OPTIONAL(sink, string)));
-    if (!msg.parse(__FUNCTION__, lshandle))
-        return true;
-
-    std::string reply;
-
-    EVirtualAudiodSink sink = eVirtualSink_All;
-    std::string sinkName;
-    if (msg.get("sink", sinkName) && sinkName != "all")
-    {
-        sink = getSinkByName(sinkName.c_str());
-        if (!IsValidVirtualSink(sink))
-        {
-            reply = INVALID_PARAMETER_ERROR(sink, string);
-            goto sendReply;
-        }
-    }
-    if (IsValidVirtualSink(sink))
-    {
-        pbnjson::JValue answer = createJsonReply(true);
-
-        answer.put("sink", systemdependantvirtualsinkmap[sink].virtualsinkname);
-        answer.put("volume", mPulseStateVolume[sink]);
-        answer.put("filter", mPulseStateFilter);
-        answer.put("latency", mPulseStateLatency);
-        const char * destination = (mPulseStateRoute[sink] >= 0) ?
-         systemdependantphysicalsinkmap[mPulseStateRoute[sink]].physicalsinkname :
-          "undefined";
-        answer.put("destination", destination);
-        answer.put("openStreams", mPulseStateActiveStreamCount[sink]);
-
-        reply = jsonToString(answer);
-    }
-    else    // return all sinks!
-    {
-        pbnjson::JValue answer = createJsonReply(true);
-        for (EVirtualAudiodSink sink = eVirtualSink_First;
-              sink <= eVirtualSink_Last;
-              sink = EVirtualAudiodSink(sink + 1))
-        {
-            pbnjson::JValue sinkstate = pbnjson::Object();
-            sinkstate.put("sink", systemdependantvirtualsinkmap[sink].virtualsinkname);
-            sinkstate.put("volume", mPulseStateVolume[sink]);
-            sinkstate.put("filter", mPulseStateFilter);
-            sinkstate.put("latency", mPulseStateLatency);
-            const char * destination = (mPulseStateRoute[sink] >= 0) ?
-              systemdependantphysicalsinkmap[mPulseStateRoute[sink]].physicalsinkname :
-               "undefined";
-            sinkstate.put("destination", destination);
-            sinkstate.put("openStreams", mPulseStateActiveStreamCount[sink]);
-            answer.put(systemdependantvirtualsinkmap[sink].virtualsinkname, sinkstate);
-        }
-        reply = jsonToString(answer);
-    }
-
-sendReply:
-    CLSError lserror;
-    if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
-
-    return true;
-}
-
-#if defined(AUDIOD_TEST_API)
-static bool
-_setFilter(LSHandle *lshandle, LSMessage *message, void *ctx)
-{
-    return gPulseAudioMixer._setFilter(lshandle, message);
-}
-#endif
-
-bool
-PulseAudioMixer::_setFilter(LSHandle *lshandle, LSMessage *message)
-{
-    LSMessageJsonParser    msg(message, SCHEMA_1(REQUIRED(filter, boolean)));
-    if (!msg.parse(__FUNCTION__, lshandle))
-        return true;
-
-    const char * errorText = STANDARD_JSON_SUCCESS;
-    bool filter;
-    if (!msg.get("filter", filter))
-    {
-        errorText = MISSING_PARAMETER_ERROR(filter, boolean);
-    }
-    else
-    {
-        if (filter)
-            mPulseFilterEnabled = true;
-        else
-            mPulseFilterEnabled = false;
-
-        programFilter(mPulseStateFilter);
-    }
-
-    CLSError lserror;
-    if (!LSMessageReply(lshandle, message, errorText, &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
-
-    return true;
-}
-
-#if defined(AUDIOD_TEST_API)
-static bool
-_suspend(LSHandle *lshandle, LSMessage *message, void *ctx)
-{
-    return gPulseAudioMixer._suspend(lshandle, message);
-}
-#endif
-
-bool
-PulseAudioMixer::_suspend(LSHandle *lshandle, LSMessage *message)
-{
-    LSMessageJsonParser msg(message, SCHEMA_1(REQUIRED(suspend, boolean)));
-    if (!msg.parse(__FUNCTION__, lshandle))
-        return true;
-
-    const char * errorText = STANDARD_JSON_SUCCESS;
-    bool suspend;
-    if (!msg.get("suspend", suspend))
-    {
-        errorText = MISSING_PARAMETER_ERROR(suspend, boolean);
-    }
-    else
-    {
-        suspendAll();
-    }
-
-    CLSError lserror;
-    if (!LSMessageReply(lshandle, message, errorText, &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
-
-    return true;
 }
 
 static int IdToDtmf(const char* snd) {
@@ -1585,8 +1138,6 @@ void PulseAudioMixer::stopDtmf() {
 
 #if defined(AUDIOD_TEST_API)
 static LSMethod pulseMethods[] = {
-    { "sinkStatus", _sinkStatus},
-    { "suspend", _suspend},
     { },
 };
 #endif
