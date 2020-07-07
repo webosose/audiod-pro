@@ -22,10 +22,24 @@
 #include <lunaservice.h>
 #include <pulse/module-palm-policy.h>
 #include "log.h"
+#include "ConstString.h"
+#include <pulse/module-palm-policy-tables.h>
+#include "IPC_SharedAudiodDefinitions.h"
+
+enum EBTDeviceType
+{
+    eBTDevice_NarrowBand =1,
+    eBTDevice_Wideband =2
+};
 
 enum EUMISink
 {
-    eUmiSink
+    eUmiMedia = eVirtualSink_Count+1,
+    eVirtualUMISink_Count,
+    eVirtualUMISink_First = eUmiMedia,
+    eVirtualUMISink_Last = eUmiMedia,
+    eVirtualUMISink_All = eVirtualUMISink_Count,
+    eAllSink = eVirtualUMISink_Count
 };
 
 template <typename EnumT, typename BaseEnumT>
@@ -33,17 +47,12 @@ class ExtendEnum
 {
     public:
         ExtendEnum() {}
-
         ExtendEnum(EnumT e):enum_(e) {}
-
         ExtendEnum(BaseEnumT e):enum_(static_cast<EnumT>(e)) {}
-
         explicit ExtendEnum( int val):enum_(static_cast<EnumT>(val)) {}
-
         operator EnumT() const { return enum_; }
-
     private:
-            EnumT enum_;
+        EnumT enum_;
 };
 
 typedef ExtendEnum<EUMISink, EVirtualSink> EVirtualAudioSink;
@@ -72,7 +81,42 @@ namespace utils
         eEventKeySubscription,
         eEventMixerStatus
     }EVENT_TYPE_E;
+
+    typedef enum EConnStatus
+    {
+        eConnectionNone,
+        eConnected,
+        eDisconnected
+    }ECONN_STATUS;
 }
+
+//Simple set class to hold a set of sinks & test it
+class VirtualSinkSet
+{
+    public:
+        VirtualSinkSet() : mSet(0) {}
+        void clear() { mSet = 0; }
+        void add(EVirtualAudioSink sink) { mSet |= mask(sink); }
+        void remove(EVirtualAudioSink sink) { mSet &= ~mask(sink); }
+        bool operator == (const VirtualSinkSet & rhs) const { return mSet == rhs.mSet; }
+        bool operator != (const VirtualSinkSet & rhs) const { return mSet != rhs.mSet; }
+
+    private:
+        long mask(EVirtualAudioSink sink) const { return (long)1 << sink; }
+        long mSet;
+};
+
+inline bool IsValidVirtualSink(EVirtualAudioSink sink)
+    { return sink >= eVirtualSink_First && sink <= eVirtualUMISink_Last; }
+
+inline bool IsValidVirtualSource(EVirtualSource source)
+    { return source >= eVirtualSource_First && source <= eVirtualSource_Last; }
+
+const char * controlEventName(utils::EConnStatus eConnStatus);
+const char * virtualSinkName(EVirtualAudioSink sink, bool prettyName = true);
+EVirtualAudioSink getSinkByName(const char * name);
+const char * virtualSourceName(EVirtualSource source, bool prettyName = true);
+EVirtualSource getSourceByName(const char * name);
 
 class LSMessageJsonParser;
 

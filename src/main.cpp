@@ -22,15 +22,10 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sstream>
-
 #include <lunaservice.h>
-
 #include "log.h"
-#include "state.h"
-#include "AudioMixer.h"
 #include "utils.h"
 #include "messageUtils.h"
-#include "MixerInit.h"
 #include "main.h"
 #include "moduleInitializer.h"
 
@@ -178,14 +173,6 @@ main(int argc, char **argv)
 
     setpriority(PRIO_PROCESS,getpid(),niceme);
 
-    // Initialized audiod shared properties. Do not use them before this point!
-    gState.init();
-
-    // Initialize HW and verify, but before all registered inits,
-    // except for static initializations & shared properties.
-    //Will be removed or updated once DAP design is updated
-    //VERIFY(gAudioDevice.pre_init());
-
     gMainLoop = g_main_loop_new(NULL, FALSE);
 
     /**
@@ -196,18 +183,6 @@ main(int argc, char **argv)
         return -1;
     PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Register [com.webos.service.audio] Successful");
 
-
-    std::stringstream configPath;
-    configPath << CONFIG_DIR_PATH << "/" << "mixerconfig.json";
-    MixerInit mObjMixerInit(configPath);
-    if(mObjMixerInit.readMixerConfig())
-    {
-        mObjMixerInit.initMixerInterface();
-    }
-    else
-    {
-        PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT, "Could not reaad mixer config json file");
-    }
     std::stringstream moduleConfigPath;
     moduleConfigPath << CONFIG_DIR_PATH << "/" << "audiod_module_config.json";
     ModuleInitializer mObjModuleInit(moduleConfigPath);
@@ -216,10 +191,7 @@ main(int argc, char **argv)
     else
         g_error("could not register audio modules");
     oneInitForAll (gMainLoop, GetPalmService());
-    // Verify HW initialization, but after all registered inits,
-    // static initializations & shared properties.
-    //Will be removed or updated once DAP design is updated
-    //VERIFY(gAudioDevice.post_init());
+
     PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting main loop!");
     g_main_loop_run(gMainLoop);
 

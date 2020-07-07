@@ -21,7 +21,7 @@
 #include <set>
 #include <string>
 
-#include "AudioMixer.h"
+#include "utils.h"
 #define AUDIO_EFFECT_FADE_OUT  1
 #define AUDIO_EFFECT_FADE_IN   (1<<1)
 
@@ -126,8 +126,8 @@ public:
     bool    isConnected() const    { return mPulseAudioReady; }
     bool    checkConnection()    { return isConnected()|| connectToPulse(); }
 
-    /// API to playback a system sound. Prefer the version using a EVirtualAudiodSink
-    bool    play(const char *snd, EVirtualAudiodSink sink);
+    /// API to playback a system sound. Prefer the version using a EVirtualAudioSink
+    bool    play(const char *snd, EVirtualAudioSink sink);
     bool    play(const char *snd, const char *sink);
 
     bool    play(PulseAudioDataProvider* data, const char* sink);

@@ -261,3 +261,72 @@ bool ServiceRegisterCategory(const char *category, LSMethod *methods,
     return result;
 }
 
+const char * controlEventName(utils::EConnStatus eConnStatus)
+{
+    static const char * sNames[] = { "ConnectionNone",
+                                     "Connected",
+                                     "Disconnected" };
+
+    if (VERIFY(eConnStatus >= 0 && (size_t) eConnStatus < G_N_ELEMENTS(sNames)))
+        return sNames[eConnStatus];
+
+    return "<invalid event>";
+}
+
+const char * virtualSinkName(EVirtualAudioSink sink, bool prettyName)
+{
+    const char * name = "<invalid sink>";
+    if (IsValidVirtualSink(sink))
+        name = systemdependantvirtualsinkmap[sink].virtualsinkname +
+                                                      (prettyName ? 1 : 0);
+    else if (sink == eVirtualSink_None)
+        name = "<none>";
+    else if (sink == eVirtualSink_All)
+        name = "<all/count>";
+    return name;
+}
+
+EVirtualAudioSink getSinkByName(const char * name)
+{
+    EVirtualAudioSink sink = eVirtualSink_None;
+    for (int i = eVirtualSink_First; i <= eVirtualSink_Last; i++)
+    {
+        if (0 == strcmp(name, systemdependantvirtualsinkmap[i].virtualsinkname) ||
+             0 == strcmp(name, systemdependantvirtualsinkmap[i].virtualsinkname + 1))
+        {
+            sink = (EVirtualAudioSink) systemdependantvirtualsinkmap[i].virtualsinkidentifier;
+            break;
+        }
+    }
+
+    return sink;
+}
+
+const char * virtualSourceName(EVirtualSource source, bool prettyName)
+{
+    const char * name = "<invalid source>";
+    if (IsValidVirtualSource(source))
+        name = systemdependantvirtualsourcemap[source].virtualsourcename +
+                                                       (prettyName ? 1 : 0);
+    else if (source == eVirtualSource_None)
+        name = "<none>";
+    else if (source == eVirtualSource_All)
+        name = "<all/count>";
+    return name;
+}
+
+EVirtualSource getSourceByName(const char * name)
+{
+    EVirtualSource source = eVirtualSource_None;
+    for (int i = eVirtualSource_First; i <= eVirtualSource_Last; i++)
+    {
+        if (0 == strcmp(name, systemdependantvirtualsourcemap[i].virtualsourcename) ||
+            0 == strcmp(name, systemdependantvirtualsourcemap[i].virtualsourcename + 1))
+        {
+            source = (EVirtualSource) systemdependantvirtualsourcemap[i].virtualsourceidentifier;
+            break;
+        }
+    }
+
+    return source;
+}

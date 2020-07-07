@@ -18,622 +18,581 @@
 
 #include "audioMixer.h"
 
-Mixer* Mixer::getMixerInstance()
+AudioMixer* AudioMixer::getAudioMixerInstance()
 {
-    static Mixer mMixerObj;
-    return &mMixerObj;
+    static AudioMixer mAudioMixerObj;
+    return &mAudioMixerObj;
 }
 
-Mixer::Mixer():mObjUmiMixer(nullptr), mObjPulseMixer(nullptr)
+AudioMixer::AudioMixer():mObjUmiMixer(nullptr), mObjPulseMixer(nullptr)
 {
-    g_debug("Mixer: constructor");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+                "AudioMixer: constructor");
     if (!mObjUmiMixer)
         mObjUmiMixer = new (std::nothrow)umiaudiomixer();
     if (!mObjPulseMixer)
         mObjPulseMixer = new (std::nothrow)PulseAudioMixer();
 }
 
-Mixer::~Mixer()
+AudioMixer::~AudioMixer()
 {
-    g_debug("Mixer: destructor");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: destructor");
 }
 
-bool Mixer::connectAudio(std::string strSourceName, std::string strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::connectAudio(const std::string &strSourceName, const std::string &strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: connectAudio");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: connectAudio");
     if (mObjUmiMixer)
         return mObjUmiMixer->connectAudio(strSourceName, strPhysicalSinkName, cb, message);
     else
     {
-        g_debug("connectAudio: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "connectAudio: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::disconnectAudio(std::string strSourceName, std::string strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::disconnectAudio(const std::string &strSourceName, const std::string &strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: disconnectAudio");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: disconnectAudio");
     if (mObjUmiMixer)
         return mObjUmiMixer->disconnectAudio(strSourceName, strPhysicalSinkName, cb, message);
     else
     {
-        g_debug("disconnectAudio: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "disconnectAudio: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::setSoundOut(std::string strOutputMode, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::setSoundOut(const std::string &strOutputMode, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: setSoundOut");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: setSoundOut");
     if (mObjUmiMixer)
         return mObjUmiMixer->setSoundOut(strOutputMode, cb, message);
     else
     {
-        g_debug("setSoundOut: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setSoundOut: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::setMasterVolume(std::string strSoundOutPut, int iVolume, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::setMasterVolume(const std::string &strSoundOutPut, const int &iVolume, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: setMasterVolume");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: setMasterVolume");
     if (mObjUmiMixer)
         return mObjUmiMixer->setMasterVolume(strSoundOutPut, iVolume, cb, message);
     else
     {
-        g_debug("setMasterVolume: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setMasterVolume: mObjUmiMixer is null");
         return false;
     }
 }
-bool Mixer::getMasterVolume(LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::getMasterVolume(LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: getMasterVolume");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: getMasterVolume");
     if (mObjUmiMixer)
         return mObjUmiMixer->getMasterVolume(cb, message);
     else
     {
-        g_debug("getMasterVolume: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "getMasterVolume: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::masterVolumeUp(std::string strSoundOutPut, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::masterVolumeUp(const std::string &strSoundOutPut, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: masterVolumeUp");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: masterVolumeUp");
     if (mObjUmiMixer)
         return mObjUmiMixer->masterVolumeUp(strSoundOutPut, cb, message);
     else
     {
-        g_debug("masterVolumeUp: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "masterVolumeUp: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::masterVolumeDown(std::string strSoundOutPut, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::masterVolumeDown(const std::string &strSoundOutPut, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: masterVolumeDown");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: masterVolumeDown");
     if (mObjUmiMixer)
         return mObjUmiMixer->masterVolumeDown(strSoundOutPut, cb, message);
     else
     {
-        g_debug("masterVolumeDown: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "masterVolumeDown: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::masterVolumeMute(std::string strSoundOutPut, bool bIsMute, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::masterVolumeMute(const std::string &strSoundOutPut, const bool &bIsMute, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: masterVolumeMute");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: masterVolumeMute");
     if (mObjUmiMixer)
         return mObjUmiMixer->masterVolumeMute(strSoundOutPut, bIsMute, cb, message);
     else
     {
-        g_debug("masterVolumeMute: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "masterVolumeMute: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::inputVolumeMute(std::string strPhysicalSink, std::string strSource, bool bIsMute, LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::inputVolumeMute(const std::string &strPhysicalSink, const std::string &strSource, const bool &bIsMute, LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: inputVolumeMute");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: inputVolumeMute");
     if (mObjUmiMixer)
         return mObjUmiMixer->inputVolumeMute(strPhysicalSink, strSource, bIsMute, cb, message);
     else
     {
-        g_debug("inputVolumeMute: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "inputVolumeMute: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
+bool AudioMixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
 {
-    g_debug("Mixer: getConnectionStatus");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: getConnectionStatus");
     if (mObjUmiMixer)
         return mObjUmiMixer->getConnectionStatus(cb, message);
     else
     {
-        g_debug("getConnectionStatus: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "getConnectionStatus: mObjUmiMixer is null");
         return false;
     }
 }
 
-bool Mixer::readyToProgram()
+bool AudioMixer::isStreamActive(EVirtualAudioSink eVirtualSink)
 {
-    g_debug("Mixer: readyToProgram");
-    if (mObjUmiMixer)
-        return mObjUmiMixer->readyToProgram();
-    else
-    {
-        g_debug("readyToProgram: mObjUmiMixer is null");
-        return false;
-    }
-    //need to enable for pulsemixer as well
-    //return mChannel != 0;
-    //return mObjPulseMixer->readyToProgram();
-}
-
-bool Mixer::isStreamActive(EVirtualAudiodSink eVirtualSink)
-{
-    g_debug("Mixer: isStreamActive");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: isStreamActive");
     if (mObjUmiMixer)
         return mObjUmiMixer->isStreamActive(eVirtualSink);
     else
     {
-        g_debug("isStreamActive: mObjUmiMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "isStreamActive: mObjUmiMixer is null");
         return false;
     }
 }
 
-void Mixer::onSinkChangedReply(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType)
-{
-    g_debug("Mixer: onSinkChangedReply");
-    if (mObjUmiMixer)
-        mObjUmiMixer->onSinkChangedReply(eVirtualSink, eConnStatus, eSinkType);
-    else
-        g_debug("onSinkChangedReply: mObjUmiMixer is null");
-}
-
-void Mixer::updateStreamStatus(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus)
-{
-    g_debug("Mixer: updateStreamStatus");
-    if (mObjUmiMixer)
-        mObjUmiMixer->updateStreamStatus(eVirtualSink, eConnStatus);
-    else
-        g_debug("updateStreamStatus: mObjUmiMixer is null");
-}
-
-void Mixer::setMixerReadyStatus(bool eStatus)
-{
-    g_debug("Mixer: setMixerReadyStatus");
-    if (mObjUmiMixer)
-        mObjUmiMixer->setMixerReadyStatus(eStatus);
-    else
-        g_debug("setMixerReadyStatus: mObjUmiMixer is null");
-}
-
 //pulseaudiomixer calls
-bool Mixer::programVolume(EVirtualAudiodSink sink, int volume, bool ramp)
+bool AudioMixer::programVolume(EVirtualAudioSink sink, int volume, bool ramp)
 {
-    g_debug("Mixer: programVolume");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programVolume");
     if (mObjPulseMixer)
         return mObjPulseMixer->programVolume(sink, volume, ramp);
     else
     {
-        g_debug("programVolume: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programVolume: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programCallVoiceOrMICVolume(char cmd, int volume)
+bool AudioMixer::programCallVoiceOrMICVolume(char cmd, int volume)
 {
-    g_debug("Mixer: programCallVoiceOrMICVolume");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programCallVoiceOrMICVolume");
     if (mObjPulseMixer)
         return mObjPulseMixer->programCallVoiceOrMICVolume(cmd, volume);
     else
     {
-        g_debug("programCallVoiceOrMICVolume: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programCallVoiceOrMICVolume: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programMute(EVirtualSource source, int mute)
+bool AudioMixer::programMute(EVirtualSource source, int mute)
 {
-    g_debug("Mixer: programMute");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programMute");
     if (mObjPulseMixer)
         return mObjPulseMixer->programMute(source, mute);
     else
     {
-        g_debug("programMute: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programMute: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::rampVolume(EVirtualAudiodSink sink, int endVolume)
+bool AudioMixer::rampVolume(EVirtualAudioSink sink, int endVolume)
 {
-    g_debug("Mixer: rampVolume");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: rampVolume");
     if (mObjPulseMixer)
         return mObjPulseMixer->programVolume(sink, endVolume, true);
     else
     {
-        g_debug("rampVolume: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "rampVolume: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programDestination(EVirtualAudiodSink sink, EPhysicalSink destination)
+bool AudioMixer::programDestination(EVirtualAudioSink sink, EPhysicalSink destination)
 {
-    g_debug("Mixer: programDestination");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programDestination");
     if (mObjPulseMixer)
         return mObjPulseMixer->programDestination(sink, destination);
     else
     {
-        g_debug("programDestination: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programDestination: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programDestination(EVirtualSource source, EPhysicalSource destination)
+bool AudioMixer::programDestination(EVirtualSource source, EPhysicalSource destination)
 {
-    g_debug("Mixer: programDestination");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programDestination");
     if (mObjPulseMixer)
         return mObjPulseMixer->programDestination(source, destination);
     else
     {
-        g_debug("programDestination: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programDestination: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programFilter(int filterTable)
+bool AudioMixer::programFilter(int filterTable)
 {
-    g_debug("Mixer: programFilter");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programFilter");
     if (mObjPulseMixer)
         return mObjPulseMixer->programFilter(filterTable);
     else
     {
-        g_debug("programFilter: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programFilter: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programBalance(int balance)
+bool AudioMixer::programBalance(int balance)
 {
-    g_debug("Mixer: programBalance");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programBalance");
     if (mObjPulseMixer)
         return mObjPulseMixer->programBalance(balance);
     else
     {
-        g_debug("programBalance: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programBalance: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::muteAll()
+bool AudioMixer::muteAll()
 {
-    g_debug("Mixer: muteAll");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: muteAll");
     if (mObjPulseMixer)
         return mObjPulseMixer->muteAll();
     else
     {
-        g_debug("muteAll: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "muteAll: mObjPulseMixer is null");
         return false;
     }
 }
-bool Mixer::suspendAll()
+bool AudioMixer::suspendAll()
 {
-    g_debug("Mixer: suspendAll");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: suspendAll");
     if (mObjPulseMixer)
         return mObjPulseMixer->suspendAll();
     else
     {
-        g_debug("suspendAll: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "suspendAll: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::updateRate(int rate)
+bool AudioMixer::updateRate(int rate)
 {
-    g_debug("Mixer: updateRate");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: updateRate");
     if (mObjPulseMixer)
         return mObjPulseMixer->updateRate(rate);
     else
     {
-        g_debug("updateRate: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "updateRate: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::setMute(int sink, int mutestatus)
+bool AudioMixer::setMute(int sink, int mutestatus)
 {
-    g_debug("Mixer: setMute");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: setMute");
     if (mObjPulseMixer)
         return mObjPulseMixer->setMute(sink, mutestatus);
     else
     {
-        g_debug("setMute: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setMute: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::setVolume(int display, int volume)
+bool AudioMixer::setVolume(int display, int volume)
 {
-    g_debug("Mixer: setVolume");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: setVolume");
     if (mObjPulseMixer)
         return mObjPulseMixer->setVolume(display, volume);
     else
     {
-        g_debug("setVolume: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setVolume: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::playSystemSound(const char *snd, EVirtualAudiodSink sink)
+bool AudioMixer::playSystemSound(const char *snd, EVirtualAudioSink sink)
 {
-    g_debug("Mixer: playSystemSound");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: playSystemSound");
     if (mObjPulseMixer)
         return mObjPulseMixer->playSystemSound(snd, sink);
     else
     {
-        g_debug("playSystemSound: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "playSystemSound: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programHeadsetRoute(int route)
+bool AudioMixer::programHeadsetRoute(int route)
 {
-    g_debug("Mixer: programHeadsetRoute");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programHeadsetRoute");
     if (mObjPulseMixer)
         return mObjPulseMixer->programHeadsetRoute(route);
     else
     {
-        g_debug("programHeadsetRoute: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programHeadsetRoute: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::externalSoundcardPathCheck(std::string filename,  int status)
+bool AudioMixer::externalSoundcardPathCheck(std::string filename,  int status)
 {
-    g_debug("Mixer: externalSoundcardPathCheck");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: externalSoundcardPathCheck");
     if (mObjPulseMixer)
         return mObjPulseMixer->externalSoundcardPathCheck(filename, status);
     else
     {
-        g_debug("externalSoundcardPathCheck: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "externalSoundcardPathCheck: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status)
+bool AudioMixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status)
 {
-    g_debug("Mixer: loadUSBSinkSource");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: loadUSBSinkSource");
     if (mObjPulseMixer)
         return mObjPulseMixer->loadUSBSinkSource(cmd, cardno, deviceno, status);
     else
     {
-        g_debug("loadUSBSinkSource: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "loadUSBSinkSource: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::_connectSocket()
+bool AudioMixer::_connectSocket()
 {
-    g_debug("Mixer: _connectSocket");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: _connectSocket");
     if (mObjPulseMixer)
         return mObjPulseMixer->_connectSocket();
     else
     {
-        g_debug("_connectSocket: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "_connectSocket: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::suspendSink(int sink)
+bool AudioMixer::suspendSink(int sink)
 {
-    g_debug("Mixer: suspendSink");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: suspendSink");
     if (mObjPulseMixer)
         return mObjPulseMixer->suspendSink(sink);
     else
     {
-        g_debug("suspendSink: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "suspendSink: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programLoadBluetooth(const char * address , const char *profile)
+bool AudioMixer::programLoadBluetooth(const char * address , const char *profile)
 {
-    g_debug("Mixer: programLoadBluetooth");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programLoadBluetooth");
     if (mObjPulseMixer)
         return mObjPulseMixer->programLoadBluetooth(address, profile);
     else
     {
-        g_debug("programLoadBluetooth: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programLoadBluetooth: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programUnloadBluetooth(const char *profile)
+bool AudioMixer::programUnloadBluetooth(const char *profile)
 {
-    g_debug("Mixer: programUnloadBluetooth");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programUnloadBluetooth");
     if (mObjPulseMixer)
         return mObjPulseMixer->programUnloadBluetooth(profile);
     else
     {
-        g_debug("programUnloadBluetooth: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programUnloadBluetooth: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::setRouting(const ConstString & scenario)
+bool AudioMixer::setRouting(const ConstString & scenario)
 {
-    g_debug("Mixer: setRouting");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: setRouting");
     if (mObjPulseMixer)
         return mObjPulseMixer->setRouting(scenario);
     else
     {
-        g_debug("setRouting: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setRouting: mObjPulseMixer is null");
         return false;
     }
 }
 
-bool Mixer::programSource(char cmd, int sink, int value)
+bool AudioMixer::programSource(char cmd, int sink, int value)
 {
-    g_debug("Mixer: programSource");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programSource");
     if (mObjPulseMixer)
         return mObjPulseMixer->programSource(cmd, sink, value);
     else
     {
-        g_debug("programSource: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programSource: mObjPulseMixer is null");
         return false;
     }
 }
 
-void Mixer::outputStreamOpened(EVirtualAudiodSink sink)
+void AudioMixer::outputStreamOpened(EVirtualAudioSink sink)
 {
-    g_debug("Mixer: outputStreamOpened");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: outputStreamOpened");
     if (mObjPulseMixer)
         mObjPulseMixer->outputStreamOpened(sink);
     else
-        g_debug("outputStreamOpened: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "outputStreamOpened: mObjPulseMixer is null");
 }
 
-void Mixer::outputStreamClosed(EVirtualAudiodSink sink)
+void AudioMixer::outputStreamClosed(EVirtualAudioSink sink)
 {
-    g_debug("Mixer: outputStreamClosed");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: outputStreamClosed");
     if (mObjPulseMixer)
         mObjPulseMixer->outputStreamClosed(sink);
     else
-        g_debug("outputStreamClosed: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "outputStreamClosed: mObjPulseMixer is null");
 }
 
-void Mixer::inputStreamOpened(EVirtualSource source)
+void AudioMixer::inputStreamOpened(EVirtualSource source)
 {
-    g_debug("Mixer: inputStreamOpened");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: inputStreamOpened");
     if (mObjPulseMixer)
         mObjPulseMixer->inputStreamOpened(source);
     else
-        g_debug("inputStreamOpened: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "inputStreamOpened: mObjPulseMixer is null");
 }
 
-void Mixer::inputStreamClosed(EVirtualSource source)
+void AudioMixer::inputStreamClosed(EVirtualSource source)
 {
-    g_debug("Mixer: inputStreamClosed");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: inputStreamClosed");
     if (mObjPulseMixer)
         mObjPulseMixer->inputStreamClosed(source);
     else
-        g_debug("inputStreamClosed: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "inputStreamClosed: mObjPulseMixer is null");
 }
 
-void Mixer::preloadSystemSound(const char * snd)
+void AudioMixer::preloadSystemSound(const char * snd)
 {
-    g_debug("Mixer: preloadSystemSound");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: preloadSystemSound");
     if (mObjPulseMixer)
         mObjPulseMixer->preloadSystemSound(snd);
     else
-        g_debug("preloadSystemSound: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "preloadSystemSound: mObjPulseMixer is null");
 }
 
-void Mixer::playOneshotDtmf(const char *snd, EVirtualAudiodSink sink)
+void AudioMixer::playOneshotDtmf(const char *snd, EVirtualAudioSink sink)
 {
-    g_debug("Mixer: playOneshotDtmf");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: playOneshotDtmf");
     if (mObjPulseMixer)
         mObjPulseMixer->playOneshotDtmf(snd, sink);
     else
-        g_debug("playOneshotDtmf: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "playOneshotDtmf: mObjPulseMixer is null");
 }
 
-void Mixer::playOneshotDtmf(const char *snd, const char* sink)
+void AudioMixer::playOneshotDtmf(const char *snd, const char* sink)
 {
-    g_debug("Mixer: playOneshotDtmf");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: playOneshotDtmf");
     if (mObjPulseMixer)
         mObjPulseMixer->playOneshotDtmf(snd, sink);
     else
-        g_debug("playOneshotDtmf: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "playOneshotDtmf: mObjPulseMixer is null");
 }
 
-void Mixer::playDtmf(const char *snd, EVirtualAudiodSink sink)
+void AudioMixer::playDtmf(const char *snd, EVirtualAudioSink sink)
 {
-    g_debug("Mixer: playDtmf");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: playDtmf");
     if (mObjPulseMixer)
         mObjPulseMixer->playDtmf(snd, sink);
     else
-        g_debug("playDtmf: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "playDtmf: mObjPulseMixer is null");
 }
 
-void Mixer::playDtmf(const char *snd, const char* sink)
+void AudioMixer::playDtmf(const char *snd, const char* sink)
 {
-    g_debug("Mixer: playDtmf");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: playDtmf");
     if (mObjPulseMixer)
         mObjPulseMixer->playDtmf(snd, sink);
     else
-        g_debug("playDtmf: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "playDtmf: mObjPulseMixer is null");
 }
 
-void Mixer::stopDtmf()
+void AudioMixer::stopDtmf()
 {
-    g_debug("Mixer: stopDtmf");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: stopDtmf");
     if (mObjPulseMixer)
         mObjPulseMixer->stopDtmf();
     else
-        g_debug("stopDtmf: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "stopDtmf: mObjPulseMixer is null");
 }
 
-void Mixer::_pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data)
+void AudioMixer::_pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data)
 {
-    g_debug("Mixer: _pulseStatus");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: _pulseStatus");
     if (mObjPulseMixer)
         mObjPulseMixer->_pulseStatus(ch, condition, user_data);
     else
-        g_debug("_pulseStatus: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "_pulseStatus: mObjPulseMixer is null");
 }
 
-void Mixer::_timer()
+void AudioMixer::_timer()
 {
-    g_debug("Mixer: _timer");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: _timer");
     if (mObjPulseMixer)
         mObjPulseMixer->_timer();
     else
-        g_debug("_timer: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "_timer: mObjPulseMixer is null");
 }
 
-void Mixer::setNREC(bool value)
+void AudioMixer::setNREC(bool value)
 {
-    g_debug("Mixer: setNREC");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: setNREC");
     if (mObjPulseMixer)
         mObjPulseMixer->setNREC(value);
     else
-        g_debug("setNREC: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setNREC: mObjPulseMixer is null");
 }
 
-void Mixer::openCloseSink(EVirtualAudiodSink sink, bool openNotClose)
+void AudioMixer::openCloseSink(EVirtualAudioSink sink, bool openNotClose)
 {
-    g_debug("Mixer: openCloseSink");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: openCloseSink");
     if (mObjPulseMixer)
         mObjPulseMixer->openCloseSink(sink, openNotClose);
     else
-        g_debug("openCloseSink: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "openCloseSink: mObjPulseMixer is null");
 }
 
-VirtualSinkSet Mixer::getActiveStreams()
+VirtualSinkSet AudioMixer::getActiveStreams()
 {
-    g_debug("Mixer: getActiveStreams");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: getActiveStreams");
     VirtualSinkSet mActiveStreams;
     if (mObjPulseMixer)
         return mObjPulseMixer->getActiveStreams();
     else
     {
-        g_debug("getActiveStreams: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "getActiveStreams: mObjPulseMixer is null");
         return mActiveStreams;
     }
 }
 
-int Mixer::loopback_set_parameters(const char * value)
+int AudioMixer::loopback_set_parameters(const char * value)
 {
-    g_debug("Mixer: loopback_set_parameters");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: loopback_set_parameters");
     if (mObjPulseMixer)
         return mObjPulseMixer->loopback_set_parameters(value);
     else
     {
-        g_debug("loopback_set_parameters: mObjPulseMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "loopback_set_parameters: mObjPulseMixer is null");
         return -1;
     }
 }

@@ -13,7 +13,9 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-/* New Audiod service path */
+//New Audiod service path
+#include <lunaservice.h>
+
 #define AUDIOD_SERVICE_PATH                 "com.webos.service.audio"
 
 GMainContext * GetMainLoopContext();

@@ -18,10 +18,8 @@
 #include "utils.h"
 #include "messageUtils.h"
 #include "volume.h"
-#include "state.h"
 #include "main.h"
 #include "log.h"
-#include "VolumeControlChangesMonitor.h"
 #include "PulseAudioMixer.h"
 #include "main.h"
 
@@ -685,8 +683,6 @@ _lockVolumeKeys(LSHandle *lshandle, LSMessage *message, void *ctx)
     CLSError lserror;
     const char * reply = STANDARD_JSON_SUCCESS;
 
-    VolumeControlChangesMonitor    monitor;
-
     //Will be removed or updated once DAP design is updated
     //ScenarioModule *module = (ScenarioModule*)ctx;
 
@@ -708,13 +704,6 @@ _lockVolumeKeys(LSHandle *lshandle, LSMessage *message, void *ctx)
 
     if (!foregroundApp)
     {
-        //Will be removed or updated once DAP design is updated
-        /*if (!gState.setLockedVolumeModule(module))
-        {
-            g_warning ("%s: could not lock volume keys.", __FUNCTION__);
-            reply = STANDARD_JSON_ERROR(3, "Could not lock volume keys.");
-            goto send;
-        }*/
         goto send;
     }
 
@@ -723,12 +712,6 @@ _lockVolumeKeys(LSHandle *lshandle, LSMessage *message, void *ctx)
         lserror.Print(__FUNCTION__, __LINE__);
 
         reply = STANDARD_JSON_ERROR(3, "Failed to subscribe to lockVolumeKeys.");
-
-        //Will be removed or updated once DAP design is updated
-        /*if (foregroundApp)
-            module->setVolumeOverride (false);
-        else
-            gState.setLockedVolumeModule (NULL);*/
     }
 
 send:
@@ -804,133 +787,12 @@ _hacSet(LSHandle *lshandle, LSMessage *message, void *ctx)
 bool
 _hacGet(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    if (!VERIFY(ctx != 0 && message != 0))
-        return true;
-
-    CLSError lserror;
-    bool subscribed = false;
-
-    if (LSMessageIsSubscription (message))
-    {
-        if (!LSSubscriptionProcess (lshandle, message, &subscribed, &lserror))
-            lserror.Print(__FUNCTION__, __LINE__);
-    }
-
-    pbnjson::JValue reply = pbnjson::Object();
-
-    reply.put("returnValue", true);
-    reply.put("enabled", gState.hacGet());
-    reply.put("subscribed", subscribed);
-
-    std::string replyString = jsonToString(reply);
-    g_debug("Hac enabled: %s", replyString.c_str());
-
-    bool result = LSMessageReply(lshandle, message, replyString.c_str(), &lserror);
-    if (!result)
-        lserror.Print(__FUNCTION__, __LINE__);
-
-    CHECK(result);
-
     return true;
 }
 
 bool
 _callStatusUpdate(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    if (!VERIFY(ctx != 0 && message != 0))
-        return true;
-
-    LSMessageJsonParser    msg(message, SCHEMA_1(REQUIRED(lines, array)));
-    if (!msg.parse(__FUNCTION__))
-        return true;
-
-    const char * reply = STANDARD_JSON_SUCCESS;
-    pbnjson::JValue    lines = msg.get()["lines"];
-    if (!lines.isArray())
-        return true;
-
-    int carrier = 0, voip = 0;
-    int length = lines.arraySize();
-    std::string state[length];
-    std::string transport[length];
-    pbnjson::JValue calls;
-
-    ECallStatus status = eCallStatus_NoCall;
-
-    for (int i = 0; i < lines.arraySize(); i++) {
-        if (lines[i]["state"].asString(state[i]) == CONV_OK)
-            g_debug("state is %s", state[i].c_str());
-        else
-            g_warning("could not get state");
-
-        calls = lines[i]["calls"];
-        if (!calls.isArray()) {
-            g_warning("calls is not an array!!!");
-            return true;
-        }
-
-        if (calls[0]["transport"].asString(transport[i]) == CONV_OK)
-            g_debug("transport is %s", transport[i].c_str());
-        else
-            g_warning("could not get transport");
-
-        if (!strcmp(transport[i].c_str(), "com.palm.telephony")) {
-            carrier++;
-        } else {
-            voip++;
-        }
-
-        if (voip) {
-            if (!strcmp(state[i].c_str(), "active"))
-                status = eCallStatus_Active;
-            else if (!strcmp(state[i].c_str(), "incoming"))
-                status = eCallStatus_Incoming;
-            else if (!strcmp(state[i].c_str(), "connecting"))
-                status = eCallStatus_Connecting;
-            else if (!strcmp(state[i].c_str(), "dialing"))
-                status = eCallStatus_Dialing;
-            else if (!strcmp(state[i].c_str(), "disconnected"))
-                status = eCallStatus_Disconnected;
-            else if (!strcmp(state[i].c_str(), "onHold"))
-                status = eCallStatus_OnHold;
-
-            gState.setCallMode(eCallMode_Voip, status);
-
-            bool outgoingvideo = false;
-            bool incomingvideo = false;
-            if (lines[i]["outgoingVideo"].asBool(outgoingvideo) == CONV_OK) {
-                g_debug("outgoingvideo is %d", outgoingvideo);
-            } else
-                g_debug("could not get outgoingvideo");
-
-            if (lines[i]["incomingVideo"].asBool(incomingvideo) == CONV_OK) {
-                g_debug("incomingvideo is %d", incomingvideo);
-            } else
-                g_debug("could not get incomingvideo");
-
-            gState.setCallWithVideo(outgoingvideo || incomingvideo);
-        } else {
-            if (!strcmp(state[i].c_str(), "active"))
-                status = eCallStatus_Active;
-            else if (!strcmp(state[i].c_str(), "incoming"))
-                status = eCallStatus_Incoming;
-            else if (!strcmp(state[i].c_str(), "connecting"))
-                status = eCallStatus_Connecting;
-            else if (!strcmp(state[i].c_str(), "dialing"))
-                status = eCallStatus_Dialing;
-            else if (!strcmp(state[i].c_str(), "disconnected"))
-                status = eCallStatus_Disconnected;
-            else if (!strcmp(state[i].c_str(), "onHold"))
-                status = eCallStatus_OnHold;
-
-            gState.setCallMode(eCallMode_Carrier, status);
-        }
-    }
-
-    CLSError lserror;
-    if (!LSMessageReply(lshandle, message, reply, &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
-
     return true;
 }
 

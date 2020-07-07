@@ -17,8 +17,6 @@
 
 #include "PulseAudioLink.h"
 #include "log.h"
-#include "state.h"
-#include "utils.h"
 #include <math.h>
 #include <unistd.h>
 #include <audiodTracer.h>
@@ -92,7 +90,7 @@ static void pulseAudioCallback(pa_context * c, void * user)
         reinterpret_cast<PulseAudioLink *>(user)->pulseAudioStateChanged(pa_context_get_state(c));
 }
 
-bool PulseAudioLink::play(const char *snd, EVirtualAudiodSink sink)
+bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink)
 {
     PMTRACE_FUNCTION;
     if (!IsValidVirtualSink(sink))
@@ -100,11 +98,9 @@ bool PulseAudioLink::play(const char *snd, EVirtualAudiodSink sink)
         g_warning("'%d' is not a valid sink id", sink);
         return false;
     }
-    if((ePhoneStatus_Connected == gState.getPhoneStatus()) && (sink == efeedback)){
-        g_message("call in progess .......... feedback playback not allowed \n");
-        return false;
-    }
-    else{
+    //will be implemented as per DAP design
+    else
+    {
         return play(snd, virtualSinkName(sink, false));
     }
 }

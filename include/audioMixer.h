@@ -26,47 +26,41 @@
 #include "main.h"
 #include <cstdlib>
 
-class Mixer
+class AudioMixer
 {
     private:
-        Mixer(const Mixer&) = delete;
-        Mixer& operator=(const Mixer&) = delete;
-        Mixer();
+        AudioMixer(const AudioMixer&) = delete;
+        AudioMixer& operator=(const AudioMixer&) = delete;
+        AudioMixer();
         umiaudiomixer *mObjUmiMixer;
         PulseAudioMixer *mObjPulseMixer;
-        AudiodCallbacksInterface *mCallbacks;
 
     public:
-        ~Mixer();
-        static Mixer* getMixerInstance();
+        ~AudioMixer();
+        static AudioMixer* getAudioMixerInstance();
 
         //umimixer calls
-        bool connectAudio(std::string strSourceName, std::string strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
-        bool disconnectAudio(std::string strSourceName, std::string strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
-        bool setSoundOut(std::string strOutputMode, LSFilterFunc cb, envelopeRef *message);
-        bool setMasterVolume(std::string strSoundOutPut, int iVolume, LSFilterFunc cb, envelopeRef *message);
+        bool connectAudio(const std::string &strSourceName, const std::string &strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
+        bool disconnectAudio(const std::string &strSourceName, const std::string &strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
+        bool setSoundOut(const std::string &strOutputMode, LSFilterFunc cb, envelopeRef *message);
+        bool setMasterVolume(const std::string &strSoundOutPut, const int &iVolume, LSFilterFunc cb, envelopeRef *message);
         bool getMasterVolume(LSFilterFunc cb, envelopeRef *message);
-        bool masterVolumeUp(std::string strSoundOutPut, LSFilterFunc cb, envelopeRef *message);
-        bool masterVolumeDown(std::string strSoundOutPut, LSFilterFunc cb, envelopeRef *message);
-        bool masterVolumeMute(std::string strSoundOutPut, bool bIsMute, LSFilterFunc cb, envelopeRef *message);
-        bool inputVolumeMute(std::string strPhysicalSink, std::string strSource, bool bIsMute, LSFilterFunc cb, envelopeRef *message);
+        bool masterVolumeUp(const std::string &strSoundOutPut, LSFilterFunc cb, envelopeRef *message);
+        bool masterVolumeDown(const std::string &strSoundOutPut, LSFilterFunc cb, envelopeRef *message);
+        bool masterVolumeMute(const std::string &strSoundOutPut, const bool &bIsMute, LSFilterFunc cb, envelopeRef *message);
+        bool inputVolumeMute(const std::string &strPhysicalSink, const std::string &strSource, const bool &bIsMute, LSFilterFunc cb, envelopeRef *message);
         bool getConnectionStatus(LSFilterFunc cb, envelopeRef *message);
-        bool readyToProgram();
-        bool isStreamActive(EVirtualAudiodSink eVirtualSink);
-
-        void onSinkChangedReply(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType);
-        void updateStreamStatus(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus);
-        void setMixerReadyStatus(bool eStatus);
+        bool isStreamActive(EVirtualAudioSink eVirtualSink);
 
         //To know audiooutputd server status - Need to implement from adapter class
         //static bool audiodOutputdServiceStatusCallBack(LSHandle *sh, const char *serviceName, bool connected, void *ctx);
 
         //pulsemixer calls
-        bool programVolume(EVirtualAudiodSink sink, int volume, bool ramp = false);
+        bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);
-        bool rampVolume(EVirtualAudiodSink sink, int endVolume);
-        bool programDestination(EVirtualAudiodSink sink, EPhysicalSink destination);
+        bool rampVolume(EVirtualAudioSink sink, int endVolume);
+        bool programDestination(EVirtualAudioSink sink, EPhysicalSink destination);
         bool programDestination(EVirtualSource source, EPhysicalSource destination);
         bool programFilter(int filterTable);
         bool programBalance(int balance);
@@ -75,7 +69,7 @@ class Mixer
         bool updateRate(int rate);
         bool setMute(int sink, int mutestatus);
         bool setVolume(int display, int volume);
-        bool playSystemSound(const char *snd, EVirtualAudiodSink sink);
+        bool playSystemSound(const char *snd, EVirtualAudioSink sink);
         bool programHeadsetRoute(int route);
         bool externalSoundcardPathCheck(std::string filename,  int status);
         bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
@@ -86,20 +80,20 @@ class Mixer
         bool setRouting(const ConstString & scenario);
         bool programSource(char cmd, int sink, int value);
 
-        void outputStreamOpened(EVirtualAudiodSink sink);
-        void outputStreamClosed(EVirtualAudiodSink sink);
+        void outputStreamOpened(EVirtualAudioSink sink);
+        void outputStreamClosed(EVirtualAudioSink sink);
         void inputStreamOpened(EVirtualSource source);
         void inputStreamClosed(EVirtualSource source);
         void preloadSystemSound(const char * snd);
-        void playOneshotDtmf(const char *snd, EVirtualAudiodSink sink) ;
+        void playOneshotDtmf(const char *snd, EVirtualAudioSink sink) ;
         void playOneshotDtmf(const char *snd, const char* sink) ;
-        void playDtmf(const char *snd, EVirtualAudiodSink sink) ;
+        void playDtmf(const char *snd, EVirtualAudioSink sink) ;
         void playDtmf(const char *snd, const char* sink) ;
         void stopDtmf();
         void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);
         void _timer();
         void setNREC(bool value);
-        void openCloseSink(EVirtualAudiodSink sink, bool openNotClose);
+        void openCloseSink(EVirtualAudioSink sink, bool openNotClose);
 
         VirtualSinkSet getActiveStreams();
 

@@ -22,6 +22,7 @@
 #include <cstring>
 #include <glib.h>
 #include "umiaudiomixer.h"
+#include "PulseAudioMixer.h"
 #define AUDIOD_API_GET_VOLUME "/master/getVolume"
 
 class volumeSettings

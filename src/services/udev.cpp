@@ -23,10 +23,12 @@
 #include "module.h"
 #include "utils.h"
 #include "messageUtils.h"
-#include "state.h"
 #include "log.h"
+#include "audioMixer.h"
 
 #define SYSFS_HEADSET_MIC "/sys/devices/virtual/switch/h2w/state"
+
+static bool setMicOrHeadset (EHeadsetState state, int cardno, int deviceno, int status);
 
 #if defined(AUDIOD_PALM_LEGACY)
 static bool
@@ -47,50 +49,80 @@ _event(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.get("device_no", device_no))
         device_no = 0;
 
-    if (gState.getUseUdevForHeadsetEvents()) {
-        std::string event;
-
-        if (!msg.get("event", event)) {
-            reply = MISSING_PARAMETER_ERROR(event, string);
-        } else {
-              if (event == "headset-removed")
-                  gState.setHeadsetState (eHeadsetState_None);
-
-              else if (event == "headset-inserted")
-                  gState.setHeadsetState (eHeadsetState_Headset);
-
-              else if (event == "headset-mic-inserted")
-                  gState.setHeadsetState (eHeadsetState_HeadsetMic);
-
-              else if (event == "usb-mic-inserted") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbMic_Connected , soundcard_no, device_no, 1);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
-              else if (event == "usb-mic-removed") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbMic_DisConnected , soundcard_no, device_no, 0);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
-              else if (event == "usb-headset-inserted") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbHeadset_Connected , soundcard_no, device_no, 1);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
-              else if (event == "usb-headset-removed") {
-                  retVal = gState.setMicOrHeadset (eHeadsetState_UsbHeadset_DisConnected , soundcard_no, device_no, 0);
-                  if (false == retVal)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-              }
-              else
-                  reply = INVALID_PARAMETER_ERROR(event, string);
+    std::string event;
+    if (!msg.get("event", event))
+    {
+        reply = MISSING_PARAMETER_ERROR(event, string);
+    }
+    else
+    {
+        if (event == "headset-removed")
+        {
+            //same way like setMicOrHeadset needs to be implemented
+            //gState.setHeadsetState (eHeadsetState_None);
         }
+        else if (event == "headset-inserted")
+        {
+            //same way like setMicOrHeadset needs to be implemented
+            //gState.setHeadsetState (eHeadsetState_Headset);
+        }
+        else if (event == "headset-mic-inserted")
+        {
+            //same way like setMicOrHeadset needs to be implemented
+            //gState.setHeadsetState (eHeadsetState_HeadsetMic);
+        }
+        else if (event == "usb-mic-inserted")
+        {
+            retVal = setMicOrHeadset (eHeadsetState_UsbMic_Connected , soundcard_no, device_no, 1);
+            if (false == retVal)
+              reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+        }
+        else if (event == "usb-mic-removed")
+        {
+            retVal = setMicOrHeadset (eHeadsetState_UsbMic_DisConnected , soundcard_no, device_no, 0);
+            if (false == retVal)
+              reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+        }
+        else if (event == "usb-headset-inserted")
+        {
+            retVal = setMicOrHeadset (eHeadsetState_UsbHeadset_Connected , soundcard_no, device_no, 1);
+            if (false == retVal)
+              reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+        }
+        else if (event == "usb-headset-removed")
+        {
+            retVal = setMicOrHeadset (eHeadsetState_UsbHeadset_DisConnected , soundcard_no, device_no, 0);
+            if (false == retVal)
+              reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+        }
+        else
+            reply = INVALID_PARAMETER_ERROR(event, string);
     }
 
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply, &lserror))
         lserror.Print(__FUNCTION__, __LINE__);
 
+    return true;
+}
+
+bool setMicOrHeadset (EHeadsetState state, int cardno, int deviceno, int status)
+{
+    bool ret = false;
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
+    if (state == eHeadsetState_UsbMic_Connected || state == eHeadsetState_UsbMic_DisConnected)
+        if (audioMixerObj)
+            ret = audioMixerObj->loadUSBSinkSource('j',cardno,deviceno,status);
+    else if (state == eHeadsetState_UsbHeadset_Connected || state == eHeadsetState_UsbHeadset_DisConnected)
+        if (audioMixerObj)
+            ret = audioMixerObj->loadUSBSinkSource('z',cardno,deviceno,status);
+    else
+        return false;
+
+    if (false == ret) {
+        g_debug("Failed execution of loadUSBSinkSource");
+        return false;
+    }
     return true;
 }
 
@@ -111,7 +143,7 @@ static int UdevInit()
         (G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)))
     {
         g_message ("Using udev headset events");
-    gState.setUseUdevForHeadsetEvents(true);
+        //will be implemented as per DAP design
     }
 
     return 0;
@@ -119,31 +151,13 @@ static int UdevInit()
 
 static void readInitialUdevHeadsetState()
 {
-    FILE * hsfile  = 0;
-    int headsetMic = 0;
-
-    hsfile = fopen(SYSFS_HEADSET_MIC, "r");
-    if (VERIFY(hsfile))    {
-        fscanf(hsfile, "%i\n", &headsetMic);
-    fclose(hsfile);
-
-        if (1 == headsetMic)
-        gState.setHeadsetState(eHeadsetState_Headset);
-
-    else if(2 == headsetMic)
-            gState.setHeadsetState(eHeadsetState_HeadsetMic);
-
-    else
-            gState.setHeadsetState(eHeadsetState_None);
-    }
+    //will be implemented as per DAP design
 }
 
 int
 UdevInterfaceInit(GMainLoop *loop, LSHandle *handle)
 {
-    if (gState.getUseUdevForHeadsetEvents())
-        readInitialUdevHeadsetState();
-
+    //will be implemented as per DAP design
 #if defined(AUDIOD_PALM_LEGACY)
     /* luna service interface */
     CLSError lserror;

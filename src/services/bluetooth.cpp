@@ -22,6 +22,7 @@
 #include "ConstString.h"
 #include "utils.h"
 #include "messageUtils.h"
+#include "audioMixer.h"
 
 #define BLUETOOTH_SERVICE       "com.webos.service.bluetooth2"
 #define BT_DEVICE_GET_STATUS    "luna://com.webos.service.bluetooth2/device/getStatus"
@@ -34,15 +35,16 @@ static std::string connectedDevice;
 static void _setBlueToothA2DPActive (bool state, char *address, char *profile)
 {
     g_message ("_setBlueToothA2DPActive : state = %d, address = %s, profile = %s", state, address, profile);
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     if (state)
     {
-        //Will be removed or updated once DAP design is updated
-        //gAudioMixer.programLoadBluetooth(address, profile);
+        if (audioMixerObj)
+            audioMixerObj->programLoadBluetooth(address, profile);
     }
     else
     {
-        //Will be removed or updated once DAP design is updated
-        //gAudioMixer.programUnloadBluetooth(profile);
+        if (audioMixerObj)
+            audioMixerObj->programUnloadBluetooth(profile);
     }
 }
 

@@ -134,7 +134,6 @@ SET (modules_files
         src/umi/soundSettings/soundSettings.cpp
         src/umi/umiDispatcher.cpp
         src/controls/umiaudiomixer.cpp
-        src/MixerInit.cpp
         src/audioPolicyManager.cpp
         src/moduleInitializer.cpp
         src/volumePolicyInfoParser.cpp
@@ -201,8 +200,6 @@ add_definitions(-DENABLE_WAKELOCK_FOR_SLEEP_STATE)
 
 webos_build_system_bus_files()
 webos_build_daemon()
-
-install(FILES include/public/mixerconfig.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
 
 #-- install udev rule for headset detection
 install(FILES etc/udev/rules.d/86-audiod.rules DESTINATION ${WEBOS_INSTALL_WEBOS}/etc/udev/rules.d/)

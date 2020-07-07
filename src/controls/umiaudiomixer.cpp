@@ -17,10 +17,8 @@
 #include <cerrno>
 #include <glib.h>
 #include "log.h"
-
 #include "umiaudiomixer.h"
 
-#define AUDIOOUTPUT_SERVICE                "com.webos.service.audiooutput"
 #define CONNECT                            "luna://com.webos.service.audiooutput/audio/connect"
 #define DISCONNECT                         "luna://com.webos.service.audiooutput/audio/disconnect"
 #define SET_SOUNDOUT                       "luna://com.webos.service.audiooutput/audio/setSoundOut"
@@ -31,29 +29,6 @@
 #define MASTER_VOLUME_MUTE                 "luna://com.webos.service.audiooutput/audio/volume/muteSoundOut"
 #define INPUT_VOLUME_MUTE                  "luna://com.webos.service.audiooutput/audio/mute"
 #define GET_CONN_STATUS                    "luna://com.webos.service.audiooutput/audio/getStatus"
-
-umiaudiomixer* umiaudiomixer::mObjUmiMixer = nullptr;
-
-umiaudiomixer* umiaudiomixer::getUmiMixerInstance()
-{
-    return mObjUmiMixer;
-}
-
-void umiaudiomixer::createUmiMixerInstance()
-{
-    if(nullptr == mObjUmiMixer)
-    {
-        mObjUmiMixer = new (std::nothrow)umiaudiomixer();
-        if (nullptr == mObjUmiMixer)
-        {
-            g_debug("Could not create m_ObjUmiMixer");
-        }
-        else
-        {
-            g_debug("created m_ObjUmiMixer");
-        }
-    }
-}
 
 bool umiaudiomixer::connectAudio(std::string strSourceName, std::string strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message)
 {
@@ -273,23 +248,19 @@ bool umiaudiomixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
     return result;
 }
 
-bool umiaudiomixer::audiodOutputdServiceStatusCallBack(LSHandle *sh, const char *serviceName, bool connected, void *ctx)
-{
-    umiaudiomixer *mUmiMixer = umiaudiomixer::getUmiMixerInstance();
-    if (nullptr != mUmiMixer)
-    {
-        mUmiMixer->setMixerReadyStatus(connected);
-    }
-    return true;
-}
-
 void umiaudiomixer::setMixerReadyStatus(bool eStatus)
 {
     mIsReadyToProgram  = eStatus;
     g_debug("umiaudiomixer: audioOutputd status: %d", (int)mIsReadyToProgram);
 }
 
-umiaudiomixer::umiaudiomixer(): mIsReadyToProgram(false), mCallbacks(nullptr)
+umiaudiomixer* umiaudiomixer::getUmiMixerInstance()
+{
+    static umiaudiomixer umiMixerInstance;
+    return &umiMixerInstance;
+}
+
+umiaudiomixer::umiaudiomixer(): mIsReadyToProgram(false)
 {
     g_debug("umiaudiomixer constructor");
 }
@@ -299,62 +270,39 @@ umiaudiomixer::~umiaudiomixer()
     g_debug("umiaudiomixer distructor");
 }
 
-void umiaudiomixer::initUmiMixer(GMainLoop * loop, LSHandle * handle,
-AudiodCallbacksInterface * interface)
-{
-    mCallbacks = interface;
-    g_debug("init connect umiaudiomixer");
-    CLSError lserror;
-    // check if the service is up
-    bool result = LSRegisterServerStatusEx(handle, AUDIOOUTPUT_SERVICE,
-                      audiodOutputdServiceStatusCallBack, loop, NULL, &lserror);
-    if (!result)
-    {
-        lserror.Print(__FUNCTION__, __LINE__);
-    }
-}
-
 bool umiaudiomixer::readyToProgram()
 {
     return mIsReadyToProgram;
 }
 
-void umiaudiomixer::onSinkChangedReply(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType)
+void umiaudiomixer::onSinkChangedReply(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus, utils::EMIXER_TYPE eMixerType)
 {
-    g_debug("OnSinkChangedReply Sink Name :%d, Connection status: %d sink type %d", eVirtualSink, eConnStatus, (int)eSinkType);
-    EControlEvent event = eControlEvent_None;
-    if (eConnect == eConnStatus)
+    g_debug("OnSinkChangedReply Sink Name :%d, Connection status: %d sink type %d", eVirtualSink, eConnStatus, eMixerType);
+    utils::ECONN_STATUS eSinkStatus = utils::eConnectionNone;
+    if (utils::eConnected == eConnStatus)
     {
-        event = eControlEvent_FirstStreamOpened;
+        eSinkStatus = utils::eConnected;
     }
-    else if (eDisConnect == eConnStatus)
+    else if (utils::eDisconnected == eConnStatus)
     {
-        event = eControlEvent_LastStreamClosed;
+        eSinkStatus = utils::eDisconnected;
     }
     else
     {
         g_debug("umiaudiomixer: OnSinkChangedReply Invalid Connection status");
     }
-    updateStreamStatus(eVirtualSink,eConnStatus);
-    if (nullptr != mCallbacks)
-    {
-        mCallbacks->onSinkChanged(eVirtualSink, event, eSinkType);
-    }
-    else
-    {
-        g_debug("mCallbacks is NULL");
-    }
+    updateStreamStatus(eVirtualSink, eConnStatus);
 }
 
-void umiaudiomixer::updateStreamStatus(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus)
+void umiaudiomixer::updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus)
 {
-    if (eConnect == eConnStatus)
+    if (utils::eConnected == eConnStatus)
     {
         mVectActiveStreams.push_back(eVirtualSink);
     }
-    else if (eDisConnect == eConnStatus)
+    else if (utils::eDisconnected == eConnStatus)
     {
-        for (std::vector<EVirtualAudiodSink>::iterator itStream = mVectActiveStreams.begin() ; itStream != mVectActiveStreams.end(); ++itStream)
+        for (std::vector<EVirtualAudioSink>::iterator itStream = mVectActiveStreams.begin() ; itStream != mVectActiveStreams.end(); ++itStream)
         {
             if (*itStream == eVirtualSink)
             {
@@ -369,7 +317,7 @@ void umiaudiomixer::updateStreamStatus(EVirtualAudiodSink eVirtualSink, E_CONNST
     }
 }
 
-bool umiaudiomixer::isStreamActive(EVirtualAudiodSink eVirtualSink)
+bool umiaudiomixer::isStreamActive(EVirtualAudioSink eVirtualSink)
 {
     for (auto &elements : mVectActiveStreams)
     {

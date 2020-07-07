@@ -18,94 +18,65 @@
 #ifndef PULSEAUDIOMIXER_H_
 #define PULSEAUDIOMIXER_H_
 
-#include "AudioMixer.h"
 #include "PulseAudioLink.h"
+#include "utils.h"
 
-/*
- * Implementation of AudioMixer using Pulse as backend
- */
-
-class PulseAudioMixer : public AudioMixer
+//Implementation of PulseMixer using Pulse as backend
+class PulseAudioMixer
 {
-
-public:
+    public:
     /// Constructor that only does initialization of member variables
     PulseAudioMixer();
     ~PulseAudioMixer();
 
-    /// Initialize mixer & possibly, register services
-    void init(GMainLoop * loop,
-                             LSHandle * handle,
-                             AudiodCallbacksInterface * interface);
-
     /// We might not be ready for programming the mixer
-    bool readyToProgram()    { return mChannel != 0; }
+    bool readyToProgram() {return mChannel != 0;}
 
     /// Program volume of a sink.
     //Will ignore volume of high latency sinks not playing and mute them.
-    bool programVolume(EVirtualAudiodSink sink, int volume, bool ramp = false);
-
+    bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
     bool programCallVoiceOrMICVolume(char cmd, int volume);
     bool programMute(EVirtualSource source, int mute);
-
     /// Same as program volume, but ramped.
-    bool rampVolume(EVirtualAudiodSink sink, int endVolume)
-                       { return programVolume(sink, endVolume, true); }
-
+    bool rampVolume(EVirtualAudioSink sink, int endVolume)
+        {return programVolume(sink, endVolume, true);}
     /// Program destination of a sink
-    bool programDestination(EVirtualAudiodSink sink, EPhysicalSink destination);
+    bool programDestination(EVirtualAudioSink sink, EPhysicalSink destination);
     /// Program destination of a source
     bool programDestination(EVirtualSource source, EPhysicalSource destination);
-
     /// Program a filter
     bool programFilter(int filterTable);
     bool programBalance(int balance);
     bool muteAll();
-
     /// Get active streams set to test which sinks are active.
-    VirtualSinkSet getActiveStreams() { return mActiveStreams; }
-
+    VirtualSinkSet getActiveStreams()
+        {return mActiveStreams;}
     /// Count how many output streams are opened
-    void outputStreamOpened (EVirtualAudiodSink sink);
-    void outputStreamClosed (EVirtualAudiodSink sink);
-
+    void outputStreamOpened (EVirtualAudioSink sink);
+    void outputStreamClosed (EVirtualAudioSink sink);
     /// Count how many input streams are opened
     void inputStreamOpened (EVirtualSource source);
     void inputStreamClosed (EVirtualSource source);
-
     /// Suspend all streams (when entering power saving mode).
     bool suspendAll();
-
     /// Suspend sampling rate on sinks/sources
     bool updateRate(int rate);
-
-
     /// Play a system sound using Pulse's API
-    bool playSystemSound(const char *snd, EVirtualAudiodSink sink);
-
+    bool playSystemSound(const char *snd, EVirtualAudioSink sink);
     /// Pre-load system sound in Pulse, if necessary
     void preloadSystemSound(const char * snd) { mPulseLink.preload(snd); }
     /// mute/unmute the Physical sink
     bool setMute(int sink, int mutestatus);
-
     /// set volume on a particular display
     bool setVolume(int display, int volume);
-
-    void playOneshotDtmf(const char *snd, EVirtualAudiodSink sink) ;
-
+    void playOneshotDtmf(const char *snd, EVirtualAudioSink sink) ;
     void playOneshotDtmf(const char *snd, const char* sink) ;
-
-    void playDtmf(const char *snd, EVirtualAudiodSink sink) ;
-
+    void playDtmf(const char *snd, EVirtualAudioSink sink) ;
     void playDtmf(const char *snd, const char* sink) ;
-
     void stopDtmf();
-
     bool programHeadsetRoute (int route);
-
     bool externalSoundcardPathCheck (std::string filename,  int status);
     bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
-
     /// These should really be private, but they're needed for global callbacks...
     bool _connectSocket();
     void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);
@@ -114,12 +85,14 @@ public:
     GIOChannel* mChannel;
     bool suspendSink(int sink);
     bool programSource(char cmd, int sink, int value);
-    void openCloseSink(EVirtualAudiodSink sink, bool openNotClose);
+    void openCloseSink(EVirtualAudioSink sink, bool openNotClose);
     void setNREC(bool value);
     bool programLoadBluetooth (const char * address , const char *profile);
     bool programUnloadBluetooth (const char *profile);
     bool setRouting(const ConstString & scenario);
     int loopback_set_parameters(const char * value);
+    void init(GMainLoop * loop, LSHandle * handle);
+
 private:
     // Direct socket connection to Pulse
     int mTimeout;
@@ -129,7 +102,6 @@ private:
     // Connection to Pulse via official Pulse APIs
     PulseAudioLink mPulseLink;
     PulseDtmfGenerator* mCurrentDtmf;
-
     VirtualSinkSet mActiveStreams;
     int mPulseStateVolume[eVirtualSink_Count];
     int mPulseStateVolumeHeadset[eVirtualSink_Count];
@@ -139,19 +111,15 @@ private:
     bool mPulseFilterEnabled;
     int mPulseStateFilter;
     int mPulseStateLatency;
-
     int mInputStreamsCurrentlyOpenedCount;
     int mOutputStreamsCurrentlyOpenedCount;
-
     bool voLTE;
     int BTDeviceType;
     int mPreviousVolume;
     bool NRECvalue;
     bool BTvolumeSupport;
-    AudiodCallbacksInterface* mCallbacks;
 };
 
-extern PulseAudioMixer gPulseAudioMixer;
-
+extern PulseAudioMixer gAudioMixer;
 
 #endif /* PULSEAUDIOMIXER_H_ */

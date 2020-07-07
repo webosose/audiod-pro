@@ -17,102 +17,58 @@
 
 #ifndef UMIAUDIOMIXER_H_
 #define UMIAUDIOMIXER_H_
-#include "AudioMixer.h"
 #include <vector>
 #include <string>
 #include "main.h"
 #include "messageUtils.h"
-/*Connect and disconnect status of streams to inform scenario modules*/
-typedef enum ConnStatus
-{
-    eUnknown,
-    eConnect,
-    eDisConnect
-}E_CONNSTATUS;
+#include "utils.h"
 
 class umiaudiomixer
 {
-
     private :
-
-    /*To store umi mixer ready status*/
+    //To store umi mixer ready status
     bool mIsReadyToProgram;
-
     static umiaudiomixer *mObjUmiMixer;
-
-    /*call back pointer to call onsink changed*/
-    AudiodCallbacksInterface * mCallbacks;
-
-    /*To store the status if the starem is currently active*/
-
-    std::vector<EVirtualAudiodSink> mVectActiveStreams;
-
+    //To store the status if the starem is currently active
+    std::vector<EVirtualAudioSink> mVectActiveStreams;
     umiaudiomixer(const umiaudiomixer &) = delete;
     umiaudiomixer& operator=(const umiaudiomixer &) = delete;
 
     public:
     //Constructor
     umiaudiomixer();
-
     //Destructor
     ~umiaudiomixer();
-
-    /*Initialize umi mixer*/
-    void initUmiMixer(GMainLoop * loop, LSHandle * handle, AudiodCallbacksInterface* interface);
-
-    /*Connect hardware stream*/
+    //Connect hardware stream
     bool connectAudio(std::string strSourceName, std::string strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
-
-    /*Disconnect hardware stream*/
+    //Disconnect hardware stream*
     bool disconnectAudio(std::string strSourceName, std::string strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
-
-    /*Set sound out of TV/ALSA eg:Headphone, TV internal speaker, Soundbar*/
+    //Set sound out of ALSA eg:Headphone, internal speaker, Soundbar
     bool setSoundOut(std::string strOutputMode, LSFilterFunc cb, envelopeRef *message);
-
-    /*Set the volume of speaker */
+    //Set the volume of speaker
     bool setMasterVolume(std::string strSoundOutPut, int iVolume, LSFilterFunc cb, envelopeRef *message);
-
-    /*Get the volume of speaker */
+    //Get the volume of speaker
     bool getMasterVolume(LSFilterFunc cb, envelopeRef *message);
-
-    /*Volume Up for speaker */
+    //Volume Up for speaker
     bool masterVolumeUp(std::string strSoundOutPut, LSFilterFunc cb, envelopeRef *message);
-
-    /*Volume down for speaker */
+    //Volume down for speaker
     bool masterVolumeDown(std::string strSoundOutPut, LSFilterFunc cb, envelopeRef *message);
-
-    /*Volume mute for speaker */
+    //Volume mute for speaker
     bool masterVolumeMute(std::string strSoundOutPut, bool bIsMute, LSFilterFunc cb, envelopeRef *message);
-
-    /*Volume unmute for speaker */
+    //Volume unmute for speaker
     bool inputVolumeMute(std::string strPhysicalSink, std::string strSource, bool bIsMute, LSFilterFunc cb, envelopeRef *message);
-
-    /*To get all the info of connected UMI audio streams*/
+    //To get all the info of connected UMI audio streams
     bool getConnectionStatus(LSFilterFunc cb, envelopeRef *message);
-
-    /*To send on sink changed status to all the pulse audiod and umi scenario modules*/
-    void onSinkChangedReply(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus, ESinkType eSinkType);
-
-    /*To inform scenario modules if the mixer interafce is ready to use, in tis case it audiooutputd luna service status*/
-    bool readyToProgram ();
-
-    /*To keep track of active stream types*/
-    void updateStreamStatus(EVirtualAudiodSink eVirtualSink, E_CONNSTATUS eConnStatus);
-
-    /*To get the status if the starem is currently active*/
-    bool isStreamActive(EVirtualAudiodSink eVirtualSink);
-
-    /*To update IsReadyToProgram*/
+    //To send on sink changed status to all the pulse audiod and umi scenario modules
+    void onSinkChangedReply(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus, utils::EMIXER_TYPE eMixerType);
+    //To inform scenario modules if the mixer interafce is ready to use, in tis case it audiooutputd luna service status
+    bool readyToProgram();
+    //To keep track of active stream types
+    void updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus);
+    //To get the status if the starem is currently active
+    bool isStreamActive(EVirtualAudioSink eVirtualSink);
+    //To update IsReadyToProgram
     void setMixerReadyStatus(bool eStatus);
-
     static umiaudiomixer* getUmiMixerInstance();
-
-    static void createUmiMixerInstance();
-
-    /*To know audiooutputd server status*/
-    static bool audiodOutputdServiceStatusCallBack(LSHandle *sh,
-    const char *serviceName,
-    bool connected,
-    void *ctx);
 };
-#endif /* AUDIOMIXER_H_ */
+#endif //UMIAUDIOMIXER_H_

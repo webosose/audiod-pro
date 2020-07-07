@@ -139,6 +139,7 @@ extern PmLogContext audiodLogContext;
 #define MSGID_MODULE_MANAGER                           "AUDIO_MODULE_MANAGER"              //module manager
 #define MSGID_MODULE_INTERFACE                         "MODULE_INTERFACE"                  //module interface
 #define MSGID_POLICY_CONFIGURATOR                      "POLICY_CONFIGURATOR"               //Policy Configuration
-#define MSGID_INVALID_INPUT                            "INVALID_INPUT"                     // For invalid input values
+#define MSGID_INVALID_INPUT                            "INVALID_INPUT"                     //For invalid input values
+#define MSGID_AUDIO_MIXER                              "AUDIO_MIXER"                       //audio, umi and pulse mixer functions
 
 #endif // LOG_H_

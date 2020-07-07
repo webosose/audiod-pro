@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "messageUtils.h"
-#include "state.h"
 #include "utils.h"
 
 #define GET_SYSTEM_SETTINGS "luna://com.webos.settingsservice/getSystemSettings"
@@ -36,16 +35,7 @@ bool __settingCallback(LSHandle *lshandle, LSMessage *message, void *ctx)
 
     if (!object.isObject())
         return true;
-
-    if (object["touchSoundEnable"].asBool(touchEnable) == CONV_OK)
-        gState.setTouchSound(touchEnable);
-    else
-        g_debug("__settingCallback() touchSoundEnable field not found");
-
-    if (object["dndEnable"].asBool(dndEnable) == CONV_OK)
-        gState.setDndMode(dndEnable);
-    else
-        g_debug("__settingCallback(): dndEnable field not found");
+    //will be implemented based on DAP design
 
     if (object["amplitude"].asNumber(amplitude) == CONV_OK)
     {

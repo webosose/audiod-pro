@@ -20,13 +20,12 @@
 #include <cstring>
 #include <glib.h>
 #include <stdio.h>
-
-#include "AudioMixer.h"
-#include "state.h"
 #include "utils.h"
 #include "messageUtils.h"
 #include "log.h"
 #include "main.h"
+#include "audioMixer.h"
+#include "PulseAudioMixer.h"
 
 static bool
 _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
@@ -40,18 +39,14 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
         return true;
 
     const gchar * reply = STANDARD_JSON_SUCCESS;
-    EVirtualAudiodSink sink = efeedback;
+    EVirtualAudioSink sink = efeedback;
     std::string    name, sinkName;
     bool bPlay = true;
     bool bOverride = false;
     char *filename = NULL;
     FILE *fp = NULL;
 
-    //Will be removed or updated once DAP design is updated
-    /*if (gAudioDevice.isSuspended()) {
-        reply = STANDARD_JSON_ERROR(4, "Audio suspended");
-        goto error;
-    }*/
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
 
     if (!msg.get("name", name))
     {
@@ -101,60 +96,13 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
 
     if (bPlay)
     {
-        if (sink == efeedback)
-            if (gState.getRingerOn()) // don't bother if ringer is off
-               bPlay = gState.getTouchSound() || bOverride;
-            else
-                bPlay = bOverride;
-        std::string    type;
+        std::string type;
         if (msg.get("type", type))
         {
-            if (type == "text_entry_correction")
-            {    // decide if it should be heard or felt (vibration)
-                std::string pref;
-                bool vibrate = false;
-                bool useAutoPolicy = false;
-                if (!gState.getPreference(cPref_TextEntryCorrectionHapticPolicy, pref) ||
-                                                             pref == "auto")
-                    useAutoPolicy = true;
-                else if (pref == "hapticOnly")
-                {
-                    bPlay = false;
-                    vibrate = true;
-                }
-                else if (pref == "disabled")
-                    bPlay = false;
-                else if (pref == "soundOnly")
-                    ;// we're ok already
-                else
-                {
-                    g_warning("_playFeedback: unknown policy preference '%s'",\
-                                                                 pref.c_str());
-                    useAutoPolicy = true;
-                }
-
-                if (useAutoPolicy)
-                {
-                    if (gState.getRingerOn())
-                        bPlay = true;
-                    else
-                    {
-                        bPlay = false;
-                        vibrate = true;
-                    }
-                }
-
-                if (vibrate)
-                {
-                    //getVibrateDevice()->realVibrate("{\"period\":100,\"duration\":100,\"amplitude\":3}");
-                    //getVibrateDevice()->realVibrate("{\"name\":\"feedback\"}");
-                }
-            }
-            else
-                g_warning("_playFeedback: unknown type '%s'", type.c_str());
+            //Will be implemented as per DAP design
         }
 
-        if (bPlay && !gAudioMixer.playSystemSound(name.c_str(), sink))
+        if (audioMixerObj && bPlay && !audioMixerObj->playSystemSound(name.c_str(), sink))
         {
             reply = STANDARD_JSON_ERROR(3, "unable to connect to pulseaudio.");
             goto error;
@@ -162,7 +110,10 @@ _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
     }
     else
     {
-        gAudioMixer.preloadSystemSound(name.c_str());
+        if (audioMixerObj)
+            audioMixerObj->preloadSystemSound(name.c_str());
+        else
+            g_debug("audioMixerObj is null");
     }
 
 error:
