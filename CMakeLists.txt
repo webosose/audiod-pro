@@ -137,6 +137,7 @@ SET (modules_files
         src/MixerInit.cpp
         src/audioPolicyManager.cpp
         src/moduleInitializer.cpp
+        src/volumePolicyInfoParser.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")
