@@ -18,7 +18,16 @@
 #define _UMI_DISPATCHER_H_
 
 #include <map>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <glib.h>
+#include "main.h"
 #include <string>
+#include <lunaservice.h>
+#include "utils.h"
+#include "messageUtils.h"
+#include "module.h"
 
 #define UMI_CATEGORY_NAME                "/UMI"
 #define GET_STATUS_CATEGORY_AND_KEY      "/UMI/getStatus"

@@ -14,18 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <utils.h>
-#include <string>
-#include "messageUtils.h"
-#include "module.h"
 #include "volumeSettings.h"
-
-#define DISPLAY_ONE 0
-#define DISPLAY_TWO 1
-#define MIN_VOLUME 0
-#define MAX_VOLUME 100
-#define DEFAULT_ONE_DISPLAY_ID 1
-#define DEFAULT_TWO_DISPLAY_ID 2
 
 bool volumeSettings::_setVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
@@ -56,6 +45,7 @@ bool volumeSettings::_setVolume(LSHandle *lshandle, LSMessage *message, void *ct
 
     g_debug("SetMasterVolume with soundout: %s volume: %d display: %d", soundOutput.c_str(), volume, displayId);
     volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     if (DISPLAY_TWO == display)
     {
         if (soundOutput != "alsa")
@@ -63,7 +53,7 @@ bool volumeSettings::_setVolume(LSHandle *lshandle, LSMessage *message, void *ct
             g_debug("Not a valid soundOutput");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
         }
-        else if ((volumeInstance) && (isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        else if ((volumeInstance) && (isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(displayId, volume)))
         {
             g_debug("set volume %d for display: %d", volume, displayId);
             volumeInstance->displayTwoVolume = volume;
@@ -87,7 +77,7 @@ bool volumeSettings::_setVolume(LSHandle *lshandle, LSMessage *message, void *ct
     }
     else
     {
-        if ((volumeInstance) && (isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        if ((volumeInstance) && (isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(displayId, volume)))
         {
             g_debug("set volume %d for display: %d", volume, displayId);
             volumeInstance->displayOneVolume = volume;
@@ -267,32 +257,37 @@ void volumeSettings::notifyVolumeSubscriber(const int &displayId, const std::str
 
 void volumeSettings::setMuteStatus(const int &displayId)
 {
-    if (DEFAULT_ONE_DISPLAY_ID == displayId)
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
+    if (DEFAULT_ONE_DISPLAY_ID == displayId && audioMixerObj)
     {
-        gAudioMixer.setMute(displayId, displayOneMuteStatus);
+        audioMixerObj->setMute(displayId, displayOneMuteStatus);
         g_debug("set mute status %d for display: %d", displayOneMuteStatus, displayId);
     }
-    else if (DEFAULT_TWO_DISPLAY_ID == displayId)
+    else if (DEFAULT_TWO_DISPLAY_ID == displayId && audioMixerObj)
     {
-        gAudioMixer.setMute(displayId, displayTwoMuteStatus);
+        audioMixerObj->setMute(displayId, displayTwoMuteStatus);
         g_debug("set mute status %d for display: %d", displayTwoMuteStatus, displayId);
     }
     else
     {
-        gAudioMixer.setMute(displayId, displayOneMuteStatus);
-        gAudioMixer.setMute(displayId, displayTwoMuteStatus);
-        g_debug("set mute status is %d for display one and mute status is %d for display two", displayOneMuteStatus, displayTwoMuteStatus);
+        if (audioMixerObj)
+        {
+            audioMixerObj->setMute(displayId, displayOneMuteStatus);
+            audioMixerObj->setMute(displayId, displayTwoMuteStatus);
+            g_debug("set mute status is %d for display one and mute status is %d for display two", displayOneMuteStatus, displayTwoMuteStatus);
+        }
     }
 }
 
 void volumeSettings::setVolume(const int &displayId)
 {
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     int volume = 0;
     if (DEFAULT_ONE_DISPLAY_ID == displayId)
         volume = displayOneVolume;
     else if (DEFAULT_TWO_DISPLAY_ID == displayId)
         volume = displayTwoVolume;
-    if (gAudioMixer.setVolume(displayId, volume))
+    if (audioMixerObj && audioMixerObj->setVolume(displayId, volume))
         g_debug("set volume %d for display: %d", volume, displayId);
     else
         g_debug("Did not able to set volume %d for display: %d", volume, displayId);
@@ -459,10 +454,11 @@ bool volumeSettings::_muteVolume(LSHandle *lshandle, LSMessage *message, void *c
     g_debug("muteVolume with soundout: %s mute status: %d",soundOutput.c_str(),(int)mute);
     envelopeRef *envelope = new (std::nothrow)envelopeRef;
     volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     std::string callerId = LSMessageGetSenderServiceName(message);
     if (DISPLAY_TWO == display)
     {
-        if (gAudioMixer.setMute(displayId, mute))
+        if (audioMixerObj && audioMixerObj->setMute(displayId, mute))
         {
             volumeInstance->displayTwoMuteStatus = mute;
             volumeInstance->notifyVolumeSubscriber(displayId, callerId);
@@ -484,7 +480,7 @@ bool volumeSettings::_muteVolume(LSHandle *lshandle, LSMessage *message, void *c
     }
     else
     {
-        if (gAudioMixer.setMute(displayId, mute))
+        if (audioMixerObj && audioMixerObj->setMute(displayId, mute))
         {
             g_debug("Successfully set mute volume %d for display: %d", mute, displayId);
             if (DEFAULT_ONE_DISPLAY_ID == displayId)
@@ -640,6 +636,7 @@ bool volumeSettings::_volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx
 
     g_debug("MasterVolume: volumeUp with soundout: %s", soundOutput.c_str());
     volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     std::string callerId = LSMessageGetSenderServiceName(message);
     if (DISPLAY_TWO == display)
     {
@@ -650,7 +647,7 @@ bool volumeSettings::_volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx
         }
         else
             g_debug("Volume up value not in range");
-        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        if ((isValidVolume) && (audioMixerObj && audioMixerObj->setVolume(displayId, volume)))
         {
             g_debug("set volume %d for display: %d", volume, displayId);
             ++(volumeInstance->displayTwoVolume);
@@ -685,7 +682,7 @@ bool volumeSettings::_volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx
             if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
                 lserror.Print(__FUNCTION__, __LINE__);
         }
-        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        if ((isValidVolume) && (audioMixerObj && audioMixerObj->setVolume(displayId, volume)))
         {
             g_debug("set volume %d for display: %d", volume, displayId);
             ++(volumeInstance->displayOneVolume);
@@ -832,6 +829,7 @@ bool volumeSettings::_volumeDown(LSHandle *lshandle, LSMessage *message, void *c
 
     g_debug("MasterVolume: volumeDown with soundout: %s", soundOutput.c_str());
     volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     std::string callerId = LSMessageGetSenderServiceName(message);
     if (DISPLAY_TWO == display)
     {
@@ -842,7 +840,7 @@ bool volumeSettings::_volumeDown(LSHandle *lshandle, LSMessage *message, void *c
         }
         else
             g_debug("Volume down value not in range");
-        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        if ((isValidVolume) && (audioMixerObj && audioMixerObj->setVolume(displayId, volume)))
         {
             g_debug("set volume %d for display: %d", volume, displayId);
             --(volumeInstance->displayTwoVolume);
@@ -877,7 +875,7 @@ bool volumeSettings::_volumeDown(LSHandle *lshandle, LSMessage *message, void *c
             if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
                 lserror.Print(__FUNCTION__, __LINE__);
         }
-        if ((isValidVolume) && (gAudioMixer.setVolume(displayId, volume)))
+        if ((isValidVolume) && (audioMixerObj && audioMixerObj->setVolume(displayId, volume)))
         {
             g_debug("set volume %d for display: %d", volume, displayId);
             --(volumeInstance->displayOneVolume);
@@ -1027,7 +1025,7 @@ static LSMethod MasterVolumeMethods[] =
     {cModuleMethod_muteVolume, volumeSettings::_muteVolume},
     { },
 };
-volumeSettings::volumeSettings(): mixerObj(umiaudiomixer::getUmiMixerInstance()), mVolume(0), mMuteStatus(false), displayOneVolume(100), displayTwoVolume(100)
+volumeSettings::volumeSettings(): mixerObj(AudioMixer::getAudioMixerInstance()), mVolume(0), mMuteStatus(false), displayOneVolume(100), displayTwoVolume(100)
 {
     g_debug("volumeSettings: constructor");
 }

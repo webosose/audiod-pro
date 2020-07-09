@@ -22,12 +22,16 @@
 #include "main.h"
 #include "messageUtils.h"
 #include "utils.h"
+#include <sys/un.h>
+#include <cerrno>
+#include <glib.h>
+#include "log.h"
 
 class umiaudiomixer
 {
     private :
     //To store umi mixer ready status
-    bool mIsReadyToProgram;
+    bool mIsUmiMixerReadyToProgram;
     static umiaudiomixer *mObjUmiMixer;
     //To store the status if the starem is currently active
     std::vector<EVirtualAudioSink> mVectActiveStreams;
@@ -67,8 +71,10 @@ class umiaudiomixer
     void updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus);
     //To get the status if the starem is currently active
     bool isStreamActive(EVirtualAudioSink eVirtualSink);
+    //To get the mixer ready status
+    bool getUmiMixerReadyStatus();
     //To update IsReadyToProgram
-    void setMixerReadyStatus(bool eStatus);
+    void setUmiMixerReadyStatus(bool eStatus);
     static umiaudiomixer* getUmiMixerInstance();
 };
 #endif //UMIAUDIOMIXER_H_

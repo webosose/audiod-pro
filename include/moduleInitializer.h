@@ -29,6 +29,7 @@
 #include <lunaservice.h>
 #include <pbnjson/cxx/JDomParser.h>
 #include "moduleManager.h"
+#include "audioMixer.h"
 
 using namespace pbnjson;
 

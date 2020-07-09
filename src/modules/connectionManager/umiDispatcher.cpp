@@ -14,17 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <glib.h>
-
-#include <lunaservice.h>
-#include "utils.h"
-#include "messageUtils.h"
-#include "module.h"
 #include "umiDispatcher.h"
-#include "main.h"
 
 Dispatcher * Dispatcher :: getDispatcher()
 {

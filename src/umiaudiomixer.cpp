@@ -13,10 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-#include <sys/un.h>
-#include <cerrno>
-#include <glib.h>
-#include "log.h"
+
 #include "umiaudiomixer.h"
 
 #define CONNECT                            "luna://com.webos.service.audiooutput/audio/connect"
@@ -38,7 +35,7 @@ bool umiaudiomixer::connectAudio(std::string strSourceName, std::string strPhysi
     bool result = false;
     CLSError lserror;
     LSHandle *sh = GetPalmService();
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, CONNECT, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -48,7 +45,7 @@ bool umiaudiomixer::connectAudio(std::string strSourceName, std::string strPhysi
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -60,7 +57,7 @@ bool umiaudiomixer::disconnectAudio(std::string strSourceName, std::string strPh
     bool result = false;
     CLSError lserror;
     LSHandle *sh = GetPalmService();
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, DISCONNECT, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -70,7 +67,7 @@ bool umiaudiomixer::disconnectAudio(std::string strSourceName, std::string strPh
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -81,7 +78,7 @@ bool umiaudiomixer::setSoundOut(std::string strOutputMode, LSFilterFunc cb, enve
     bool result = false;
     CLSError lserror;
     LSHandle *sh = GetPalmService();
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, SET_SOUNDOUT, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -91,7 +88,7 @@ bool umiaudiomixer::setSoundOut(std::string strOutputMode, LSFilterFunc cb, enve
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -103,7 +100,7 @@ bool umiaudiomixer::setMasterVolume(std::string strSoundOutPut, int iVolume, LSF
     CLSError lserror;
     LSHandle *sh = GetPalmService();
     pbnjson::JValue payloadSnd = pbnjson::JObject{{"soundOutput", strSoundOutPut}, {"volume", iVolume}};
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, SET_MASTER_VOLUME, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -113,7 +110,7 @@ bool umiaudiomixer::setMasterVolume(std::string strSoundOutPut, int iVolume, LSF
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -124,7 +121,7 @@ bool umiaudiomixer::getMasterVolume(LSFilterFunc cb, envelopeRef *message)
     CLSError lserror;
     LSHandle *sh = GetPalmService();
     pbnjson::JValue payloadSnd = pbnjson::JObject{{}};
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, GET_MASTER_VOLUME, payloadSnd.stringify().c_str(), cb,(void*)message, nullptr, &lserror);
         if (!result)
@@ -134,7 +131,7 @@ bool umiaudiomixer::getMasterVolume(LSFilterFunc cb, envelopeRef *message)
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -146,7 +143,7 @@ bool umiaudiomixer::masterVolumeUp(std::string strSoundOutPut, LSFilterFunc cb, 
     CLSError lserror;
     LSHandle *sh = GetPalmService();
     pbnjson::JValue payloadSnd = pbnjson::JObject{{"soundOutput", strSoundOutPut}};
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, MASTER_VOLUME_UP, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -156,7 +153,7 @@ bool umiaudiomixer::masterVolumeUp(std::string strSoundOutPut, LSFilterFunc cb, 
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -167,7 +164,7 @@ bool umiaudiomixer::masterVolumeDown(std::string strSoundOutPut, LSFilterFunc cb
     CLSError lserror;
     LSHandle *sh = GetPalmService();
     pbnjson::JValue payloadSnd = pbnjson::JObject{{"soundOutput", strSoundOutPut}};
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, MASTER_VOLUME_DOWN, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -177,7 +174,7 @@ bool umiaudiomixer::masterVolumeDown(std::string strSoundOutPut, LSFilterFunc cb
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -188,7 +185,7 @@ bool umiaudiomixer::masterVolumeMute(std::string strSoundOutPut, bool bIsMute, L
     CLSError lserror;
     LSHandle *sh = GetPalmService();
     pbnjson::JValue payloadSnd = pbnjson::JObject{{"soundOutput", strSoundOutPut}, {"mute", bIsMute}};
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, MASTER_VOLUME_MUTE, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -198,7 +195,7 @@ bool umiaudiomixer::masterVolumeMute(std::string strSoundOutPut, bool bIsMute, L
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -211,7 +208,7 @@ bool umiaudiomixer::inputVolumeMute(std::string strPhysicalSink, std::string str
     CLSError lserror;
     LSHandle *sh = GetPalmService();
     pbnjson::JValue payloadSnd = pbnjson::JObject{{"sink", strPhysicalSink}, {"source", strSource}, {"mute", bIsMute}};
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, INPUT_VOLUME_MUTE, payloadSnd.stringify().c_str(), cb, (void*)message, nullptr, &lserror);
         if (!result)
@@ -221,7 +218,7 @@ bool umiaudiomixer::inputVolumeMute(std::string strPhysicalSink, std::string str
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
@@ -233,7 +230,7 @@ bool umiaudiomixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
     CLSError lserror;
     LSHandle *sh = GetPalmService();
     pbnjson::JValue payloadSnd = pbnjson::JObject{{}};
-    if (mIsReadyToProgram)
+    if (mIsUmiMixerReadyToProgram)
     {
         result = LSCallOneReply (sh, GET_CONN_STATUS, payloadSnd.stringify().c_str(), cb, (void*)message, NULL, &lserror);
         if (!result)
@@ -243,15 +240,23 @@ bool umiaudiomixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
     }
     else
     {
-        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsReadyToProgram);
+        g_debug("umiaudiomixer: audioouputd server is not running, status: %d", (int)mIsUmiMixerReadyToProgram);
     }
     return result;
 }
 
-void umiaudiomixer::setMixerReadyStatus(bool eStatus)
+bool umiaudiomixer::getUmiMixerReadyStatus()
 {
-    mIsReadyToProgram  = eStatus;
-    g_debug("umiaudiomixer: audioOutputd status: %d", (int)mIsReadyToProgram);
+    PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer:getUmiMixerReadyStatus ready status:%d", \
+                mIsUmiMixerReadyToProgram);
+    return mIsUmiMixerReadyToProgram;
+}
+
+void umiaudiomixer::setUmiMixerReadyStatus(bool eStatus)
+{
+    mIsUmiMixerReadyToProgram  = eStatus;
+    PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer:setUmiMixerReadyStatus ready status:%d", \
+                mIsUmiMixerReadyToProgram);
 }
 
 umiaudiomixer* umiaudiomixer::getUmiMixerInstance()
@@ -260,7 +265,7 @@ umiaudiomixer* umiaudiomixer::getUmiMixerInstance()
     return &umiMixerInstance;
 }
 
-umiaudiomixer::umiaudiomixer(): mIsReadyToProgram(false)
+umiaudiomixer::umiaudiomixer(): mIsUmiMixerReadyToProgram(false)
 {
     g_debug("umiaudiomixer constructor");
 }
@@ -268,11 +273,6 @@ umiaudiomixer::umiaudiomixer(): mIsReadyToProgram(false)
 umiaudiomixer::~umiaudiomixer()
 {
     g_debug("umiaudiomixer distructor");
-}
-
-bool umiaudiomixer::readyToProgram()
-{
-    return mIsReadyToProgram;
 }
 
 void umiaudiomixer::onSinkChangedReply(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus, utils::EMIXER_TYPE eMixerType)

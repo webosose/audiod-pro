@@ -14,19 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <cerrno>
-
-#include <pulse/module-palm-policy-tables.h>
-
 #include "PulseAudioMixer.h"
-#include "messageUtils.h"
-#include "log.h"
-#include "main.h"
-#include "volumeSettings.h"
-#include <audiodTracer.h>
 
 #define SHORT_DTMF_LENGTH  200
 #define phone_MaxVolume 70
@@ -37,8 +25,6 @@
 
 #define _NAME_STRUCT_OFFSET(struct_type, member) \
                        ((long) ((unsigned char*) &((struct_type*) 0)->member))
-
-PulseAudioMixer gAudioMixer;
 
 const int cMinTimeout = 50;
 const int cMaxTimeout = 5000;
@@ -60,6 +46,7 @@ PulseAudioMixer::PulseAudioMixer() : mChannel(0),
                                      BTvolumeSupport(false)
 {
     // initialize table for the pulse state lookup table
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer constructor");
     for (int i = eVirtualSink_First; i <= eVirtualSink_Last; i++)
     {
         mPulseStateVolume[i] = -1;
@@ -71,9 +58,12 @@ PulseAudioMixer::PulseAudioMixer() : mChannel(0),
     {
         mPulseStateSourceRoute[i] = -1;
     }
+    createPulseSocketCommunication();
 }
 
-PulseAudioMixer::~PulseAudioMixer() {
+PulseAudioMixer::~PulseAudioMixer()
+{
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer destructor");
 }
 
 /*
@@ -325,6 +315,8 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
        ret = true;
     }
 
+		//Will be removed or modified once masterVolume manager is done as per DAP design
+    #if 0
     volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
     if (nullptr != volumeInstance)
     {
@@ -335,6 +327,7 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
     }
     else
         g_message ("volumeInstance is NULL");
+    #endif
 
     return ret;
 }
@@ -466,6 +459,8 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
        ret = true;
     }
 
+    //Will be updated as per DAP design
+    #if 0
     volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
     if (nullptr != volumeInstance)
     {
@@ -476,7 +471,7 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
     }
     else
         g_message ("volumeInstance is NULL");
-
+    #endif
     return ret;
 }
 
@@ -579,8 +574,11 @@ bool PulseAudioMixer::muteAll ()
 static gboolean
 _pulseStatus(GIOChannel *ch, GIOCondition condition, gpointer user_data)
 {
-    //Will be implemented as per DAP design
-    //gPulseAudioMixer._pulseStatus(ch, condition, user_data);
+    PulseAudioMixer *pulseMixerObj = (PulseAudioMixer*)user_data;
+    if (pulseMixerObj)
+        pulseMixerObj->_pulseStatus(ch, condition, user_data);
+    else
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "_timer: pulseMixerObj is null");
     return TRUE;
 }
 
@@ -671,7 +669,7 @@ PulseAudioMixer::_connectSocket ()
     // To do? since we are connected setup a watch for data on the file descriptor.
     mChannel = g_io_channel_unix_new(sockfd);
 
-    mSourceID = g_io_add_watch (mChannel, condition, ::_pulseStatus, NULL);
+    mSourceID = g_io_add_watch (mChannel, condition, ::_pulseStatus, this);
 
     // Let audiod know that we now have a connection, so that the mixer can be programmed
     //Will be implemented as per DAP design
@@ -691,8 +689,11 @@ PulseAudioMixer::_connectSocket ()
 static gboolean
 _timer (gpointer data)
 {
-    //Will be implemented as per DAP design
-    //gPulseAudioMixer._timer();
+    PulseAudioMixer *pulseMixerObj = (PulseAudioMixer*)data;
+    if (pulseMixerObj)
+        pulseMixerObj->_timer();
+    else
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "_timer: pulseMixerObj is null");
     return FALSE;
 }
 
@@ -700,7 +701,7 @@ void PulseAudioMixer::_timer()
 {
     if (!_connectSocket())
     {
-        g_timeout_add (mTimeout, ::_timer, 0);
+        g_timeout_add (mTimeout, ::_timer, this);
         mTimeout *= 2;
         if (mTimeout > cMaxTimeout)
             mTimeout = cMinTimeout;
@@ -891,7 +892,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
         mChannel = NULL;
         //Will be updated once DAP design is updated
         //gState.setRTPLoaded(false);
-        g_timeout_add (0, ::_timer, 0);
+        g_timeout_add (0, ::_timer, this);
     }
 }
 
@@ -999,6 +1000,17 @@ void PulseAudioMixer::stopDtmf() {
     }
 }
 
+void PulseAudioMixer::createPulseSocketCommunication()
+{
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::createPulseSocketCommunication");
+    g_timeout_add (0, ::_timer, this);
+}
+
+bool PulseAudioMixer::getPulseMixerReadyStatus()
+{
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::getPulseMixerReadystatus");
+    return mChannel != 0;
+}
 
 #if defined(AUDIOD_TEST_API)
 static LSMethod pulseMethods[] = {
@@ -1019,5 +1031,4 @@ void PulseAudioMixer::init(GMainLoop * loop, LSHandle * handle)
         g_message("%s: Registering Service for '%s' category failed", __FUNCTION__, "/state/pulse");
     }
 #endif
-    g_timeout_add (0, ::_timer, 0);
 }

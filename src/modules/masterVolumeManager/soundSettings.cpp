@@ -14,15 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <glib.h>
-
-#include <lunaservice.h>
-#include "utils.h"
-#include "main.h"
-#include "umiaudiomixer.h"
 #include "soundSettings.h"
 
 bool soundSettings::_SetSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx)

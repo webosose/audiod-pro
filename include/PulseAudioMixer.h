@@ -20,6 +20,14 @@
 
 #include "PulseAudioLink.h"
 #include "utils.h"
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <cerrno>
+#include "messageUtils.h"
+#include "log.h"
+#include "main.h"
+#include <audiodTracer.h>
+#include <pulse/module-palm-policy-tables.h>
 
 //Implementation of PulseMixer using Pulse as backend
 class PulseAudioMixer
@@ -30,7 +38,7 @@ class PulseAudioMixer
     ~PulseAudioMixer();
 
     /// We might not be ready for programming the mixer
-    bool readyToProgram() {return mChannel != 0;}
+    bool getPulseMixerReadyStatus();
 
     /// Program volume of a sink.
     //Will ignore volume of high latency sinks not playing and mute them.
@@ -118,8 +126,9 @@ private:
     int mPreviousVolume;
     bool NRECvalue;
     bool BTvolumeSupport;
+
+    //To start the pulse socket connect timer
+    void createPulseSocketCommunication();
 };
 
-extern PulseAudioMixer gAudioMixer;
-
-#endif /* PULSEAUDIOMIXER_H_ */
+#endif //PULSEAUDIOMIXER_H_

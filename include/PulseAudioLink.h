@@ -20,6 +20,12 @@
 #include <pulse/pulseaudio.h>
 #include <set>
 #include <string>
+#include "log.h"
+#include "../include/IPC_SharedAudiodDefinitions.h"
+#include "utils.h"
+#include <math.h>
+#include <unistd.h>
+#include <audiodTracer.h>
 
 #include "utils.h"
 #define AUDIO_EFFECT_FADE_OUT  1

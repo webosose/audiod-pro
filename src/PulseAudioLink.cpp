@@ -16,10 +16,7 @@
 
 
 #include "PulseAudioLink.h"
-#include "log.h"
-#include <math.h>
-#include <unistd.h>
-#include <audiodTracer.h>
+
 static const size_t kSampleNameMaxSize = 64;
 
 struct ssound_t {

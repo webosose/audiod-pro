@@ -20,6 +20,10 @@ ModuleInitializer::ModuleInitializer(const std::stringstream& audioModuleConfigP
                                   mAudioModuleConfigPath(audioModuleConfigPath.str())
 {
     PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "ModuleInitializer constructor");
+    AudioMixer* audioMixerObj  = AudioMixer ::getAudioMixerInstance();
+    if (audioMixerObj)
+        PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "audioMixerObj is initialized");
+
     ModuleManager* moduleManagerObj  = ModuleManager::getModuleManagerInstance();
     if (moduleManagerObj)
         PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "ModuleManager is initialized");

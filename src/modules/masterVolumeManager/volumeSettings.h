@@ -21,15 +21,25 @@
 #include <cstdlib>
 #include <cstring>
 #include <glib.h>
-#include "umiaudiomixer.h"
-#include "PulseAudioMixer.h"
+#include "audioMixer.h"
+#include "module.h"
+#include <utils.h>
+#include <string>
+#include "messageUtils.h"
+
 #define AUDIOD_API_GET_VOLUME "/master/getVolume"
+#define DISPLAY_ONE 0
+#define DISPLAY_TWO 1
+#define MIN_VOLUME 0
+#define MAX_VOLUME 100
+#define DEFAULT_ONE_DISPLAY_ID 1
+#define DEFAULT_TWO_DISPLAY_ID 2
 
 class volumeSettings
 {
     private :
 
-      umiaudiomixer *mixerObj;
+      AudioMixer *mixerObj;
 
       int mVolume;
 

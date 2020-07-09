@@ -32,14 +32,15 @@ class AudioMixer
         AudioMixer(const AudioMixer&) = delete;
         AudioMixer& operator=(const AudioMixer&) = delete;
         AudioMixer();
-        umiaudiomixer *mObjUmiMixer;
-        PulseAudioMixer *mObjPulseMixer;
+        umiaudiomixer* mObjUmiAudioMixer;
+        PulseAudioMixer* mObjPulseAudioMixer;
 
     public:
         ~AudioMixer();
         static AudioMixer* getAudioMixerInstance();
+        bool readyToProgram();
 
-        //umimixer calls
+        //umiAudioMixer calls
         bool connectAudio(const std::string &strSourceName, const std::string &strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
         bool disconnectAudio(const std::string &strSourceName, const std::string &strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message);
         bool setSoundOut(const std::string &strOutputMode, LSFilterFunc cb, envelopeRef *message);
@@ -55,7 +56,7 @@ class AudioMixer
         //To know audiooutputd server status - Need to implement from adapter class
         //static bool audiodOutputdServiceStatusCallBack(LSHandle *sh, const char *serviceName, bool connected, void *ctx);
 
-        //pulsemixer calls
+        //pulseAudioMixer calls
         bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);
@@ -100,4 +101,4 @@ class AudioMixer
         int loopback_set_parameters(const char * value);
 };
 
-#endif //_AUDIO_MIXER_H_
+#endif

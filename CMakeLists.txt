@@ -92,19 +92,19 @@ include_directories(${Boost_INCLUDE_DIRS})
 # global installation directories for all components
 
 include_directories(src)
-include_directories(src/umi)
-include_directories(src/umi/soundSettings)
-include_directories(src/controls)
-include_directories(src/controls/pulse)
+include_directories(src/modules/audioPolicyManager)
+include_directories(src/modules/bluetoothManager)
+include_directories(src/modules/connectionManager)
+include_directories(src/modules/masterVolumeManager)
+include_directories(src/modules/settingsServiceManager)
+include_directories(src/modules/systemSoundsManager)
+include_directories(src/modules/udevEventManager)
 include_directories(include/public/)
 
 #Please check these header files again
 include_directories(include)
 
 aux_source_directory(src src_files)
-aux_source_directory(src/utils utils_files)
-aux_source_directory(src/controls controls_files)
-aux_source_directory(src/controls/pulse controls_pulse_files)
 aux_source_directory(utils utils_1_files)
 aux_source_directory(ipc ipc_files)
 aux_source_directory(pmtrace pmtrace_files)
@@ -122,21 +122,16 @@ if (AUDIOD_TEST_API)
     add_definitions(-DAUDIOD_TEST_API)
 endif(AUDIOD_TEST_API)
 
-SET (services_files
-        src/services/udev.cpp
-        src/services/settingsservice.cpp
-        src/services/bluetooth.cpp
-
-)
-
 SET (modules_files
-        src/umi/soundSettings/volumeSettings.cpp
-        src/umi/soundSettings/soundSettings.cpp
-        src/umi/umiDispatcher.cpp
-        src/controls/umiaudiomixer.cpp
-        src/audioPolicyManager.cpp
-        src/moduleInitializer.cpp
-        src/volumePolicyInfoParser.cpp
+        src/modules/audioPolicyManager/audioPolicyManager.cpp
+        src/modules/audioPolicyManager/volumePolicyInfoParser.cpp
+        src/modules/bluetoothManager/bluetooth.cpp
+        src/modules/connectionManager/umiDispatcher.cpp
+        src/modules/masterVolumeManager/volumeSettings.cpp
+        src/modules/masterVolumeManager/soundSettings.cpp
+        src/modules/settingsServiceManager/settingsservice.cpp
+        src/modules/systemSoundsManager/systemsounds.cpp
+        src/modules/udevEventManager/udev.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")
@@ -148,11 +143,7 @@ SET (modules_files
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}
-            ${utils_files}
             ${src_files}
-            ${controls_files}
-            ${controls_pulse_files}
-            ${services_files}
             ${modules_files}
             ${pmtrace_files})
 
@@ -175,11 +166,7 @@ add_definitions(-DHAS_LTTNG)
 
 else ()
 add_executable(audiod     ${utils_1_files}
-            ${utils_files}
             ${src_files}
-            ${controls_files}
-            ${controls_pulse_files}
-            ${services_files}
             ${modules_files} )
 
 target_link_libraries(audiod     ${GLIB2_LDFLAGS}
