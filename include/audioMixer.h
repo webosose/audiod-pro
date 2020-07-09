@@ -35,6 +35,8 @@ class AudioMixer
         umiaudiomixer* mObjUmiAudioMixer;
         PulseAudioMixer* mObjPulseAudioMixer;
 
+        utils::vectorVirtualSink mActiveStreams;
+
     public:
         ~AudioMixer();
         static AudioMixer* getAudioMixerInstance();
@@ -96,9 +98,9 @@ class AudioMixer
         void setNREC(bool value);
         void openCloseSink(EVirtualAudioSink sink, bool openNotClose);
 
-        VirtualSinkSet getActiveStreams();
+        utils::vectorVirtualSink getActiveStreams();
 
         int loopback_set_parameters(const char * value);
 };
 
-#endif
+#endif //_AUDIO_MIXER_H_

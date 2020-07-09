@@ -588,17 +588,10 @@ void AudioMixer::openCloseSink(EVirtualAudioSink sink, bool openNotClose)
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "openCloseSink: mObjPulseAudioMixer is null");
 }
 
-VirtualSinkSet AudioMixer::getActiveStreams()
+utils::vectorVirtualSink AudioMixer::getActiveStreams()
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: getActiveStreams");
-    VirtualSinkSet mActiveStreams;
-    if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->getActiveStreams();
-    else
-    {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "getActiveStreams: mObjPulseAudioMixer is null");
-        return mActiveStreams;
-    }
+    return mActiveStreams;
 }
 
 int AudioMixer::loopback_set_parameters(const char * value)

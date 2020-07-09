@@ -25,6 +25,9 @@
 #include "ConstString.h"
 #include <pulse/module-palm-policy-tables.h>
 #include "IPC_SharedAudiodDefinitions.h"
+#include <map>
+#include <string>
+#include <vector>
 
 enum EBTDeviceType
 {
@@ -79,7 +82,8 @@ namespace utils
         eEventSinkStatus,
         eEventServerStatusSubscription,
         eEventKeySubscription,
-        eEventMixerStatus
+        eEventMixerStatus,
+        eEventCurrentInputVolume
     }EVENT_TYPE_E;
 
     typedef enum EConnStatus
@@ -88,6 +92,54 @@ namespace utils
         eConnected,
         eDisconnected
     }ECONN_STATUS;
+
+    typedef struct volumePolicyInfo
+    {
+        std::string streamType;
+        int policyVolume;
+        int priority;
+        int groupId;
+        int defaultVolume;
+        int maxVolume;
+        int minVolume;
+        bool volumeAdjustable;
+        int currentVolume;
+        bool muteStatus;
+        std::string sink;
+        std::string source;
+        EMIXER_TYPE mixerType;
+        bool isPolicyInProgress;
+        bool isStreamActive;
+        bool ramp;
+        std::string category;
+        volumePolicyInfo()
+        {
+            streamType = "";
+            policyVolume = 0;
+            priority  = 0;
+            groupId = 0;
+            defaultVolume = 100;
+            maxVolume = 100;
+            minVolume = 0;
+            volumeAdjustable = true;
+            currentVolume = 0;
+            muteStatus = false;
+            sink = "";
+            source = "";
+            mixerType = eMixerNone;
+            isPolicyInProgress = false;
+            isStreamActive = false;
+            ramp = false;
+            category = "";
+        }
+    }VOLUME_POLICY_INFO_T;
+
+    typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
+
+    typedef std::map<EVirtualAudioSink, std::string> mapSinkToStream;
+    typedef std::map<EVirtualAudioSink, std::string>::iterator itMapSinkToStream;
+    typedef std::map<std::string, EVirtualAudioSink> mapStreamToSink;
+    typedef std::map<std::string, EVirtualAudioSink>::iterator itMapStreamToSink;
 }
 
 //Simple set class to hold a set of sinks & test it
