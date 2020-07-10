@@ -41,6 +41,8 @@ ModuleInitializer::~ModuleInitializer()
             unload_udev_event_manager();
         else if (it == "load_master_volume_manager")
             unload_master_volume_manager();
+        else if (it == "load_bluetooth_manager")
+            unload_bluetooth_manager();
     }
 }
 
@@ -53,11 +55,12 @@ void ModuleInitializer::initializeModuleInfo()
         ("load_udev_event_manager", load_udev_event_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_master_volume_manager", load_master_volume_manager));
+    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
+        ("load_bluetooth_manager", load_bluetooth_manager));
+
     //these should be enabled when the modules are implemented
     /*moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_luna_event_subscriber", load_luna_event_subscriber));
-    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
-        ("load_bluetooth_manager", load_bluetooth_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_avdtp_manager", load_avdtp_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\

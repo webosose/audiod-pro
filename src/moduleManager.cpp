@@ -70,6 +70,26 @@ void ModuleManager::subscribeModuleEvent(ModuleInterface* module, bool first, ut
                 listMasterVolumeStatusSubscribers.push_back(module);
         }
         break;
+        case utils::eEventServerStatusSubscription:
+        {
+            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                    "subscribeModuleEvent:: eEventServerStatusSubscription");
+            if (first)
+                listServerStatusSubscriptionSubscribers.push_front(module);
+            else
+                listServerStatusSubscriptionSubscribers.push_back(module);
+        }
+        break;
+        case utils::eEventKeySubscription:
+        {
+            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                    "subscribeModuleEvent:: eEventKeySubscription");
+            if (first)
+                listKeySubscriptionSubscribers.push_front(module);
+            else
+                listKeySubscriptionSubscribers.push_back(module);
+        }
+        break;
         default:
         {
             PM_LOG_WARNING(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
@@ -77,6 +97,56 @@ void ModuleManager::subscribeModuleEvent(ModuleInterface* module, bool first, ut
         }
         break;
     }
+}
+
+void ModuleManager::subscribeKeyInfo(ModuleInterface* module, bool first, LUNA_KEY_TYPE_E event,
+SERVER_TYPE_E eService, const std::string& key, const std::string& payload)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, \
+        "subscribeKeyInfo called %d:%d", event, eService );
+    bool success = true;
+    if (!(eService >= eServiceFirst && eService < eServiceCount))
+    {
+        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "not Valid service");
+        success = false;
+    }
+    if (!(event >= eLunaEventKeyFirst && event < eLunaEventCount))
+    {
+        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "not Valid Subscription");
+        success = false;
+    }
+    if (success)
+    {
+        bool found = (std::find(listKeyInfoSubscribers[event].begin(),
+            listKeyInfoSubscribers[event].end(), module) != listKeyInfoSubscribers[event].end());
+        if (!found)
+        {
+            if (first)
+                listKeyInfoSubscribers[event].push_front(module);
+            else
+                listKeyInfoSubscribers[event].push_back(module);
+        }
+        //if payload is required from Module during runtime
+        notifyKeySubscription(event, eService, key, payload);
+    }
+}
+
+void ModuleManager::subscribeServerStatusInfo(ModuleInterface* module, bool first, SERVER_TYPE_E eStatus)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, \
+        "subscribeServerStatusInfo called");
+    if (!(eStatus >= eBluetoothService && eStatus < eServiceCount))
+    {
+        PM_LOG_WARNING(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "not Valid service");
+    }
+    else
+    {
+        if (first)
+            listServerStatusInfoSubscribers[eStatus].push_front(module);
+        else
+            listServerStatusInfoSubscribers[eStatus].push_back(module);
+    }
+    notifyServerStatusSubscription(eStatus);
 }
 
 void ModuleManager::notifySinkStatusInfo(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
@@ -117,4 +187,46 @@ void ModuleManager::notifyMasterVolumeStatus()
     {
         it->eventMasterVolumeStatus();
     }
+}
+
+void ModuleManager::notifyKeySubscription(LUNA_KEY_TYPE_E event, SERVER_TYPE_E eService, const std::string& key,\
+        const std::string& payload)
+{
+
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "ModuleManager:notifyKeySubscription %s LUNA_KEY_TYPE_E = %d key = %s, payload = %s",
+        __FUNCTION__, (int)event, key, payload);
+    for (const auto &it : listKeySubscriptionSubscribers)
+       it->eventSubscribeKey(event, eService, key, payload);
+}
+
+void ModuleManager::notifyServerStatusInfo(SERVER_TYPE_E serviceName,
+            bool connected)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "ModuleManager:notifyServerStatusInfo Server : %d, status %d",\
+        (int)serviceName, connected);
+    for (const auto it:listServerStatusInfoSubscribers[serviceName])
+    {
+        it->eventServerStatusInfo(serviceName, connected);
+    }
+}
+
+void ModuleManager::notifyKeyInfo(LUNA_KEY_TYPE_E type, LSMessage *message)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "ModuleManager::notifyKeyInfo Callback recived LUNA_KEY_TYPE_E:%d", type);
+    for (const auto it:listKeyInfoSubscribers[type])
+    {
+        it->eventKeyInfo(type, message);
+    }
+}
+
+void ModuleManager::notifyServerStatusSubscription(SERVER_TYPE_E eService)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "%s ModuleManager:notifyServerStatusSubscription LUNA_KEY_TYPE_E = %d",
+        __FUNCTION__, eService);
+    for (const auto &it : listServerStatusSubscriptionSubscribers)
+       it->eventSubscribeServerStatus(eService);
 }

@@ -47,6 +47,20 @@ enum EUMISink
     eAllSink = eVirtualUMISink_Count
 };
 
+typedef enum serverType{
+    eBluetoothService = 0,
+    eBluetoothService2,
+    eServiceCount,        //Last element should be eServiceCount
+    eServiceFirst = eBluetoothService,
+}SERVER_TYPE_E;
+
+typedef enum LunaKeyType {
+    eLunaEventBTDeviceStatus,
+    eLunaEventA2DPStatus,
+    eLunaEventCount,     //Last element should be eLunaEventCount
+    eLunaEventKeyFirst = eLunaEventBTDeviceStatus,
+}LUNA_KEY_TYPE_E;
+
 template <typename EnumT, typename BaseEnumT>
 class ExtendEnum
 {

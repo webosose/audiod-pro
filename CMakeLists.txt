@@ -125,7 +125,7 @@ endif(AUDIOD_TEST_API)
 SET (modules_files
         src/modules/audioPolicyManager/audioPolicyManager.cpp
         src/modules/audioPolicyManager/volumePolicyInfoParser.cpp
-        src/modules/bluetoothManager/bluetooth.cpp
+        src/modules/bluetoothManager/bluetoothManager.cpp
         src/modules/connectionManager/umiDispatcher.cpp
         src/modules/masterVolumeManager/masterVolumeManager.cpp
         src/modules/masterVolumeManager/soundSettings.cpp

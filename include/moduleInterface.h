@@ -30,9 +30,13 @@ class ModuleInterface
 
         virtual void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType){}
+        virtual void eventKeyInfo(LUNA_KEY_TYPE_E type, LSMessage *message){}
+        virtual void eventSubscribeKey(LUNA_KEY_TYPE_E event, SERVER_TYPE_E eServer, \
+            const std::string& api, const std::string& payload){}
+        virtual void eventServerStatusInfo(SERVER_TYPE_E serviceName, bool connected){}
         virtual void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType){}
         virtual void eventInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp){}
         virtual void eventMasterVolumeStatus(){}
+        virtual void eventSubscribeServerStatus(SERVER_TYPE_E eService){}
 };
-
 #endif//_MODULE_INTERFACE_H_
