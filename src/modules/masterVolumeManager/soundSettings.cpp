@@ -34,9 +34,9 @@ bool soundSettings::_SetSoundOut(LSHandle *lshandle, LSMessage *message, void *c
         envelopeObj->message = message;
         envelopeObj->context = (soundSettings*)ctx;
         soundSettings *soundSettingsObj = (soundSettings*)ctx;
-        if(nullptr!=soundSettingsObj->mixerObj)
+        if(nullptr!=soundSettingsObj->mObjAudioMixer)
         {
-            if(soundSettingsObj->mixerObj->setSoundOut(soundOut,_updateSoundOutStatus,envelopeObj))
+            if(soundSettingsObj->mObjAudioMixer->setSoundOut(soundOut,_updateSoundOutStatus,envelopeObj))
             {
                 g_debug("SoundSettings: SetSoundOut Successful");
                 LSMessageRef(message);
@@ -50,7 +50,7 @@ bool soundSettings::_SetSoundOut(LSHandle *lshandle, LSMessage *message, void *c
         }
         else
         {
-            g_debug("Sound Settings :MixerObject is NULL");
+            g_debug("Sound Settings :mObjAudioMixer is NULL");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
         }
     }
@@ -130,7 +130,7 @@ static LSMethod soundSettingsMethods[] = {
     { },
 };
 
-soundSettings::soundSettings():mixerObj(umiaudiomixer::getUmiMixerInstance()),soundMode("")
+soundSettings::soundSettings():mObjAudioMixer(AudioMixer::getAudioMixerInstance()),soundMode("")
 {
    g_debug("soundSettings: constructor");
 }

@@ -39,7 +39,7 @@ class volumeSettings
 {
     private :
 
-      AudioMixer *mixerObj;
+      AudioMixer *mObjAudioMixer;
 
       int mVolume;
 

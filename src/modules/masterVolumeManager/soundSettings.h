@@ -25,13 +25,13 @@
 #include <lunaservice.h>
 #include "utils.h"
 #include "main.h"
-#include "umiaudiomixer.h"
+#include "audioMixer.h"
 
 class soundSettings
 {
 private:
     std::string soundMode;
-    umiaudiomixer *mixerObj;
+    AudioMixer *mObjAudioMixer;
 public:
     static soundSettings * getSoundSettingsInstance();
     static bool _SetSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx);

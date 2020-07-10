@@ -259,13 +259,8 @@ void umiaudiomixer::setUmiMixerReadyStatus(bool eStatus)
                 mIsUmiMixerReadyToProgram);
 }
 
-umiaudiomixer* umiaudiomixer::getUmiMixerInstance()
-{
-    static umiaudiomixer umiMixerInstance;
-    return &umiMixerInstance;
-}
-
-umiaudiomixer::umiaudiomixer(): mIsUmiMixerReadyToProgram(false)
+umiaudiomixer::umiaudiomixer(MixerInterface* mixerCallBack):\
+              mIsUmiMixerReadyToProgram(false), mObjMixerCallBack(mixerCallBack)
 {
     g_debug("umiaudiomixer constructor");
 }
@@ -275,32 +270,28 @@ umiaudiomixer::~umiaudiomixer()
     g_debug("umiaudiomixer distructor");
 }
 
-void umiaudiomixer::onSinkChangedReply(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus, utils::EMIXER_TYPE eMixerType)
+bool umiaudiomixer::onSinkChangedReply(const std::string& source, const std::string& sink, EVirtualAudioSink eVirtualSink,\
+                                         utils::ESINK_STATUS eSinkStatus, utils::EMIXER_TYPE eMixerType)
 {
-    g_debug("OnSinkChangedReply Sink Name :%d, Connection status: %d sink type %d", eVirtualSink, eConnStatus, eMixerType);
-    utils::ECONN_STATUS eSinkStatus = utils::eConnectionNone;
-    if (utils::eConnected == eConnStatus)
-    {
-        eSinkStatus = utils::eConnected;
-    }
-    else if (utils::eDisconnected == eConnStatus)
-    {
-        eSinkStatus = utils::eDisconnected;
-    }
+    g_debug("OnSinkChangedReply: source:%s sink:%s sinkId:%d, Sink status: %d sink type %d",\
+        source.c_str(), sink.c_str(), eVirtualSink, eSinkStatus, eMixerType);
+    if (mObjMixerCallBack)
+        mObjMixerCallBack->callBackSinkStatus(source, sink, eVirtualSink, eSinkStatus, utils::eUmiMixer);
     else
     {
-        g_debug("umiaudiomixer: OnSinkChangedReply Invalid Connection status");
+        g_debug("onSinkChangedReply: mObjMixerCallBack is null");
+        return false;
     }
-    updateStreamStatus(eVirtualSink, eConnStatus);
+    return true;
 }
 
-void umiaudiomixer::updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus)
+void umiaudiomixer::updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ESINK_STATUS eSinkStatus)
 {
-    if (utils::eConnected == eConnStatus)
+    if (utils::eSinkOpened == eSinkStatus)
     {
         mVectActiveStreams.push_back(eVirtualSink);
     }
-    else if (utils::eDisconnected == eConnStatus)
+    else if (utils::eSinkClosed == eSinkStatus)
     {
         for (std::vector<EVirtualAudioSink>::iterator itStream = mVectActiveStreams.begin() ; itStream != mVectActiveStreams.end(); ++itStream)
         {

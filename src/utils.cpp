@@ -261,6 +261,18 @@ bool ServiceRegisterCategory(const char *category, LSMethod *methods,
     return result;
 }
 
+const char* controlEventName(utils::ESINK_STATUS eSinkStatus)
+{
+    static const char* sNames[] = { "SinkNone",
+                                    "SinkOpened",
+                                    "SinkClosed" };
+
+    if (VERIFY(eSinkStatus >= 0 && (size_t) eSinkStatus < G_N_ELEMENTS(sNames)))
+        return sNames[eSinkStatus];
+
+    return "<invalid event>";
+}
+
 const char * controlEventName(utils::EConnStatus eConnStatus)
 {
     static const char * sNames[] = { "ConnectionNone",

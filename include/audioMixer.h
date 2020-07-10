@@ -23,10 +23,11 @@
 #include "messageUtils.h"
 #include "PulseAudioMixer.h"
 #include "umiaudiomixer.h"
+#include "moduleManager.h"
 #include "main.h"
 #include <cstdlib>
 
-class AudioMixer
+class AudioMixer : public MixerInterface
 {
     private:
         AudioMixer(const AudioMixer&) = delete;
@@ -34,6 +35,7 @@ class AudioMixer
         AudioMixer();
         umiaudiomixer* mObjUmiAudioMixer;
         PulseAudioMixer* mObjPulseAudioMixer;
+        ModuleManager *mObjModuleManager;
 
         utils::vectorVirtualSink mActiveStreams;
 
@@ -54,6 +56,8 @@ class AudioMixer
         bool inputVolumeMute(const std::string &strPhysicalSink, const std::string &strSource, const bool &bIsMute, LSFilterFunc cb, envelopeRef *message);
         bool getConnectionStatus(LSFilterFunc cb, envelopeRef *message);
         bool isStreamActive(EVirtualAudioSink eVirtualSink);
+        bool onSinkChangedReply(const std::string& source, const std::string& sink, EVirtualAudioSink eVirtualSink,\
+                                utils::ESINK_STATUS eSinkStatus, utils::EMIXER_TYPE eMixerType);
 
         //To know audiooutputd server status - Need to implement from adapter class
         //static bool audiodOutputdServiceStatusCallBack(LSHandle *sh, const char *serviceName, bool connected, void *ctx);
@@ -97,10 +101,13 @@ class AudioMixer
         void _timer();
         void setNREC(bool value);
         void openCloseSink(EVirtualAudioSink sink, bool openNotClose);
-
-        utils::vectorVirtualSink getActiveStreams();
-
         int loopback_set_parameters(const char * value);
+
+        //Audio mixer calls
+        utils::vectorVirtualSink getActiveStreams();
+        //mixer interface implementation
+        void callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
+              utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
 };
 
 #endif //_AUDIO_MIXER_H_

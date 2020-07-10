@@ -29,7 +29,7 @@
 const int cMinTimeout = 50;
 const int cMaxTimeout = 5000;
 
-PulseAudioMixer::PulseAudioMixer() : mChannel(0),
+PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
                                      mTimeout(cMinTimeout),
                                      mSourceID(-1),
                                      mConnectAttempt(0),
@@ -43,7 +43,8 @@ PulseAudioMixer::PulseAudioMixer() : mChannel(0),
                                      NRECvalue(1),
                                      BTDeviceType(eBTDevice_NarrowBand),
                                      mPreviousVolume(0),
-                                     BTvolumeSupport(false)
+                                     BTvolumeSupport(false),
+                                     mObjMixerCallBack(mixerCallBack)
 {
     // initialize table for the pulse state lookup table
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer constructor");
@@ -737,13 +738,17 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose)
 
     if (oldstreamflags != mActiveStreams)
     {
-        utils::ECONN_STATUS eConnStatus = openNotClose ? utils::eConnected :
-                                          utils::eDisconnected;
-        //Will be implemented as per DAP design
-        //if (mCallbacks)
-        //{
-        //    mCallbacks->onSinkChanged(sink, event, ePulseAudio);
-        //}
+        utils::ESINK_STATUS eSinkStatus = openNotClose ? utils::eSinkOpened :
+                                           utils::eSinkClosed;
+        if (mObjMixerCallBack)
+        {
+            std::string sourceId = "source";
+            std::string sinkId = "sink";
+            mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer);
+        }
+        else
+             PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+                 "mObjMixerCallBack is null");
     }
 }
 

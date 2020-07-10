@@ -28,13 +28,14 @@
 #include "main.h"
 #include <audiodTracer.h>
 #include <pulse/module-palm-policy-tables.h>
+#include "mixerInterface.h"
 
 //Implementation of PulseMixer using Pulse as backend
 class PulseAudioMixer
 {
-    public:
+public:
     /// Constructor that only does initialization of member variables
-    PulseAudioMixer();
+    PulseAudioMixer(MixerInterface* mixerCallBack);
     ~PulseAudioMixer();
 
     /// We might not be ready for programming the mixer
@@ -102,6 +103,10 @@ class PulseAudioMixer
     void init(GMainLoop * loop, LSHandle * handle);
 
 private:
+    PulseAudioMixer() = delete;
+    PulseAudioMixer(const PulseAudioMixer &) = delete;
+    PulseAudioMixer& operator=(const PulseAudioMixer &) = delete;
+    MixerInterface *mObjMixerCallBack;
     // Direct socket connection to Pulse
     int mTimeout;
     unsigned int mSourceID;

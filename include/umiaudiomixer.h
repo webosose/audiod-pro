@@ -26,21 +26,23 @@
 #include <cerrno>
 #include <glib.h>
 #include "log.h"
+#include "mixerInterface.h"
 
 class umiaudiomixer
 {
     private :
     //To store umi mixer ready status
     bool mIsUmiMixerReadyToProgram;
-    static umiaudiomixer *mObjUmiMixer;
+    MixerInterface *mObjMixerCallBack;
     //To store the status if the starem is currently active
     std::vector<EVirtualAudioSink> mVectActiveStreams;
     umiaudiomixer(const umiaudiomixer &) = delete;
     umiaudiomixer& operator=(const umiaudiomixer &) = delete;
+    umiaudiomixer() = delete;
 
     public:
     //Constructor
-    umiaudiomixer();
+    umiaudiomixer(MixerInterface* mixerCallBack);
     //Destructor
     ~umiaudiomixer();
     //Connect hardware stream
@@ -64,17 +66,15 @@ class umiaudiomixer
     //To get all the info of connected UMI audio streams
     bool getConnectionStatus(LSFilterFunc cb, envelopeRef *message);
     //To send on sink changed status to all the pulse audiod and umi scenario modules
-    void onSinkChangedReply(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus, utils::EMIXER_TYPE eMixerType);
-    //To inform scenario modules if the mixer interafce is ready to use, in tis case it audiooutputd luna service status
-    bool readyToProgram();
+    bool onSinkChangedReply(const std::string& source, const std::string& sink, EVirtualAudioSink eVirtualSink,\
+                            utils::ESINK_STATUS eSinkStatus, utils::EMIXER_TYPE eMixerType);
     //To keep track of active stream types
-    void updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ECONN_STATUS eConnStatus);
+    void updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ESINK_STATUS eSinkStatus);
     //To get the status if the starem is currently active
     bool isStreamActive(EVirtualAudioSink eVirtualSink);
     //To get the mixer ready status
     bool getUmiMixerReadyStatus();
     //To update IsReadyToProgram
     void setUmiMixerReadyStatus(bool eStatus);
-    static umiaudiomixer* getUmiMixerInstance();
 };
 #endif //UMIAUDIOMIXER_H_

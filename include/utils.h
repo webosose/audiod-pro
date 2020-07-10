@@ -164,7 +164,7 @@ inline bool IsValidVirtualSink(EVirtualAudioSink sink)
 inline bool IsValidVirtualSource(EVirtualSource source)
     { return source >= eVirtualSource_First && source <= eVirtualSource_Last; }
 
-const char * controlEventName(utils::EConnStatus eConnStatus);
+const char * controlEventName(utils::ESINK_STATUS eSinkStatus);
 const char * virtualSinkName(EVirtualAudioSink sink, bool prettyName = true);
 EVirtualAudioSink getSinkByName(const char * name);
 const char * virtualSourceName(EVirtualSource source, bool prettyName = true);

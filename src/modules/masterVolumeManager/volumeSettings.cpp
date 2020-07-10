@@ -100,9 +100,9 @@ bool volumeSettings::_setVolume(LSHandle *lshandle, LSMessage *message, void *ct
             envelope->context = (volumeSettings*)ctx;
             volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
 
-            if ((nullptr != volumeSettingsObj->mixerObj) && (isValidVolume))
+            if ((nullptr != volumeSettingsObj->mObjAudioMixer) && (isValidVolume))
             {
-                if(volumeSettingsObj->mixerObj->setMasterVolume(soundOutput, volume, _setVolumeCallBack, envelope))
+                if(volumeSettingsObj->mObjAudioMixer->setMasterVolume(soundOutput, volume, _setVolumeCallBack, envelope))
                 {
                     g_debug("MasterVolume: SetMasterVolume umimixer call successfull");
                     LSMessageRef(message);
@@ -501,9 +501,9 @@ bool volumeSettings::_muteVolume(LSHandle *lshandle, LSMessage *message, void *c
             envelope->message = message;
             envelope->context = (volumeSettings*)ctx;
             volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-            if (nullptr != volumeSettingsObj->mixerObj)
+            if (nullptr != volumeSettingsObj->mObjAudioMixer)
             {
-                if(volumeSettingsObj->mixerObj->masterVolumeMute(soundOutput, mute, _muteVolumeCallBack, envelope))
+                if(volumeSettingsObj->mObjAudioMixer->masterVolumeMute(soundOutput, mute, _muteVolumeCallBack, envelope))
                 {
                     g_debug("MasterVolume: masterVolumeMute umimixer call successfull");
                     LSMessageRef(message);
@@ -694,9 +694,9 @@ bool volumeSettings::_volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx
             envelope->message = message;
             envelope->context = (volumeSettings*)ctx;
             volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-            if ((nullptr != volumeSettingsObj->mixerObj) && (isValidVolume))
+            if ((nullptr != volumeSettingsObj->mObjAudioMixer) && (isValidVolume))
             {
-                if(volumeSettingsObj->mixerObj->masterVolumeUp(soundOutput, _volumeUpCallBack, envelope))
+                if(volumeSettingsObj->mObjAudioMixer->masterVolumeUp(soundOutput, _volumeUpCallBack, envelope))
                 {
                     g_debug("MasterVolume: masterVolumeUp umimixer call successfull");
                     LSMessageRef(message);
@@ -887,9 +887,9 @@ bool volumeSettings::_volumeDown(LSHandle *lshandle, LSMessage *message, void *c
             envelope->message = message;
             envelope->context = (volumeSettings*)ctx;
             volumeSettings *volumeSettingsObj = (volumeSettings*)ctx;
-            if ((nullptr != volumeSettingsObj->mixerObj) && (isValidVolume))
+            if ((nullptr != volumeSettingsObj->mObjAudioMixer) && (isValidVolume))
             {
-                if(volumeSettingsObj->mixerObj->masterVolumeDown(soundOutput, _volumeDownCallBack, envelope))
+                if(volumeSettingsObj->mObjAudioMixer->masterVolumeDown(soundOutput, _volumeDownCallBack, envelope))
                 {
                     g_debug("MasterVolume: masterVolumeDown umimixer call successfull");
                     LSMessageRef(message);
@@ -1025,7 +1025,8 @@ static LSMethod MasterVolumeMethods[] =
     {cModuleMethod_muteVolume, volumeSettings::_muteVolume},
     { },
 };
-volumeSettings::volumeSettings(): mixerObj(AudioMixer::getAudioMixerInstance()), mVolume(0), mMuteStatus(false), displayOneVolume(100), displayTwoVolume(100)
+volumeSettings::volumeSettings(): mObjAudioMixer(AudioMixer::getAudioMixerInstance()), mVolume(0), mMuteStatus(false), \
+                                  displayOneVolume(100), displayTwoVolume(100)
 {
     g_debug("volumeSettings: constructor");
 }
