@@ -83,7 +83,8 @@ namespace utils
         eEventServerStatusSubscription,
         eEventKeySubscription,
         eEventMixerStatus,
-        eEventCurrentInputVolume
+        eEventCurrentInputVolume,
+        eEventInputVolume,
     }EVENT_TYPE_E;
 
     typedef enum EConnStatus
@@ -92,6 +93,12 @@ namespace utils
         eConnected,
         eDisconnected
     }ECONN_STATUS;
+
+    typedef enum ReplyType
+    {
+        eLSReply,
+        eLSRespond
+    }EReplyType;
 
     typedef struct volumePolicyInfo
     {
@@ -140,6 +147,9 @@ namespace utils
     typedef std::map<EVirtualAudioSink, std::string>::iterator itMapSinkToStream;
     typedef std::map<std::string, EVirtualAudioSink> mapStreamToSink;
     typedef std::map<std::string, EVirtualAudioSink>::iterator itMapStreamToSink;
+
+    void LSMessageResponse(LSHandle* handle, LSMessage * message,\
+        const char* reply, utils::EReplyType eType, bool isReferenced);
 }
 
 //Simple set class to hold a set of sinks & test it

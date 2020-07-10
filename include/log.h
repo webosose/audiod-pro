@@ -134,6 +134,8 @@ extern PmLogContext audiodLogContext;
 //Json related message ID's
 #define MSGID_MALFORMED_JSON                           "MALFORMED_JSON"                    //Malformed json data
 #define MSGID_JSON_PARSE_ERROR                         "JSON_PARSE_ERROR"                  //Error while parsing json data
+#define MSGID_PARSE_JSON                               "PARSE_JSON"                        //Parse json message
+#define MSGID_DATA_NULL                                "NULL_MESSAGE"                      //luna message is null
 
 #define MSGID_MODULE_INITIALIZER                       "INITIALIZE_MODULE"                 //module initialiser
 #define MSGID_MODULE_MANAGER                           "AUDIO_MODULE_MANAGER"              //module manager

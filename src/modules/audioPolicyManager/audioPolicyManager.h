@@ -70,6 +70,15 @@ class AudioPolicyManager : public ModuleInterface
         static void loadModuleAudioPolicyManager();
         static AudioPolicyManager *mAudioPolicyManager;
 
+        //luna api's
+        static bool _setInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _getInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _getStreamStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
+
+        void notifyGetVolumeSubscribers(const std::string& streamType, const int& volume);
+        void notifyGetStreamStatusSubscribers(const std::string& payload) const;
+        static bool _setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);

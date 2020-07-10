@@ -31,6 +31,7 @@ class ModuleInterface
         virtual void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType){}
         virtual void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType){}
+        virtual void eventInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp){}
 };
 
 #endif//_MODULE_INTERFACE_H_

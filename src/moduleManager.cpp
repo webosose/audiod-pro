@@ -88,3 +88,13 @@ void ModuleManager::notifyMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixer
         it->eventMixerStatus(mixerStatus, mixerType);
     }
 }
+
+void ModuleManager::notifyInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "notifyInputVolume sink : %d, volume : %d, ramp : %d", (int)audioSink, volume, ramp);
+    for (const auto &it:listInputVolumeSubscribers)
+    {
+        it->eventInputVolume(audioSink, volume, ramp);
+    }
+}
