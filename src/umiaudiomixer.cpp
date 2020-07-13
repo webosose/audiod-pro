@@ -245,20 +245,6 @@ bool umiaudiomixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
     return result;
 }
 
-bool umiaudiomixer::getUmiMixerReadyStatus()
-{
-    PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer:getUmiMixerReadyStatus ready status:%d", \
-                mIsUmiMixerReadyToProgram);
-    return mIsUmiMixerReadyToProgram;
-}
-
-void umiaudiomixer::setUmiMixerReadyStatus(bool eStatus)
-{
-    mIsUmiMixerReadyToProgram  = eStatus;
-    PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer:setUmiMixerReadyStatus ready status:%d", \
-                mIsUmiMixerReadyToProgram);
-}
-
 umiaudiomixer::umiaudiomixer(MixerInterface* mixerCallBack):\
               mIsUmiMixerReadyToProgram(false), mObjMixerCallBack(mixerCallBack)
 {
@@ -283,39 +269,4 @@ bool umiaudiomixer::onSinkChangedReply(const std::string& source, const std::str
         return false;
     }
     return true;
-}
-
-void umiaudiomixer::updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ESINK_STATUS eSinkStatus)
-{
-    if (utils::eSinkOpened == eSinkStatus)
-    {
-        mVectActiveStreams.push_back(eVirtualSink);
-    }
-    else if (utils::eSinkClosed == eSinkStatus)
-    {
-        for (std::vector<EVirtualAudioSink>::iterator itStream = mVectActiveStreams.begin() ; itStream != mVectActiveStreams.end(); ++itStream)
-        {
-            if (*itStream == eVirtualSink)
-            {
-                mVectActiveStreams.erase(itStream);
-                return;
-            }
-        }
-    }
-    else
-    {
-        g_debug("umiaudiomixer: UpdateStreamStatus Invalid Connection status");
-    }
-}
-
-bool umiaudiomixer::isStreamActive(EVirtualAudioSink eVirtualSink)
-{
-    for (auto &elements : mVectActiveStreams)
-    {
-        if (elements == eVirtualSink)
-        {
-            return true;
-        }
-    }
-    return false;
 }

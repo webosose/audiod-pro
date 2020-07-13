@@ -68,13 +68,5 @@ class umiaudiomixer
     //To send on sink changed status to all the pulse audiod and umi scenario modules
     bool onSinkChangedReply(const std::string& source, const std::string& sink, EVirtualAudioSink eVirtualSink,\
                             utils::ESINK_STATUS eSinkStatus, utils::EMIXER_TYPE eMixerType);
-    //To keep track of active stream types
-    void updateStreamStatus(EVirtualAudioSink eVirtualSink, utils::ESINK_STATUS eSinkStatus);
-    //To get the status if the starem is currently active
-    bool isStreamActive(EVirtualAudioSink eVirtualSink);
-    //To get the mixer ready status
-    bool getUmiMixerReadyStatus();
-    //To update IsReadyToProgram
-    void setUmiMixerReadyStatus(bool eStatus);
 };
 #endif //UMIAUDIOMIXER_H_

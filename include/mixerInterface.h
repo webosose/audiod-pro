@@ -30,5 +30,6 @@ class MixerInterface
         virtual ~MixerInterface (){};
         virtual void callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
               utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType) = 0;
+        virtual void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType) = 0;
 };
 #endif

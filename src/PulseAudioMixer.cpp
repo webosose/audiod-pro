@@ -673,9 +673,11 @@ PulseAudioMixer::_connectSocket ()
     mSourceID = g_io_add_watch (mChannel, condition, ::_pulseStatus, this);
 
     // Let audiod know that we now have a connection, so that the mixer can be programmed
-    //Will be implemented as per DAP design
-    //if (VERIFY(mCallbacks))
-        //mCallbacks->onAudioMixerConnected();
+    if (mObjMixerCallBack)
+        mObjMixerCallBack->callBackMixerStatus(true, utils::ePulseMixer);
+    else
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "_connectSocket: mObjMixerCallBack is null");
 
     // We've just established our direct socket link to Pulse.
     // It's a good time to see if we can connect using the Pulse APIs
@@ -1009,12 +1011,6 @@ void PulseAudioMixer::createPulseSocketCommunication()
 {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::createPulseSocketCommunication");
     g_timeout_add (0, ::_timer, this);
-}
-
-bool PulseAudioMixer::getPulseMixerReadyStatus()
-{
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::getPulseMixerReadystatus");
-    return mChannel != 0;
 }
 
 #if defined(AUDIOD_TEST_API)

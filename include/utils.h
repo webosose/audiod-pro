@@ -142,6 +142,7 @@ namespace utils
     }VOLUME_POLICY_INFO_T;
 
     typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
+    typedef std::vector<EVirtualAudioSink>::iterator itVirtualSink;
 
     typedef std::map<EVirtualAudioSink, std::string> mapSinkToStream;
     typedef std::map<EVirtualAudioSink, std::string>::iterator itMapSinkToStream;

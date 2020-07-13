@@ -24,10 +24,14 @@ AudioMixer* AudioMixer::getAudioMixerInstance()
     return &mAudioMixerObj;
 }
 
-AudioMixer::AudioMixer():mObjUmiAudioMixer(nullptr), mObjPulseAudioMixer(nullptr)
+AudioMixer::AudioMixer():mObjUmiAudioMixer(nullptr), mObjPulseAudioMixer(nullptr), \
+                         mUmiMixerStatus(false), mPulseMixerStatus(false)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
                 "AudioMixer: constructor");
+    mActiveStreams.clear();
+    mUmiStreams.clear();
+    mPulseStreams.clear();
     if (!mObjUmiAudioMixer)
         mObjUmiAudioMixer = new (std::nothrow)umiaudiomixer(this);
     if (!mObjPulseAudioMixer)
@@ -40,20 +44,146 @@ AudioMixer::~AudioMixer()
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: destructor");
 }
 
+//Audio mixer calls start//
+bool AudioMixer::getUmiMixerReadyStatus()
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: getUmiMixerStatus:%d", mUmiMixerStatus);
+    return mUmiMixerStatus;
+}
+
+bool AudioMixer::getPulseMixerReadyStatus()
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: getPulseMixerReadyStatus:%d", mPulseMixerStatus);
+    return mPulseMixerStatus;
+}
+
 bool AudioMixer::readyToProgram()
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: readyToProgram");
-    bool umiMixerStatus = false;
-    bool pulseMixerStatus = false;
-    if (mObjUmiAudioMixer)
-        umiMixerStatus = mObjUmiAudioMixer->getUmiMixerReadyStatus();
+    return  mUmiMixerStatus && mPulseMixerStatus;
+}
+
+utils::vectorVirtualSink AudioMixer::getActiveStreams()
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: getActiveStreams");
+    return mActiveStreams;
+}
+
+bool AudioMixer::isStreamActive(EVirtualAudioSink sink)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: isStreamActive sinkId:%d", sink);
+    if (IsValidVirtualSink(sink))
+    {
+        utils::itVirtualSink it;
+        it = std::find(mActiveStreams.begin(), mActiveStreams.end(), sink);
+        if (it != mActiveStreams.end())
+            return true;
+    }
     else
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "readyToProgram: mObjUmiAudioMixer is null");
-    if (mObjPulseAudioMixer)
-        pulseMixerStatus = mObjPulseAudioMixer->getPulseMixerReadyStatus();
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
+    return false;
+}
+//Audio mixer calls end//
+
+//AudioMixer util functions start//
+void AudioMixer::removeAudioSink(EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: removeAudioSink");
+    utils::itVirtualSink it;
+    it = std::find(mActiveStreams.begin(), mActiveStreams.end(), audioSink);
+    if(it != mActiveStreams.end())
+        mActiveStreams.erase(it);
+
+    if (utils::ePulseMixer == mixerType)
+    {
+        it = std::find(mPulseStreams.begin(), mPulseStreams.end(), audioSink);
+        if(it != mPulseStreams.end())
+            mPulseStreams.erase(it);
+    }
+    else if (utils::eUmiMixer == mixerType)
+    {
+        it = std::find(mUmiStreams.begin(), mUmiStreams.end(), audioSink);
+        if(it != mUmiStreams.end())
+            mUmiStreams.erase(it);
+    }
     else
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "readyToProgram: mObjPulseAudioMixer is null");
-    return  umiMixerStatus && pulseMixerStatus;
+        PM_LOG_WARNING(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+           "AudioMixer:: removeAudioSink invalid mixer type");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: removeAudioSink active streams:%d pulse streams:%d umi streams:%d",\
+        mActiveStreams.size(), mPulseStreams.size(), mUmiStreams.size());
+}
+
+void AudioMixer::addAudioSink(EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: addAudioSink");
+    mActiveStreams.push_back(audioSink);
+    if (utils::ePulseMixer == mixerType)
+        mPulseStreams.push_back(audioSink);
+    else if (utils::eUmiMixer == mixerType)
+        mUmiStreams.push_back(audioSink);
+    else
+        PM_LOG_WARNING(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+           "AudioMixer:: addAudioSink invalid mixer type");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: addAudioSink active streams:%d pulse streams:%d umi streams:%d",\
+        mActiveStreams.size(), mPulseStreams.size(), mUmiStreams.size());
+}
+
+void AudioMixer::resetStreamInfo(utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: resetStreamInfo");
+    utils::itVirtualSink it;
+    if (utils::eUmiMixer == mixerType)
+    {
+        for (const auto& elements : mUmiStreams)
+        {
+            it = std::find(mActiveStreams.begin(), mActiveStreams.end(), elements);
+            if(it != mActiveStreams.end())
+                mActiveStreams.erase(it);
+        }
+        mUmiStreams.clear();
+    }
+    else if (utils::ePulseMixer == mixerType)
+    {
+        for (const auto& elements : mPulseStreams)
+        {
+            it = std::find(mActiveStreams.begin(), mActiveStreams.end(), elements);
+            if(it != mActiveStreams.end())
+                mActiveStreams.erase(it);
+        }
+        mPulseStreams.clear();
+    }
+    else
+       PM_LOG_WARNING(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+           "AudioMixer:: resetStreamInfo invalid mixer type");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: resetStreamInfo active streams:%d pulse streams:%d umi streams:%d",\
+        mActiveStreams.size(), mPulseStreams.size(), mUmiStreams.size());
+}
+
+//AudioMixer util functions end//
+
+//Mixer calbacks start//
+void AudioMixer::callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer::callBackMixerStatus status:%d mixerType:%d", mixerStatus, mixerType);
+    if (utils::ePulseMixer == mixerType)
+        mPulseMixerStatus = mixerStatus;
+    else if (utils::eUmiMixer == mixerType)
+        mUmiMixerStatus = mixerStatus;
+    else
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid mixer type", __FUNCTION__);
+    if (!mixerStatus)
+        resetStreamInfo(mixerType);
 }
 
 void AudioMixer::callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
@@ -64,17 +194,19 @@ void AudioMixer::callBackSinkStatus(const std::string& source, const std::string
                 source.c_str(), sink.c_str(), audioSink, sinkStatus, mixerType);
     if (IsValidVirtualSink(audioSink))
     {
-        if (utils::eSinkOpened == sinkStatus){}
-            //addAudioSink(audioSink, mixerType); //will be implemented in next patch
-        else if (utils::eSinkClosed == sinkStatus){}
-            //removeAudioSink(audioSink, mixerType); //will be implemented in next patch
+        if (utils::eSinkOpened == sinkStatus)
+            addAudioSink(audioSink, mixerType);
+        else if (utils::eSinkClosed == sinkStatus)
+            removeAudioSink(audioSink, mixerType);
         if (mObjModuleManager)
             mObjModuleManager->notifySinkStatusInfo(source, sink, audioSink, sinkStatus, mixerType);
     }
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
 }
+//Mixer calbacks end//
 
+//UMI Mixer Calls Start//
 bool AudioMixer::connectAudio(const std::string &strSourceName, const std::string &strPhysicalSinkName, LSFilterFunc cb, envelopeRef *message)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: connectAudio");
@@ -194,18 +326,6 @@ bool AudioMixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
     }
 }
 
-bool AudioMixer::isStreamActive(EVirtualAudioSink eVirtualSink)
-{
-    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: isStreamActive");
-    if (mObjUmiAudioMixer)
-        return mObjUmiAudioMixer->isStreamActive(eVirtualSink);
-    else
-    {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "isStreamActive: mObjUmiAudioMixer is null");
-        return false;
-    }
-}
-
 bool AudioMixer::onSinkChangedReply(const std::string& source, const std::string& sink, EVirtualAudioSink eVirtualSink,\
                utils::ESINK_STATUS eSinkStatus, utils::EMIXER_TYPE eMixerType)
 {
@@ -220,8 +340,9 @@ bool AudioMixer::onSinkChangedReply(const std::string& source, const std::string
         return false;
     }
 }
+//UMI Mixer Calls End//
 
-//pulseaudiomixer calls
+//Pulse Mixer Calls Start//
 bool AudioMixer::programVolume(EVirtualAudioSink sink, int volume, bool ramp)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programVolume");
@@ -623,12 +744,6 @@ void AudioMixer::openCloseSink(EVirtualAudioSink sink, bool openNotClose)
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "openCloseSink: mObjPulseAudioMixer is null");
 }
 
-utils::vectorVirtualSink AudioMixer::getActiveStreams()
-{
-    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: getActiveStreams");
-    return mActiveStreams;
-}
-
 int AudioMixer::loopback_set_parameters(const char * value)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: loopback_set_parameters");
@@ -640,3 +755,4 @@ int AudioMixer::loopback_set_parameters(const char * value)
         return -1;
     }
 }
+//Pulse Mixer Calls End//

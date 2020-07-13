@@ -38,10 +38,6 @@ public:
     PulseAudioMixer(MixerInterface* mixerCallBack);
     ~PulseAudioMixer();
 
-    /// We might not be ready for programming the mixer
-    bool getPulseMixerReadyStatus();
-
-    /// Program volume of a sink.
     //Will ignore volume of high latency sinks not playing and mute them.
     bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
     bool programCallVoiceOrMICVolume(char cmd, int volume);
