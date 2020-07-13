@@ -146,5 +146,6 @@ extern PmLogContext audiodLogContext;
 #define MSGID_PULSEAUDIO_MIXER                         "PULSEAUDIO_MIXER"                  //pulse mixer functions
 #define MSGID_UMIAUDIO_MIXER                           "UMIAUDIO_MIXER"                    //UMI mixer functions
 #define MSGID_POLICY_MANAGER                           "AUDIO_POLICY_MANAGER"              //Audio policy manager
+#define MSGID_UDEV_MANAGER                             "UDEV_EVENT_MANAGER"                //For Udev event manager
 
 #endif // LOG_H_

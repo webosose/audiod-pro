@@ -1,0 +1,169 @@
+/* @@@LICENSE
+*
+*      Copyright (c) 2020 LG Electronics Company.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*
+* LICENSE@@@ */
+#include "udevEventManager.h"
+
+#define SYSFS_HEADSET_MIC "/sys/devices/virtual/switch/h2w/state"
+
+UdevEventManager* UdevEventManager::mObjUdevEventManager = nullptr;
+
+bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    bool returnValue = false;
+    LSMessageJsonParser    msg(message, SCHEMA_3(REQUIRED(event, string),\
+        OPTIONAL(soundcard_no, integer),OPTIONAL(device_no, integer)));
+    if (!msg.parse(__FUNCTION__, lshandle))
+        return true;
+    const gchar * reply = STANDARD_JSON_SUCCESS;
+    //read optional parameters with appropriate default values
+    int soundcard_no = 0;
+    int device_no = 0;
+    if (!msg.get("soundcard_no", soundcard_no))
+        soundcard_no = 0;
+    if (!msg.get("device_no", device_no))
+        device_no = 0;
+    std::string event;
+    UdevEventManager* objUdevEventManager = UdevEventManager::getUdevEventManagerInstance();
+    if (objUdevEventManager)
+    {
+        if (!msg.get("event", event)) {
+            reply = MISSING_PARAMETER_ERROR(event, string);
+        }
+        else
+        {
+            if (objUdevEventManager->mObjAudioMixer)
+            {
+                if (event == "usb-mic-inserted") {
+                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 1);
+                    if (false == returnValue)
+                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+                }
+                else if (event == "usb-mic-removed") {
+                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 0);
+                    if (false == returnValue)
+                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+                }
+                else if (event == "usb-headset-inserted") {
+                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 1);
+                    if (false == returnValue)
+                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+                }
+                else if (event == "usb-headset-removed") {
+                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 0);
+                    if (false == returnValue)
+                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+                }
+                else
+                    reply = INVALID_PARAMETER_ERROR(event, string);
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+                    "loadUdevEventManager: mObjAudioMixer is null");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+            }
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+            "loadUdevEventManager: mObjUdevEventManager is null");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+    }
+    CLSError lserror;
+    if (!LSMessageReply(lshandle, message, reply, &lserror))
+        lserror.Print(__FUNCTION__, __LINE__);
+    return true;
+}
+
+UdevEventManager* UdevEventManager::getUdevEventManagerInstance()
+{
+    return mObjUdevEventManager;
+}
+
+UdevEventManager::UdevEventManager() : mObjAudioMixer(nullptr)
+{
+    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+        "UdevEventManager constructor");
+    mObjAudioMixer = AudioMixer::getAudioMixerInstance();
+    if (!mObjAudioMixer)
+    {
+        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+            "AudioMixer instance is null");
+    }
+}
+
+UdevEventManager::~UdevEventManager()
+{
+    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+        "UdevEventManager destructor");
+}
+
+LSMethod UdevEventManager::udevMethods[] = {
+    { "event", _event},
+    {},
+};
+
+void UdevEventManager::loadUdevEventManager(GMainLoop *loop, LSHandle* handle)
+{
+    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+        "loadUdevEventManager");
+    if (!mObjUdevEventManager)
+    {
+        mObjUdevEventManager = new (std::nothrow) UdevEventManager();
+        if (mObjUdevEventManager)
+        {
+            PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+                "loadUdevEventManager: mObjUdevEventManager created successfullly ");
+            CLSError lserror;
+            bool result = LSRegisterCategoryAppend(handle, "/udev", UdevEventManager::udevMethods, nullptr, &lserror);
+            if (!result || !LSCategorySetData(handle, "/udev", mObjUdevEventManager, &lserror))
+            {
+                PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT,\
+                    "%s: Registering Service for '%s' category failed", __FUNCTION__, "/udev");
+                lserror.Print(__FUNCTION__, __LINE__);
+            }
+            PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+                "loadUdevEventManager: module init done");
+        }
+        else
+            PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+                "loadUdevEventManager: Could not create mObjUdevEventManager");
+    }
+    else
+        PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+            "loadUdevEventManager: mObjUdevEventManager is already created");
+}
+
+int  load_udev_event_manager(GMainLoop *loop, LSHandle* handle)
+{
+    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+        "load_udev_event_manager");
+    UdevEventManager::loadUdevEventManager(loop, handle);
+    return 0;
+}
+
+void unload_udev_event_manager()
+{
+    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+        "unload_udev_event_manager");
+    if (UdevEventManager::mObjUdevEventManager)
+    {
+        delete UdevEventManager::mObjUdevEventManager;
+        UdevEventManager::mObjUdevEventManager = nullptr;
+    }
+}

@@ -37,6 +37,8 @@ ModuleInitializer::~ModuleInitializer()
     {
         if (it == "load_audio_policy_manager")
             unload_audio_policy_manager();
+        else if (it == "load_udev_event_manager")
+            unload_udev_event_manager();
     }
 }
 
@@ -45,6 +47,8 @@ void ModuleInitializer::initializeModuleInfo()
     PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "initializeModuleInfo");
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_audio_policy_manager", load_audio_policy_manager));
+    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
+        ("load_udev_event_manager", load_udev_event_manager));
     //these should be enabled when the modules are implemented
     /*moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_luna_event_subscriber", load_luna_event_subscriber));
