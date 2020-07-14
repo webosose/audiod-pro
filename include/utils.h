@@ -50,6 +50,8 @@ enum EUMISink
 typedef enum serverType{
     eBluetoothService = 0,
     eBluetoothService2,
+    eAudiooutputdService,
+    eSettingsService,
     eServiceCount,        //Last element should be eServiceCount
     eServiceFirst = eBluetoothService,
 }SERVER_TYPE_E;
@@ -60,6 +62,14 @@ typedef enum LunaKeyType {
     eLunaEventCount,     //Last element should be eLunaEventCount
     eLunaEventKeyFirst = eLunaEventBTDeviceStatus,
 }LUNA_KEY_TYPE_E;
+
+typedef struct SubscriptionDetails
+{
+    std::string sKey;
+    std::string payload;
+    std::string ctx;
+}SUBSCRIPTION_DETAILS_T;
+typedef std::map<std::string,SERVER_TYPE_E> serverNameMap;
 
 template <typename EnumT, typename BaseEnumT>
 class ExtendEnum

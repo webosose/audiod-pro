@@ -99,6 +99,7 @@ include_directories(src/modules/masterVolumeManager)
 include_directories(src/modules/settingsServiceManager)
 include_directories(src/modules/systemSoundsManager)
 include_directories(src/modules/udevEventManager)
+include_directories(src/modules/lunaEventSubscriber)
 include_directories(include/public/)
 
 #Please check these header files again
@@ -132,6 +133,7 @@ SET (modules_files
         src/modules/settingsServiceManager/settingsservice.cpp
         src/modules/systemSoundsManager/systemsounds.cpp
         src/modules/udevEventManager/udevEventManager.cpp
+        src/modules/lunaEventSubscriber/lunaEventSubscriber.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")

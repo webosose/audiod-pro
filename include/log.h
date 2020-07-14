@@ -149,4 +149,5 @@ extern PmLogContext audiodLogContext;
 #define MSGID_UDEV_MANAGER                             "UDEV_EVENT_MANAGER"                //For Udev event manager
 #define MSGID_MASTER_VOLUME_MANAGER                    "MASTER_VOLUME_MANAGER"             //Master Volume manager
 #define MSGID_BLUETOOTH_MANAGER                        "BLUETOOTH_MANAGER"                 //For Bluetooth manager
+#define MSGID_LUNA_EVENT_SUBSCRIBER                    "LUNA_EVENT_SUBSCRIBER"             //For Luna event subscriber
 #endif // LOG_H_

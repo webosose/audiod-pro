@@ -1,0 +1,326 @@
+/* @@@LICENSE
+*
+*      Copyright (c) 2020 LG Electronics Company.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*
+* LICENSE@@@ */
+
+#include "lunaEventSubscriber.h"
+
+serverNameMap statusSubscriptionMap =
+{
+    { "com.palm.bluetooth", eBluetoothService},
+    { "com.webos.service.bluetooth2", eBluetoothService2},
+    { "com.webos.service.audiooutput", eAudiooutputdService},
+    { "com.webos.settingsservice", eSettingsService},
+};
+
+lunaEventSubscriber * lunaEventSubscriber::mLunaEventSubscriber = nullptr;
+
+lunaEventSubscriber * lunaEventSubscriber::getLunaEventSubscriber()
+{
+    return mLunaEventSubscriber;
+}
+
+lunaEventSubscriber::lunaEventSubscriber() : mServerStatusSubscribed(false)
+{
+    mObjModuleManager = ModuleManager::getModuleManagerInstance();
+    mArrayKeySubscribed.fill(false);
+    mArrayServerConnected.fill(false);
+    mArrayKeyReceived.fill(false);
+    mArrayServerOfKey.fill(eServiceFirst);
+    mLoop = nullptr;
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT, "lunaEventSubscriber::Constructor");
+    if (mObjModuleManager)
+    {
+        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventKeySubscription);
+        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventServerStatusSubscription);
+        PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
+            "Subscribed to eEventKeySubscription & eEventServerStatusSubscription");
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
+            "lunaEventSubscriber :: Module manager instance null");
+    }
+}
+
+lunaEventSubscriber::~lunaEventSubscriber()
+{
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,"lunaEventSubscriber::Destructor");
+}
+
+void lunaEventSubscriber::loadLunaEventSubscriber(GMainLoop *loop)
+{
+    if (!mLunaEventSubscriber)
+    {
+        mLunaEventSubscriber = new (std::nothrow)lunaEventSubscriber();
+        if (mLunaEventSubscriber == nullptr)
+        {
+            PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT, "loading Luna event subscriber failed");
+        }
+        else
+        {
+            PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT, "load module luna event subscriber success");
+            mLunaEventSubscriber->mLoop = loop;
+        }
+    }
+}
+
+bool lunaEventSubscriber::subscriptionToKeyCallback(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    //We pass the subscription Key enum as ctx,
+    //To identify from where we recieved a callback
+    char *cb = (char*)ctx;
+    std::stringstream cbFrom = std::stringstream(cb);
+    int ctxVar = -1;
+    cbFrom >> ctxVar;
+    LUNA_KEY_TYPE_E eEventToSubscribe = (LUNA_KEY_TYPE_E)ctxVar;
+    if (eEventToSubscribe < eLunaEventKeyFirst || eEventToSubscribe >= eLunaEventCount)
+    {
+        PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
+            "Invalid event type");
+        return false;
+    }
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,
+        "Subscription Callback recieved from ctx = %s,%d", cb, (int)eEventToSubscribe);
+    ModuleManager *pInstance = ModuleManager::getModuleManagerInstance();
+    if ( nullptr != pInstance)
+    {
+        pInstance->notifyKeyInfo(eEventToSubscribe,message);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
+            "module manager instance in null");
+    }
+
+    return true;
+}
+
+bool lunaEventSubscriber::serviceStatusCallBack( LSHandle *sh,
+    const char *serviceName,
+    bool connected,
+    void *ctx)
+{
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+        "Got Server Status callback from %s:%d", serviceName, (int)connected);
+    SERVER_TYPE_E eServerStatus = statusSubscriptionMap[serviceName];
+    ModuleManager *pInstance = ModuleManager::getModuleManagerInstance();
+    if (nullptr != pInstance)
+    {
+        pInstance->notifyServerStatusInfo(eServerStatus,connected);
+    }
+    else
+    {
+         PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+            "module manager instance is Null");
+    }
+    mLunaEventSubscriber->mArrayServerConnected[eServerStatus] = connected;
+    if (connected)
+    {
+        //Loops through the list of subscrpition, and register subscription
+        subscribeToKeys(sh);
+    }
+    else
+    {
+        //unsubscribe
+        for(int i = eLunaEventKeyFirst; i < eLunaEventCount; i++)
+        {
+            if (mLunaEventSubscriber->mArrayServerOfKey[i] == eServerStatus)
+            {
+                mLunaEventSubscriber->mArrayKeySubscribed[i] = false;
+            }
+        }
+    }
+    return true;
+}
+
+void lunaEventSubscriber::subscribeToKeys(LSHandle *handle,LUNA_KEY_TYPE_E eEventToSubscribe)
+{
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+        "%s called, eEventToSubscribe = %d", __FUNCTION__, (int)eEventToSubscribe);
+    if (eLunaEventCount == eEventToSubscribe)
+    {
+        for(int it = eLunaEventKeyFirst; it < eLunaEventCount; it++)
+        {
+            PM_LOG_DEBUG("request for : %d keyrecieved = %d",\
+                (int)it, mLunaEventSubscriber->mArrayKeyReceived[it]);
+            if (mLunaEventSubscriber->mArrayKeyReceived[it] == false)
+            {
+                PM_LOG_DEBUG("Not subscribed");
+                    continue;
+            }
+            if (it == eLunaEventBTDeviceStatus ||
+                it == eLunaEventA2DPStatus)
+            {
+                PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+                    "Dynamic subscription");
+                //Since BT has dynamic payload,
+                //Let it subscribe from BT manager module itself
+                continue;
+            }
+            SERVER_TYPE_E server = mLunaEventSubscriber->mArrayServerOfKey[it];
+            if (mLunaEventSubscriber->mArrayServerConnected[server] == false)
+            {
+                PM_LOG_DEBUG("Service %d not connected",server);
+            }
+            else if (mLunaEventSubscriber->mArrayKeySubscribed[it] == false)
+            {
+                CLSError lserror;
+                char *ctx = (char*)mLunaEventSubscriber->mListSubscriptionRequests[it].ctx.c_str();
+
+                PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+                    "Register Subscription : Key = %s, Payload = %s, ctx = %s",\
+                    mLunaEventSubscriber->mListSubscriptionRequests[it].sKey.c_str(),\
+                    mLunaEventSubscriber->mListSubscriptionRequests[it].payload.c_str(),ctx);
+
+                if (!LSCall(handle, mLunaEventSubscriber->mListSubscriptionRequests[it].sKey.c_str(),
+                    mLunaEventSubscriber->mListSubscriptionRequests[it].payload.c_str(),
+                    subscriptionToKeyCallback,
+                    ctx, NULL, &lserror))
+                {
+                    mLunaEventSubscriber->mArrayKeySubscribed[it] = false;
+                    lserror.Print(__func__, __LINE__);
+                }
+                else
+                {
+                    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+                        "Register Subscription success");
+                    mLunaEventSubscriber->mArrayKeySubscribed[it] = true;
+                }
+            }
+            else
+            {
+                PM_LOG_DEBUG("Already subscribed");
+            }
+        }
+    }
+    else
+    {
+        SERVER_TYPE_E server = mLunaEventSubscriber->mArrayServerOfKey[eEventToSubscribe];
+        if (mLunaEventSubscriber->mArrayServerConnected[server] == false)
+        {
+            PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+                "Service not connected");
+        }
+        else if (mLunaEventSubscriber->mArrayKeySubscribed[eEventToSubscribe] == false)
+        {
+            CLSError lserror;
+            char *ctx = (char*)mLunaEventSubscriber->mListSubscriptionRequests[eEventToSubscribe].ctx.c_str();
+            PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+                "Register Subscription : Key = %s, Payload = %s, ctx = %s",\
+                mLunaEventSubscriber->mListSubscriptionRequests[eEventToSubscribe].sKey.c_str(),
+                mLunaEventSubscriber->mListSubscriptionRequests[eEventToSubscribe].payload.c_str(),
+                ctx);
+            if (!LSCall(handle, mLunaEventSubscriber->mListSubscriptionRequests[eEventToSubscribe].sKey.c_str(),
+                mLunaEventSubscriber->mListSubscriptionRequests[eEventToSubscribe].payload.c_str(),
+                subscriptionToKeyCallback,
+                ctx, NULL, &lserror))
+            {
+                lserror.Print(__func__, __LINE__);
+                mLunaEventSubscriber->mArrayKeySubscribed[eEventToSubscribe] = false;
+            }
+            else
+            {
+                mLunaEventSubscriber->mArrayKeySubscribed[eEventToSubscribe] = true;
+            }
+        }
+        else
+        {
+            PM_LOG_DEBUG("Already subscribed");
+        }
+    }
+}
+
+void lunaEventSubscriber::eventSubscribeServerStatus(SERVER_TYPE_E eService)
+{
+    CLSError lserror;
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+        "lunaEventSubscriber::eventSubscribeServerStatus : %d",eService);
+    if (mServerStatusSubscribed==false)
+    {
+        for(auto it:statusSubscriptionMap)
+        {
+            bool result = LSRegisterServerStatusEx(GetPalmService(), it.first.c_str(),
+                serviceStatusCallBack, mLoop, NULL, &lserror);
+            if (!result)
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+            }
+        }
+        mServerStatusSubscribed = true;
+    }
+
+    if (mObjModuleManager != nullptr)
+    {
+        bool connected = mArrayServerConnected[eService];
+        mObjModuleManager->notifyServerStatusInfo(eService, connected);
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+            "Module manager instance null");
+    }
+}
+
+void lunaEventSubscriber::eventSubscribeKey(LUNA_KEY_TYPE_E event,
+        SERVER_TYPE_E eServer,
+        const std::string& api,
+        const std::string& payload)
+{
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+        "call to subscribe to keys LUNA_KEY_TYPE_E = %d, SERVER_TYPE_E =%d",\
+        event, eServer);
+    //Based on the Service connected, We subscribe to the keys.
+    mArrayServerOfKey[event] = eServer;
+
+    if (mServerStatusSubscribed == false)
+    {
+        eventSubscribeServerStatus(eServer);
+    }
+
+    //Every time a new subscription is recived, register again
+    //So that the new subscriber will get the current value.
+    //every subscriber will get a new value, but it is duty of
+    //the modules to check whether the value changed or not
+    LSHandle *sh = GetPalmService();
+    SUBSCRIPTION_DETAILS_T sData;
+    sData.sKey = api;
+    sData.payload = payload;
+    sData.ctx = std::to_string(event);
+    mListSubscriptionRequests[event] = sData;
+    mArrayKeyReceived[event]=true;
+    mArrayKeySubscribed[event]=false;
+    subscribeToKeys(sh, event);
+}
+
+int  load_luna_event_subscriber(GMainLoop *loop, LSHandle* handle)
+{
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+                    "Load luna event subscriber");
+    lunaEventSubscriber::loadLunaEventSubscriber(loop);
+    return 0;
+}
+
+void unload_luna_event_subscriber()
+{
+    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+                    "Unloading luna event subscriber");
+    if (lunaEventSubscriber::mLunaEventSubscriber)
+    {
+        delete lunaEventSubscriber::mLunaEventSubscriber;
+        lunaEventSubscriber::mLunaEventSubscriber = nullptr;
+    }
+}
