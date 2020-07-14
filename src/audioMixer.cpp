@@ -184,6 +184,8 @@ void AudioMixer::callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid mixer type", __FUNCTION__);
     if (!mixerStatus)
         resetStreamInfo(mixerType);
+    if (mObjModuleManager)
+        mObjModuleManager->notifyMixerStatus(mixerStatus, mixerType);
 }
 
 void AudioMixer::callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \

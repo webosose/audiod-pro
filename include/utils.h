@@ -28,6 +28,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <pbnjson.h>
+#include <pbnjson.hpp>
 
 enum EBTDeviceType
 {

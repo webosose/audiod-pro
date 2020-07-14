@@ -23,13 +23,13 @@
 #include <pbnjson/cxx/JValue.h>
 #include <map>
 #include <set>
-#include "utils.h"
-#include "log.h"
 #include <glib.h>
 #include <lunaservice.h>
 #include <pbnjson/cxx/JDomParser.h>
 #include "moduleManager.h"
 #include "audioMixer.h"
+#include "utils.h"
+#include "log.h"
 
 using namespace pbnjson;
 
