@@ -39,6 +39,8 @@ ModuleInitializer::~ModuleInitializer()
             unload_audio_policy_manager();
         else if (it == "load_udev_event_manager")
             unload_udev_event_manager();
+        else if (it == "load_master_volume_manager")
+            unload_master_volume_manager();
     }
 }
 
@@ -49,6 +51,8 @@ void ModuleInitializer::initializeModuleInfo()
         ("load_audio_policy_manager", load_audio_policy_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_udev_event_manager", load_udev_event_manager));
+    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
+        ("load_master_volume_manager", load_master_volume_manager));
     //these should be enabled when the modules are implemented
     /*moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_luna_event_subscriber", load_luna_event_subscriber));

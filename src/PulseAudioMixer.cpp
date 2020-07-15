@@ -311,19 +311,11 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
        ret = true;
     }
 
-		//Will be removed or modified once masterVolume manager is done as per DAP design
-    #if 0
-    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
-    if (nullptr != volumeInstance)
-    {
-        volumeInstance->setMuteStatus(DISPLAY_ONE);
-        volumeInstance->setVolume(DISPLAY_ONE);
-        volumeInstance->setMuteStatus(DISPLAY_TWO);
-        volumeInstance->setVolume(DISPLAY_TWO);
-    }
+    if (mObjMixerCallBack)
+        mObjMixerCallBack->callBackMasterVolumeStatus();
     else
-        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "volumeInstance is NULL");
-    #endif
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                     "programLoadBluetooth: mObjMixerCallBack is null");
 
     return ret;
 }
@@ -460,19 +452,11 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
         ret = true;
     }
 
-    //Will be updated as per DAP design
-    #if 0
-    volumeSettings* volumeInstance = volumeSettings::getVolumeSettingsInstance();
-    if (nullptr != volumeInstance)
-    {
-        volumeInstance->setMuteStatus(DISPLAY_ONE);
-        volumeInstance->setVolume(DISPLAY_ONE);
-        volumeInstance->setMuteStatus(DISPLAY_TWO);
-        volumeInstance->setVolume(DISPLAY_TWO);
-    }
+    if (mObjMixerCallBack)
+        mObjMixerCallBack->callBackMasterVolumeStatus();
     else
-        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "volumeInstance is NULL");
-    #endif
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                     "programLoadBluetooth: mObjMixerCallBack is null");
     return ret;
 }
 

@@ -85,6 +85,7 @@ namespace utils
         eEventServerStatusSubscription,
         eEventKeySubscription,
         eEventMixerStatus,
+        eEventMasterVolumeStatus,
         eEventCurrentInputVolume,
         eEventInputVolume,
     }EVENT_TYPE_E;

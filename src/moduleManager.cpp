@@ -60,6 +60,16 @@ void ModuleManager::subscribeModuleEvent(ModuleInterface* module, bool first, ut
                 listMixerStatusSubscribers.push_back(module);
         }
         break;
+        case utils::eEventMasterVolumeStatus:
+        {
+            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                       "subscribeModuleEvent:: eEventMasterVolumeStatus");
+            if (first)
+                listMasterVolumeStatusSubscribers.push_front(module);
+            else
+                listMasterVolumeStatusSubscribers.push_back(module);
+        }
+        break;
         default:
         {
             PM_LOG_WARNING(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
@@ -96,5 +106,15 @@ void ModuleManager::notifyInputVolume(EVirtualAudioSink audioSink, const int& vo
     for (const auto &it:listInputVolumeSubscribers)
     {
         it->eventInputVolume(audioSink, volume, ramp);
+    }
+}
+
+void ModuleManager::notifyMasterVolumeStatus()
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                "ModuleManager: notifyMasterVolumeStatus");
+    for (const auto &it:listMasterVolumeStatusSubscribers)
+    {
+        it->eventMasterVolumeStatus();
     }
 }

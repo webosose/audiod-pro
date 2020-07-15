@@ -33,6 +33,7 @@ class ModuleManager
         std::list<ModuleInterface*> listSinkStatusSubscribers;
         std::list<ModuleInterface*> listMixerStatusSubscribers;
         std::list<ModuleInterface*> listInputVolumeSubscribers;
+        std::list<ModuleInterface*> listMasterVolumeStatusSubscribers;
 
     public:
         ~ModuleManager();
@@ -47,6 +48,7 @@ class ModuleManager
         void notifyMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
         //To notify Input volume change
         void notifyInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp);
+        void notifyMasterVolumeStatus();
 };
 
 #endif //_MODULE_MANAGER_H_

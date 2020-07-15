@@ -127,7 +127,7 @@ SET (modules_files
         src/modules/audioPolicyManager/volumePolicyInfoParser.cpp
         src/modules/bluetoothManager/bluetooth.cpp
         src/modules/connectionManager/umiDispatcher.cpp
-        src/modules/masterVolumeManager/volumeSettings.cpp
+        src/modules/masterVolumeManager/masterVolumeManager.cpp
         src/modules/masterVolumeManager/soundSettings.cpp
         src/modules/settingsServiceManager/settingsservice.cpp
         src/modules/systemSoundsManager/systemsounds.cpp

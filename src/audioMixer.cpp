@@ -206,6 +206,16 @@ void AudioMixer::callBackSinkStatus(const std::string& source, const std::string
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
 }
+
+void AudioMixer::callBackMasterVolumeStatus()
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "callBackMasterVolumeStatus");
+    if (mObjModuleManager)
+        mObjModuleManager->notifyMasterVolumeStatus();
+    else
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "callBackMasterVolumeStatus: mObjModuleManager is null");
+}
 //Mixer calbacks end//
 
 //UMI Mixer Calls Start//
