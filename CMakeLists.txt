@@ -100,6 +100,7 @@ include_directories(src/modules/settingsServiceManager)
 include_directories(src/modules/systemSoundsManager)
 include_directories(src/modules/udevEventManager)
 include_directories(src/modules/lunaEventSubscriber)
+include_directories(src/modules/playbackManager)
 include_directories(include/public/)
 
 #Please check these header files again
@@ -134,6 +135,7 @@ SET (modules_files
         src/modules/systemSoundsManager/systemsounds.cpp
         src/modules/udevEventManager/udevEventManager.cpp
         src/modules/lunaEventSubscriber/lunaEventSubscriber.cpp
+        src/modules/playbackManager/playbackManager.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")

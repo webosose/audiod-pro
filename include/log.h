@@ -150,4 +150,6 @@ extern PmLogContext audiodLogContext;
 #define MSGID_MASTER_VOLUME_MANAGER                    "MASTER_VOLUME_MANAGER"             //Master Volume manager
 #define MSGID_BLUETOOTH_MANAGER                        "BLUETOOTH_MANAGER"                 //For Bluetooth manager
 #define MSGID_LUNA_EVENT_SUBSCRIBER                    "LUNA_EVENT_SUBSCRIBER"             //For Luna event subscriber
+#define MSGID_PULSE_LINK                               "PULSE_LINK"                        //For PulseAudio link
+#define MSGID_PLAYBACK_MANAGER                         "PLAYBACK_MANAGER"                  //For Playback manager
 #endif // LOG_H_

@@ -38,11 +38,13 @@ int load_udev_event_manager(GMainLoop *loop, LSHandle* handle);
 int load_master_volume_manager(GMainLoop *loop, LSHandle* handle);
 int load_bluetooth_manager (GMainLoop *loop, LSHandle* handle);
 int load_luna_event_subscriber(GMainLoop *loop, LSHandle* handle);
+int load_playback_manager(GMainLoop *loop, LSHandle* handle);
 void unload_audio_policy_manager();
 void unload_udev_event_manager();
 void unload_master_volume_manager();
 void unload_bluetooth_manager ();
 void unload_luna_event_subscriber();
+void unload_playback_manager();
 
 class ModuleInitializer
 {

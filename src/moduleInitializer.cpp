@@ -45,6 +45,8 @@ ModuleInitializer::~ModuleInitializer()
             unload_bluetooth_manager();
         else if (it == "load_luna_event_subscriber")
             unload_luna_event_subscriber();
+        else if (it == "load_playback_manager")
+            unload_playback_manager();
     }
 }
 
@@ -61,12 +63,12 @@ void ModuleInitializer::initializeModuleInfo()
         ("load_bluetooth_manager", load_bluetooth_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_luna_event_subscriber", load_luna_event_subscriber));
+    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
+        ("load_playback_manager", load_playback_manager));
 
     //these should be enabled when the modules are implemented
     /*moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_avdtp_manager", load_avdtp_manager));
-    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
-        ("load_play_record_sound", load_play_record_sound));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_master_volume_manager", load_master_volume_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\

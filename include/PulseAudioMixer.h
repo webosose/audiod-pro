@@ -68,8 +68,10 @@ public:
     bool updateRate(int rate);
     /// Play a system sound using Pulse's API
     bool playSystemSound(const char *snd, EVirtualAudioSink sink);
+    bool playSound(const char *snd, EVirtualAudioSink sink, \
+        const char *format, int rate, int channels);
     /// Pre-load system sound in Pulse, if necessary
-    void preloadSystemSound(const char * snd) { mPulseLink.preload(snd); }
+    void preloadSystemSound(const char * snd);
     /// mute/unmute the Physical sink
     bool setMute(int sink, int mutestatus);
     /// set volume on a particular display

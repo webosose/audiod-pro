@@ -87,6 +87,8 @@ class AudioMixer : public MixerInterface
         bool setMute(int sink, int mutestatus);
         bool setVolume(int display, int volume);
         bool playSystemSound(const char *snd, EVirtualAudioSink sink);
+        bool playSound(const char *snd, EVirtualAudioSink sink, \
+            const char *format, int rate, int channels);
         bool programHeadsetRoute(int route);
         bool externalSoundcardPathCheck(std::string filename,  int status);
         bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);

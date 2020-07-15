@@ -17,6 +17,10 @@
 
 #include "PulseAudioLink.h"
 
+#define DEFAULT_SAMPLE_RATE 44100
+#define DEFAULT_CHANNELS 1
+#define DEFAULT_SAMPLE_FORMAT "PA_SAMPLE_S16LE"
+
 static const size_t kSampleNameMaxSize = 64;
 
 struct ssound_t {
@@ -92,7 +96,8 @@ bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink)
     PMTRACE_FUNCTION;
     if (!IsValidVirtualSink(sink))
     {
-        g_warning("'%d' is not a valid sink id", sink);
+        PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+            "'%d' is not a valid sink id", sink);
         return false;
     }
     //will be implemented as per DAP design
@@ -119,7 +124,8 @@ static void PlaySampleDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userd
     const char * name = data->samplename;
     if (strncmp(name, "dtmf_", 5) == 0)
         name = "dtmf_X";
-    g_message("PulseAudioLink::play: '%s' in '%s'", name, data->sink);
+    PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+        "PulseAudioLink::play: '%s' in '%s'", name, data->sink);
 
     // prepare HW for playing audio. will unmute speaker in=f in music+headset case
     if(strstr (name, "alert_"))
@@ -144,7 +150,11 @@ static void PlaySampleDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userd
 bool PulseAudioLink::play(const char * samplename, const char * sink)
 {
     PMTRACE_FUNCTION;
-    preload(samplename);    // as necessary
+    std::string path = SYSTEMSOUNDS_PATH;
+    path += samplename;
+    path += "-ondemand.pcm";
+
+    preload(samplename, DEFAULT_SAMPLE_FORMAT, DEFAULT_SAMPLE_RATE, DEFAULT_CHANNELS, path.c_str());
 
     // This will affect latency severely, but then again, how often will
     //we lose connection (ie, pulseaudio crashed)
@@ -157,6 +167,42 @@ bool PulseAudioLink::play(const char * samplename, const char * sink)
     data->pacontext = mContext;
     pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
                                               &PlaySampleDeferCB, data);
+    return true;
+}
+
+bool PulseAudioLink::play(const char * samplename, const char * sink, const char * format, int rate, int channels)
+{
+    PMTRACE_FUNCTION;
+    std::string sample = samplename;
+    std::size_t found = sample.find_last_of("/");
+    sample.substr(0,found);
+    std::string filename = sample.substr(found+1);
+    found = filename.find_last_of(".");
+    std::string preloadName = filename.substr(0, found);
+
+    preload(preloadName.c_str(), format, rate, DEFAULT_CHANNELS, samplename);
+
+    // This will affect latency severely, but then again, how often will
+    //we lose connection (ie, pulseaudio crashed)
+    if (!checkConnection())
+        return false;
+
+    PlaySampleDeferData* data = (PlaySampleDeferData*)malloc(sizeof(PlaySampleDeferData));
+    if (data)
+    {
+        strncpy(data->samplename, preloadName.c_str(), sizeof(data->samplename)-1);
+        data->sink = sink;
+        data->pacontext = mContext;
+        pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
+                                              &PlaySampleDeferCB, data);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "PulseAudioLink::play: data handle is NULL");
+        return false;
+    }
+
     return true;
 }
 
@@ -182,7 +228,8 @@ void PulseAudioLink::stream_drain_complete(pa_stream*stream,
     PulseAudioDataProvider* data = (PulseAudioDataProvider*)userdata;
 
     if (!success) {
-        g_warning("drain failed");
+        PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+            "drain failed");
         // close connection??
     }
 
@@ -269,6 +316,21 @@ bool PulseAudioLink::play(PulseAudioDataProvider* data, const char* sinkname)
     return true;
 }
 
+bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink, const char *format, int rate, int channels)
+{
+    PMTRACE_FUNCTION;
+    PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+        "Inside play function with filename %s, sink %d, format %s, rate %d and channels %d", \
+                 snd, sink, format, rate, channels);
+    if (!IsValidVirtualSink(sink))
+    {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+            "'%d' is not a valid sink id", sink);
+        return false;
+    }
+    return play(snd, virtualSinkName(sink, false), format, rate, channels);
+}
+
 bool PulseAudioLink::connectToPulse()
 {
     PMTRACE_FUNCTION;
@@ -286,7 +348,8 @@ bool PulseAudioLink::connectToPulse()
     {
         if (mPulseAudioReady)
         {
-            g_message("Connected to Pulse for system sounds");
+            PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "Connected to Pulse for system sounds");
             if (pthread_create(&mThread, NULL, &pathread_func, this)==0) {
                 pthread_detach(mThread);
                 return true;
@@ -331,10 +394,11 @@ static void preload_stream_state_cb(pa_stream * s, void *userdata)
 
         case PA_STREAM_FAILED:
         default:
-            g_warning("stream_state_cb: Failed to upload sample '%s': %s (%d)", \
-                       snd->samplename,
-                       pa_strerror(pa_context_errno(pa_stream_get_context(s))),
-                       pa_stream_get_state(s));
+            PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "stream_state_cb: Failed to upload sample '%s': %s (%d)", \
+                snd->samplename,
+                pa_strerror(pa_context_errno(pa_stream_get_context(s))),
+                pa_stream_get_state(s));
             //Fall through and clean up, and then try the next sample.
 
             snd->loading = false;
@@ -343,7 +407,8 @@ static void preload_stream_state_cb(pa_stream * s, void *userdata)
             break;
 
         case PA_STREAM_TERMINATED:
-            g_debug("stream_state_cb: Successfully pre-loaded '%s'", snd->samplename);
+            PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "stream_state_cb: Successfully pre-loaded '%s'", snd->samplename);
             snd->loading = false;
             snd->isSuccess = true;
             unref = true;
@@ -381,9 +446,10 @@ static void preloadDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userdata
     struct PreloadDeferCBData* cbdata = (struct PreloadDeferCBData*)userdata;
     bool unref= false;
     cbdata->lock();
-    g_debug("PulseAudioLink::preload: Pre-loading '%s', %u bytes.",
-                                                      cbdata->snd.samplename,
-                                                      cbdata->snd.length);
+    PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+        "PulseAudioLink::preload: Pre-loading '%s', %u bytes.",\
+        cbdata->snd.samplename,\
+        cbdata->snd.length);
     cbdata->s = pa_stream_new(cbdata->context,
                               cbdata->snd.samplename,
                               &cbdata->snd.spec,
@@ -402,7 +468,7 @@ static void preloadDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userdata
     }
 }
 
-void PulseAudioLink::preload(const char * samplename)
+void PulseAudioLink::preload(const char * samplename, const char * format, int rate, int channels, const char * path)
 {
     // is the sound file loaded?
     PMTRACE_FUNCTION;
@@ -410,26 +476,28 @@ void PulseAudioLink::preload(const char * samplename)
                               mLoadedSounds.find(samplename) != mLoadedSounds.end())
         return;
 
-    std::string path = SYSTEMSOUNDS_PATH;
-    path += samplename;
-    path += "-ondemand.pcm";
     struct stat fileStat;
-    if (stat(path.c_str(), &fileStat) == 0)
+    if (stat(path, &fileStat) == 0)
     {
         // can we talk to Pulse to load it?
         if (!VERIFY(checkConnection()))
             return;
 
-        FILE* f = fopen(path.c_str(), "r");
+        FILE* f = fopen(path, "r");
         if (VERIFY(f)) {
             PreloadDeferCBData* data = new PreloadDeferCBData();
             data->snd.file = f;
             strcpy(data->snd.samplename, samplename);
             data->snd.length = fileStat.st_size;
             data->snd.tot_written = 0;
-            data->snd.spec.format = PA_SAMPLE_S16LE;
-            data->snd.spec.rate = 44100;
-            data->snd.spec.channels = 1;
+            if (std::strncmp(format, "PA_SAMPLE_S16LE", 15) == 0)
+                data->snd.spec.format = PA_SAMPLE_S16LE;
+            else if (std::strncmp(format,"PA_SAMPLE_S24LE", 15) == 0)
+                data->snd.spec.format = PA_SAMPLE_S24LE;
+            else
+                data->snd.spec.format = PA_SAMPLE_S32LE;
+            data->snd.spec.rate = rate;
+            data->snd.spec.channels = channels;
             data->snd.loading = true;
             data->snd.isSuccess = false;
             data->context = mContext;
@@ -448,7 +516,8 @@ void PulseAudioLink::preload(const char * samplename)
             data->lock();
             if (data->snd.loading)
             {
-                g_warning("PulseAudioLink::preload: failed to load sample");
+                PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                    "PulseAudioLink::preload: failed to load sample");
             } else {
                 if (!data->snd.isSuccess && data->s) pa_stream_disconnect(data->s);
             }
@@ -466,9 +535,11 @@ void* PulseAudioLink::pathread_func(void* p) {
     PulseAudioLink* link = (PulseAudioLink*)p;
     int ret;
     if (pa_mainloop_run(link->mMainLoop, &ret) < 0) {
-        g_warning("pa_mainloop_run() failed");
+        PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+            "pa_mainloop_run() failed");
     }
-    g_debug("pathread_func() exit %d", ret);
+    PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+        "pathread_func() exit %d", ret);
     return (void*)ret;
 }
 
@@ -567,7 +638,8 @@ bool PulseDtmfGenerator::stream_write_callback(pa_stream *stream, size_t length)
     } else if (mStatus==AUDIO_STATUS_NORMAL) {
         isStopping = false;
     } else {
-        g_warning("stream_write_callback IllegalStatus %d", mStatus);
+        PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+            "stream_write_callback IllegalStatus %d", mStatus);
         pthread_mutex_unlock(&mutex);
         return false;
     }

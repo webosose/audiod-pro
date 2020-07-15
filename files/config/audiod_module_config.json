@@ -10,6 +10,7 @@
                       "load_playback_manager",
                       "load_master_volume_manager",
                       "load_udev_event_manager",
-                      "load_connection_manager"
+                      "load_connection_manager",
+                      "load_play_sound_manager"
     ]
 }

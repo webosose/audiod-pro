@@ -522,6 +522,21 @@ bool AudioMixer::playSystemSound(const char *snd, EVirtualAudioSink sink)
     }
 }
 
+bool AudioMixer::playSound(const char *snd, EVirtualAudioSink sink, \
+               const char *format, int rate, int channels)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: playSound");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->playSound(snd, sink, format, rate, channels);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "playSound: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
 bool AudioMixer::programHeadsetRoute(int route)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: programHeadsetRoute");

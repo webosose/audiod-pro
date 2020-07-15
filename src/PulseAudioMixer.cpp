@@ -22,6 +22,9 @@
 #define FILENAME "/dev/snd/pcmC"
 #define DISPLAY_ONE 1
 #define DISPLAY_TWO 2
+#define DEFAULT_SAMPLE_RATE 44100
+#define DEFAULT_CHANNELS 1
+#define DEFAULT_SAMPLE_FORMAT "PA_SAMPLE_S16LE"
 
 #define _NAME_STRUCT_OFFSET(struct_type, member) \
                        ((long) ((unsigned char*) &((struct_type*) 0)->member))
@@ -955,6 +958,20 @@ bool PulseAudioMixer::playSystemSound(const char *snd, EVirtualAudioSink sink)
         return true;
     }
     return mPulseLink.play(snd, sink);
+}
+
+bool PulseAudioMixer::playSound(const char *snd, EVirtualAudioSink sink, const char *format, int rate, int channels)
+{
+    return mPulseLink.play(snd, sink, format, rate, channels);
+}
+
+void PulseAudioMixer::preloadSystemSound(const char * snd)
+{
+    std::string path = SYSTEMSOUNDS_PATH;
+    path += snd;
+    path += "-ondemand.pcm";
+
+    mPulseLink.preload(snd, DEFAULT_SAMPLE_FORMAT, DEFAULT_SAMPLE_RATE, DEFAULT_CHANNELS, path.c_str());
 }
 
 void PulseAudioMixer::playOneshotDtmf(const char *snd, EVirtualAudioSink sink)

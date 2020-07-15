@@ -137,9 +137,13 @@ public:
     bool    play(const char *snd, const char *sink);
 
     bool    play(PulseAudioDataProvider* data, const char* sink);
+    bool    play(const char * filename, const char * sink, const char * format, \
+        int rate, int channels);
+    bool    play(const char *snd,  EVirtualAudioSink sink, const char *format, \
+        int rate, int channels);
 
     /// on-demand sounds need to be pre-loaded in Pulse for a faster initial playback
-    void    preload(const char * samplename);
+    void    preload(const char * filename, const char * format, int rate, int channels, const char * path);
 
     /// These should really be private, but they're needed for global callbacks...
     void    pulseAudioStateChanged(pa_context_state_t state);
