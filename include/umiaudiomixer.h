@@ -68,5 +68,7 @@ class umiaudiomixer
     //To send on sink changed status to all the pulse audiod and umi scenario modules
     bool onSinkChangedReply(const std::string& source, const std::string& sink, EVirtualAudioSink eVirtualSink,\
                             utils::ESINK_STATUS eSinkStatus, utils::EMIXER_TYPE eMixerType);
+    //AudioOutputd Server status callback
+    static bool audioOutputdServiceStatusCallback(LSHandle *sh, const char *serviceName, bool connected, void *ctx);
 };
 #endif //UMIAUDIOMIXER_H_

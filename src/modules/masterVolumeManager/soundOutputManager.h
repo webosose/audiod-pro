@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 LG Electronics, Inc.
+// Copyright (c) 2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _SOUNDSETTINGS_H_
-#define _SOUNDSETTINGS_H_
+#ifndef _SOUNDOUTPUT_MGR_H_
+#define _SOUNDOUTPUT_MGR_H_
 
 #include <string>
 #include <cstdio>
@@ -26,18 +26,27 @@
 #include "utils.h"
 #include "main.h"
 #include "audioMixer.h"
+#include "soundOutputListParser.h"
 
-class soundSettings
+class SoundOutputManager
 {
 private:
+    SoundOutputManager(const SoundOutputManager&) = delete;
+    SoundOutputManager& operator=(const SoundOutputManager&) = delete;
+    void readSoundOutputListInfo();
+    void printSoundOutputListInfo();
+    bool initializeSoundOutputList(const pbnjson::JValue& soundOutputListInfo);
     std::string soundMode;
+    std::map<std::string, utils::SOUNDOUTPUT_LIST_T> mSoundOutputInfoMap;
     AudioMixer *mObjAudioMixer;
+    SoundOutputListParser* mObjSoundOutputListParser;
+
 public:
-    static soundSettings * getSoundSettingsInstance();
+    SoundOutputManager();
+    ~SoundOutputManager();
+
     static bool _SetSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx);
     static bool _updateSoundOutStatus(LSHandle *sh, LSMessage *reply, void *ctx);
-    soundSettings();
-    ~soundSettings();
 };
 
-#endif // _SOUNDSETTINGS_H_
+#endif // _SOUNDOUTPUT_MGR_H_

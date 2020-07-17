@@ -27,6 +27,7 @@
 #include "moduleInterface.h"
 #include "moduleManager.h"
 #include "audioMixer.h"
+#include "soundOutputManager.h"
 
 #define AUDIOD_API_GET_VOLUME "/master/getVolume"
 #define DISPLAY_ONE 0
@@ -45,6 +46,7 @@ class MasterVolumeManager : public ModuleInterface
 
         ModuleManager* mObjModuleManager;
         AudioMixer *mObjAudioMixer;
+        static SoundOutputManager *mObjSoundOutputManager;
         int mVolume;
         int displayOneVolume;
         int displayTwoVolume;
@@ -57,6 +59,7 @@ class MasterVolumeManager : public ModuleInterface
         static MasterVolumeManager* getMasterVolumeManagerInstance();
         static void loadModuleMasterVolumeManager(GMainLoop *loop, LSHandle* handle);
         static MasterVolumeManager *mMasterVolumeManager;
+        static void initSoundOutputManager(GMainLoop *loop, LSHandle* handle);
 
         void setCurrentVolume(int iVolume);
         void setCurrentMuteStatus(bool bMuteStatus);

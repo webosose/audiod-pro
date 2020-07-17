@@ -168,6 +168,27 @@ namespace utils
         }
     }VOLUME_POLICY_INFO_T;
 
+    typedef struct soundOutputListInfo
+    {
+        bool activeStatus;
+        bool muteStatus;
+        bool adjustVolume;
+        int volume;
+        int maxVolume;
+        int minVolume;
+        int volumeStep;
+        soundOutputListInfo()
+        {
+            activeStatus = false;
+            muteStatus = false;
+            adjustVolume = true;
+            volume = 100;
+            maxVolume = 100;
+            minVolume = 0;
+            volumeStep = 1;
+        }
+    }SOUNDOUTPUT_LIST_T;
+
     typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
     typedef std::vector<EVirtualAudioSink>::iterator itVirtualSink;
 

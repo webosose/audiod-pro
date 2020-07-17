@@ -16,6 +16,7 @@
 
 #include "umiaudiomixer.h"
 
+#define AUDIOOUTPUT_SERVICE                "com.webos.service.audiooutput"
 #define CONNECT                            "luna://com.webos.service.audiooutput/audio/connect"
 #define DISCONNECT                         "luna://com.webos.service.audiooutput/audio/disconnect"
 #define SET_SOUNDOUT                       "luna://com.webos.service.audiooutput/audio/setSoundOut"
@@ -249,11 +250,48 @@ umiaudiomixer::umiaudiomixer(MixerInterface* mixerCallBack):\
               mIsUmiMixerReadyToProgram(false), mObjMixerCallBack(mixerCallBack)
 {
     PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer constructor");
+    CLSError lserror;
+    bool result = LSRegisterServerStatusEx(GetPalmService(), AUDIOOUTPUT_SERVICE, audioOutputdServiceStatusCallback, this, NULL, &lserror);
+    if (!result)
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+    }
 }
 
 umiaudiomixer::~umiaudiomixer()
 {
     PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer distructor");
+}
+
+bool umiaudiomixer::audioOutputdServiceStatusCallback(LSHandle *sh, const char *serviceName, bool connected, void *ctx)
+{
+    bool returnValue = true;
+    PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT,\
+               "umiaudiomixer audioOutputdServiceStatusCallback, status: %d", connected);
+    if (nullptr != ctx)
+    {
+        umiaudiomixer* umiMixerObj = (umiaudiomixer*) ctx;
+        if (umiMixerObj)
+        {
+            PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT,\
+                        "umiaudiomixer audioOutputdServiceStatusCallback, calling callBackMixerStatus");
+            umiMixerObj->mObjMixerCallBack->callBackMixerStatus(connected, utils::eUmiMixer);
+            umiMixerObj->mIsUmiMixerReadyToProgram = connected;
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT,\
+                        "umiaudiomixer audioOutputdServiceStatusCallback, umiMixerObj is null");
+            returnValue = false;
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT,\
+                     "umiaudiomixer audioOutputdServiceStatusCallback, ctx is null");
+        returnValue = false;
+    }
+    return returnValue;
 }
 
 bool umiaudiomixer::onSinkChangedReply(const std::string& source, const std::string& sink, EVirtualAudioSink eVirtualSink,\

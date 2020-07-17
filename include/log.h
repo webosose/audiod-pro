@@ -152,4 +152,6 @@ extern PmLogContext audiodLogContext;
 #define MSGID_LUNA_EVENT_SUBSCRIBER                    "LUNA_EVENT_SUBSCRIBER"             //For Luna event subscriber
 #define MSGID_PULSE_LINK                               "PULSE_LINK"                        //For PulseAudio link
 #define MSGID_PLAYBACK_MANAGER                         "PLAYBACK_MANAGER"                  //For Playback manager
+#define MSGID_SOUND_SETTINGS                           "SOUND_SETTINGS"                    //For sound Settings
+#define MSGID_SOUNDOUTPUT_LIST_PARSER                  "SOUNDOUTPUT_CONFIG_PARSER"         //SoundOutputList Configuration
 #endif // LOG_H_

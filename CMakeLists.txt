@@ -130,7 +130,8 @@ SET (modules_files
         src/modules/bluetoothManager/bluetoothManager.cpp
         src/modules/connectionManager/umiDispatcher.cpp
         src/modules/masterVolumeManager/masterVolumeManager.cpp
-        src/modules/masterVolumeManager/soundSettings.cpp
+        src/modules/masterVolumeManager/soundOutputManager.cpp
+        src/modules/masterVolumeManager/soundOutputListParser.cpp
         src/modules/settingsServiceManager/settingsservice.cpp
         src/modules/systemSoundsManager/systemsounds.cpp
         src/modules/udevEventManager/udevEventManager.cpp
@@ -144,6 +145,7 @@ SET (modules_files
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
     install(FILES files/config/audiod_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_module_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
+    install(FILES files/config/audiod_sound_output_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}
