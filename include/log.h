@@ -155,4 +155,5 @@ extern PmLogContext audiodLogContext;
 #define MSGID_PLAYBACK_MANAGER                         "PLAYBACK_MANAGER"                  //For Playback manager
 #define MSGID_SOUND_SETTINGS                           "SOUND_SETTINGS"                    //For sound Settings
 #define MSGID_SOUNDOUTPUT_LIST_PARSER                  "SOUNDOUTPUT_CONFIG_PARSER"         //SoundOutputList Configuration
+#define MSGID_SYSTEMSOUND_MANAGER                      "SYSTEM_SOUND"                      //For System sound plays
 #endif // LOG_H_

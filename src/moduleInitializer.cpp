@@ -49,6 +49,8 @@ ModuleInitializer::~ModuleInitializer()
             unload_playback_manager();
         else if (it == "load_settings_service_manager")
             unload_settings_service_manager();
+        else if (it == "load_system_sounds_manager")
+            unload_system_sounds_manager();
     }
 }
 
@@ -69,6 +71,8 @@ void ModuleInitializer::initializeModuleInfo()
         ("load_playback_manager", load_playback_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_settings_service_manager", load_settings_service_manager));
+    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
+        ("load_system_sounds_manager", load_system_sounds_manager));
 
     //these should be enabled when the modules are implemented
     /*moduleMap.insert(std::pair<std::string, ModuleInitFunction>\

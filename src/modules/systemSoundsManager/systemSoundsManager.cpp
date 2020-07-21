@@ -1,0 +1,199 @@
+/* @@@LICENSE
+*
+*      Copyright (c) 2020 LG Electronics Company.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*
+* LICENSE@@@ */
+
+#include "systemSoundsManager.h"
+
+SystemSoundsManager* SystemSoundsManager::mSystemSoundsManager = nullptr;
+
+SystemSoundsManager* SystemSoundsManager::getSystemSoundsManagerInstance()
+{
+    return mSystemSoundsManager;
+}
+
+SystemSoundsManager::SystemSoundsManager()
+{
+    mObjAudioMixer = AudioMixer::getAudioMixerInstance();
+    if (!mObjAudioMixer)
+    {
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+            "AudioMixer instance is null");
+    }
+    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+        "systemsounds constructor done");
+}
+
+SystemSoundsManager::~SystemSoundsManager()
+{
+    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+        "systemsounds destructor");
+}
+
+LSMethod SystemSoundsManager::systemsoundsMethods[] = {
+    { "playFeedback", SystemSoundsManager::_playFeedback},
+    { },
+};
+
+bool SystemSoundsManager::_playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser    msg(message, SCHEMA_5(REQUIRED(name, string),
+                                  OPTIONAL(sink, string),
+                                  OPTIONAL(play, boolean),
+                                  OPTIONAL(override, boolean),
+                                  OPTIONAL(type, string)));
+    if (!msg.parse(__FUNCTION__, lshandle))
+        return true;
+
+    const gchar * reply = STANDARD_JSON_SUCCESS;
+    EVirtualAudioSink sink = edefaultapp;
+    std::string    name, sinkName;
+    bool play = true;
+    bool override = false;
+    char *filename = NULL;
+    FILE *fp = NULL;
+    size_t size = 0;
+
+    SystemSoundsManager* SystemSoundsManagerInstance = SystemSoundsManager::getSystemSoundsManagerInstance();
+    AudioMixer* audioMixerObj = SystemSoundsManagerInstance->mObjAudioMixer;
+
+    if (!msg.get("name", name))
+    {
+        reply = MISSING_PARAMETER_ERROR(name, string);
+        goto error;
+    }
+
+    if (msg.get("sink", sinkName))
+    {
+        sink = getSinkByName(sinkName.c_str());
+        if (!IsValidVirtualSink(sink))
+        {
+            reply = INVALID_PARAMETER_ERROR(sink, string);
+            goto error;
+        }
+    }
+    size = strlen(SYSTEMSOUNDS_PATH) + strlen(name.c_str()) + strlen("-ondemand.pcm")+ 1;
+    filename = (char *)malloc( size );
+    if (filename == NULL) {
+         reply = STANDARD_JSON_ERROR(4, "Unable to allocate memory");
+         goto error;
+    }
+    snprintf(filename, size, SYSTEMSOUNDS_PATH "%s-ondemand.pcm", name.c_str());
+    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+        "complete file name to playback = %s\n", filename);
+
+    fp = fopen(filename, "r");
+    free(filename);
+    filename= NULL;
+    if (!fp){
+         PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+            "Error : %s : file open failed. returning from here\n", __FUNCTION__);
+         reply = INVALID_PARAMETER_ERROR(name, string);
+         goto error;
+    }
+    else{
+         fclose(fp);
+         fp = NULL;
+    }
+
+    // if "play" is false, pre-load the sound & do nothing else
+    if (!msg.get("play", play))
+        play = true;
+
+    if (msg.get("override", override))
+        override = true;
+    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+        "%s override = %d\n", __FUNCTION__, override);
+
+    if (!audioMixerObj)
+    {
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+                "audioMixerObj is null");
+        goto error;
+    }
+    if (play)
+    {
+        if (!audioMixerObj->playSystemSound(name.c_str(), sink))
+        {
+            reply = STANDARD_JSON_ERROR(3, "unable to connect to pulseaudio.");
+            goto error;
+        }
+    }
+    else
+    {
+        audioMixerObj->preloadSystemSound(name.c_str());
+    }
+
+error:
+    CLSError lserror;
+    if (!LSMessageReply(lshandle, message, reply, &lserror)){
+        lserror.Print(__FUNCTION__, __LINE__);
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+            "returning FALSE becuase of invald parameters");
+        return false;
+    }
+
+    return true;
+}
+
+void SystemSoundsManager::loadSystemSoundsManager(GMainLoop *loop, LSHandle* handle)
+{
+    if (!mSystemSoundsManager)
+    {
+        mSystemSoundsManager = new (std::nothrow) SystemSoundsManager();
+        if (mSystemSoundsManager)
+        {
+            PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+                "load SystemSoundsManager successful");
+            bool result = false;
+            CLSError lserror;
+
+            result = ServiceRegisterCategory ("/systemsounds", SystemSoundsManager::systemsoundsMethods, NULL, NULL);
+            if (!result)
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+                PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+                    "%s: Registering Service for '%s' category failed", __FUNCTION__, "/systemsounds");
+            }
+            PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+                "SystemSoundsManager init done");
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+                "SystemSoundsManager module load failed");
+        }
+    }
+}
+
+int load_system_sounds_manager(GMainLoop *loop, LSHandle* handle)
+{
+    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+        "Load system sound manager");
+    SystemSoundsManager::loadSystemSoundsManager(loop, handle);
+    return 0;
+}
+
+void unload_system_sounds_manager()
+{
+    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+        "unload system sound manager");
+    if (SystemSoundsManager::mSystemSoundsManager)
+    {
+        delete SystemSoundsManager::mSystemSoundsManager;
+        SystemSoundsManager::mSystemSoundsManager = nullptr;
+    }
+}
