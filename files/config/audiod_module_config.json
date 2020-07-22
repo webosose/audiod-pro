@@ -7,6 +7,7 @@
                       "load_audio_policy_manager",
                       "load_bluetooth_manager",
                       "load_system_sounds_manager",
+                      "load_settings_service_manager",
                       "load_playback_manager",
                       "load_master_volume_manager",
                       "load_udev_event_manager",

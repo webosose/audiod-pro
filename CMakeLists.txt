@@ -132,7 +132,7 @@ SET (modules_files
         src/modules/masterVolumeManager/masterVolumeManager.cpp
         src/modules/masterVolumeManager/soundOutputManager.cpp
         src/modules/masterVolumeManager/soundOutputListParser.cpp
-        src/modules/settingsServiceManager/settingsservice.cpp
+        src/modules/settingsServiceManager/settingsServiceManager.cpp
         src/modules/systemSoundsManager/systemsounds.cpp
         src/modules/udevEventManager/udevEventManager.cpp
         src/modules/lunaEventSubscriber/lunaEventSubscriber.cpp

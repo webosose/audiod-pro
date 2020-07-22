@@ -146,6 +146,7 @@ extern PmLogContext audiodLogContext;
 #define MSGID_PULSEAUDIO_MIXER                         "PULSEAUDIO_MIXER"                  //pulse mixer functions
 #define MSGID_UMIAUDIO_MIXER                           "UMIAUDIO_MIXER"                    //UMI mixer functions
 #define MSGID_POLICY_MANAGER                           "AUDIO_POLICY_MANAGER"              //Audio policy manager
+#define MSGID_SETTING_SERVICE_MANAGER                  "SETTINGS_SERVICE_MANAGER"          //Settings service manager
 #define MSGID_UDEV_MANAGER                             "UDEV_EVENT_MANAGER"                //For Udev event manager
 #define MSGID_MASTER_VOLUME_MANAGER                    "MASTER_VOLUME_MANAGER"             //Master Volume manager
 #define MSGID_BLUETOOTH_MANAGER                        "BLUETOOTH_MANAGER"                 //For Bluetooth manager

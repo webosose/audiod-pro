@@ -47,6 +47,8 @@ ModuleInitializer::~ModuleInitializer()
             unload_luna_event_subscriber();
         else if (it == "load_playback_manager")
             unload_playback_manager();
+        else if (it == "load_settings_service_manager")
+            unload_settings_service_manager();
     }
 }
 
@@ -65,6 +67,8 @@ void ModuleInitializer::initializeModuleInfo()
         ("load_luna_event_subscriber", load_luna_event_subscriber));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_playback_manager", load_playback_manager));
+    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
+        ("load_settings_service_manager", load_settings_service_manager));
 
     //these should be enabled when the modules are implemented
     /*moduleMap.insert(std::pair<std::string, ModuleInitFunction>\

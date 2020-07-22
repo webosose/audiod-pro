@@ -59,6 +59,8 @@ typedef enum serverType{
 typedef enum LunaKeyType {
     eLunaEventBTDeviceStatus,
     eLunaEventA2DPStatus,
+    eLunaEventSettingMediaParam,
+    eLunaEventSettingDNDParam,
     eLunaEventCount,     //Last element should be eLunaEventCount
     eLunaEventKeyFirst = eLunaEventBTDeviceStatus,
 }LUNA_KEY_TYPE_E;
