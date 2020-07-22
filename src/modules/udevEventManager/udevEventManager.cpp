@@ -47,7 +47,17 @@ bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
         {
             if (objUdevEventManager->mObjAudioMixer)
             {
-                if (event == "usb-mic-inserted") {
+                if (event == "headset-removed") {
+                    returnValue = objUdevEventManager->mObjAudioMixer->programHeadsetRoute(0);
+                    if (false == returnValue)
+                        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+                }
+                else if (event == "headset-inserted") {
+                    returnValue = objUdevEventManager->mObjAudioMixer->programHeadsetRoute(1);
+                    if (false == returnValue)
+                        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+                }
+                else if (event == "usb-mic-inserted") {
                     returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 1);
                     if (false == returnValue)
                         reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
