@@ -150,6 +150,7 @@ extern PmLogContext audiodLogContext;
 #define MSGID_SOUND_SETTINGS                           "SOUND_SETTINGS"                    //For sound Settings
 #define MSGID_SOUNDOUTPUT_LIST_PARSER                  "SOUNDOUTPUT_CONFIG_PARSER"         //SoundOutputList Configuration
 #define MSGID_SYSTEMSOUND_MANAGER                      "SYSTEM_SOUND"                      //For System sound plays
+#define MSGID_CONNECTION_MANAGER                       "CONNECTION_MANAGER"                //Connection manager
 #define MSGID_GINIT_FUNTION                            "INIT_FUNCTIONS"                    //For utils, init and hook functions
 
 /// Test macro that will make a critical log entry if the test fails
@@ -169,5 +170,4 @@ extern PmLogContext audiodLogContext;
 #define FAILURE(m) PM_LOG_ERROR(MSGID_VERIFY_FAILED, INIT_KVCOUNT,\
                                                         "%s %s %d %s", \
                                                         m, __FILE__, __LINE__, __FUNCTION__)
-
 #endif // LOG_H_
