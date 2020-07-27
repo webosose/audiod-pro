@@ -71,18 +71,6 @@ void logFilter(const gchar *log_domain,
 // priority are logged in the system log (to avoid duplication).
 void setProcessName(const char * name);
 
-/// Test macro that will make a critical log entry if the test fails
-#define VERIFY(t) (G_LIKELY(t) || (logFailedVerify(#t, __FILE__, __LINE__,  \
-                                                        __FUNCTION__), false))
-
-/// Test macro that will make a warning log entry if the test fails
-#define CHECK(t) (G_LIKELY(t) || (logCheck(#t, __FILE__, __LINE__,  \
-                                                        __FUNCTION__), false))
-
-/// Direct critical message to put in the logs with
-// file & line number, with filtering of repeats
-#define FAILURE(m) logFailure(m, __FILE__, __LINE__, __FUNCTION__)
-
 #define SHOULD_NOT_REACH_HERE FAILURE("This line should never be reached")
 
 /// Functions that implement the macros above.
@@ -130,12 +118,18 @@ extern PmLogContext audiodLogContext;
 #define MSGID_LUNA_SEND_FAILED                         "LUNA_SEND_FAILED"                  //Failed to send luna command
 #define MSGID_LUNA_CREATE_JSON_FAILED                  "LUNA_CREATE_JSON_FAILED"           //Failed to create json payload
 #define MSGID_LUNA_FAILED_TO_PARSE_PARAMETERS          "LUNA_FAILED_TO_PARSE_PARAMETERS"   //Failed to parse luna parameters
+#define MSGID_LUNA_SERVICE_ERROR                       "LUNA_SERVICE_ERROR"                //For logging LSError
 
 //Json related message ID's
 #define MSGID_MALFORMED_JSON                           "MALFORMED_JSON"                    //Malformed json data
 #define MSGID_JSON_PARSE_ERROR                         "JSON_PARSE_ERROR"                  //Error while parsing json data
 #define MSGID_PARSE_JSON                               "PARSE_JSON"                        //Parse json message
+
+//Other message ID's
 #define MSGID_DATA_NULL                                "NULL_MESSAGE"                      //luna message is null
+#define MSGID_DEBUG_SOCKETS                            "SOCKET_COMMUNICATION"              //For Socket communication
+#define MSGID_VERIFY_FAILED                            "VERIFY_FAILED"                     //Test failed
+#define MSGID_DEBUG_IPC                                "IPC_DEBUG"                         //For IPC communication
 
 #define MSGID_MODULE_INITIALIZER                       "INITIALIZE_MODULE"                 //module initialiser
 #define MSGID_MODULE_MANAGER                           "AUDIO_MODULE_MANAGER"              //module manager
@@ -156,4 +150,24 @@ extern PmLogContext audiodLogContext;
 #define MSGID_SOUND_SETTINGS                           "SOUND_SETTINGS"                    //For sound Settings
 #define MSGID_SOUNDOUTPUT_LIST_PARSER                  "SOUNDOUTPUT_CONFIG_PARSER"         //SoundOutputList Configuration
 #define MSGID_SYSTEMSOUND_MANAGER                      "SYSTEM_SOUND"                      //For System sound plays
+#define MSGID_GINIT_FUNTION                            "INIT_FUNCTIONS"                    //For utils, init and hook functions
+
+/// Test macro that will make a critical log entry if the test fails
+#define VERIFY(t) (G_LIKELY(t) || (PM_LOG_ERROR(MSGID_VERIFY_FAILED, INIT_KVCOUNT,\
+                                                        "%s %s %d %s",   \
+                                                        #t, __FILE__, __LINE__,  \
+                                                        __FUNCTION__), false))
+
+/// Test macro that will make a warning log entry if the test fails
+#define CHECK(t) (G_LIKELY(t) || ((PM_LOG_ERROR(MSGID_VERIFY_FAILED, INIT_KVCOUNT,\
+                                                        "%s %s %d %s",   \
+                                                        #t, __FILE__, __LINE__,  \
+                                                        __FUNCTION__), false))
+
+/// Direct critical message to put in the logs with
+// file & line number, with filtering of repeats
+#define FAILURE(m) PM_LOG_ERROR(MSGID_VERIFY_FAILED, INIT_KVCOUNT,\
+                                                        "%s %s %d %s", \
+                                                        m, __FILE__, __LINE__, __FUNCTION__)
+
 #endif // LOG_H_

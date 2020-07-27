@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -412,8 +412,9 @@ template <class SharedProperties> SharedProperties * IPC_SharedProperties::
     }
     catch(interprocess_exception & error)
     {
-        g_debug("attachSharedMemory: Exception trying to use  \
-                                            the shared memory: %s", error.what());
+        PM_LOG_ERROR(MSGID_DEBUG_IPC, INIT_KVCOUNT,\
+            "attachSharedMemory: Exception trying to use  \
+            the shared memory: %s", error.what());
         delete sharedProperties->mRegion;
         sharedProperties->mRegion = 0;
         delete sharedProperties->mSharedMemory;
@@ -469,8 +470,9 @@ bool IPC_SharedProperties::attachSharedMemory()
     }
     catch(interprocess_exception & ex)
     {
-        g_debug("attachSharedMemory: Exception trying to use  \
-                                            the shared memory: %s", ex.what());
+        PM_LOG_ERROR(MSGID_DEBUG_IPC, INIT_KVCOUNT,\
+            "attachSharedMemory: Exception trying to use  \
+            the shared memory: %s", ex.what());
         detachSharedMemory();
         return false;
     }

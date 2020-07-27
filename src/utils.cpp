@@ -65,7 +65,8 @@ hookInit(gpointer func)
     InitFunction function = (InitFunction) func;
     int ret = function ();
     if (ret != 0)
-        g_error ("%s: Could not run init function %p", __FUNCTION__, func);
+        PM_LOG_ERROR(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+            "%s: Could not run init function %p", __FUNCTION__, func);
 }
 
 static void
@@ -74,7 +75,8 @@ hookStart(gpointer func)
     StartFunction function = (StartFunction) func;
     int ret = function (sCurrentLoop, sCurrentHandle);
     if (ret != 0)
-        g_error ("%s: Could not run start function %p", __FUNCTION__, func);
+        PM_LOG_ERROR(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+            "%s: Could not run start function %p", __FUNCTION__, func);
 }
 
 guint64 getCurrentTimeInMs ()
@@ -86,7 +88,8 @@ guint64 getCurrentTimeInMs ()
 
 void registerAudioModule(ModuleInitFunction function)
 {
-    g_debug ("%s", __FUNCTION__);
+    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+        "%s", __FUNCTION__);
     if (NULL == sServiceStartList)
     {
        sServiceStartList = (GHookList*) malloc (sizeof (GHookList));
@@ -242,19 +245,23 @@ void oneInitForAll(GMainLoop *loop, LSHandle *handle)
     sCurrentLoop   = loop;
     sCurrentHandle = handle;
 
-    g_debug ("%s: calling all init functions", __FUNCTION__);
+    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+        "%s: calling all init functions", __FUNCTION__);
     if (NULL != sInitList)
         g_hook_list_invoke (sInitList, FALSE);
 
-    g_debug ("%s: calling all start module functions", __FUNCTION__);
+    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+        "%s: calling all start module functions", __FUNCTION__);
     if (NULL != sModuleStartList)
         g_hook_list_invoke (sModuleStartList, FALSE);
 
-    g_debug ("%s: calling all start control functions", __FUNCTION__);
+    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+        "%s: calling all start control functions", __FUNCTION__);
     if (NULL != sControlStartList)
         g_hook_list_invoke (sControlStartList, FALSE);
 
-    g_debug ("%s: calling all start service functions", __FUNCTION__);
+    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+        "%s: calling all start service functions", __FUNCTION__);
     if (NULL != sServiceStartList)
         g_hook_list_invoke (sServiceStartList, FALSE);
 
@@ -263,7 +270,8 @@ void oneInitForAll(GMainLoop *loop, LSHandle *handle)
     sCurrentLoop   = NULL;
     sCurrentHandle = NULL;
 
-    g_debug("oneInitForAll: complete!");
+    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+        "oneInitForAll: complete!");
 }
 
 bool ServiceRegisterCategory(const char *category, LSMethod *methods,
@@ -271,7 +279,8 @@ bool ServiceRegisterCategory(const char *category, LSMethod *methods,
 {
     bool result;
     CLSError lserror;
-    g_message("%s: Registering Service for '%s' category", __FUNCTION__, category);
+    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
+        "%s: Registering Service for '%s' category", __FUNCTION__, category);
     result = LSRegisterCategory (GetPalmService(), category,
             methods, signal, NULL, &lserror);
     if (!result)

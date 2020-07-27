@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@
 #define DO_DEBUG_SOCKETS 0
 
 #if DO_DEBUG_SOCKETS
-    #define DEBUG_SOCKETS g_debug
-    #define DEBUG_SOCKETS_W g_warning
-    #define DEBUG_SOCKETS_M g_message
+    #define DEBUG_SOCKETS(...) PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT, ##__VA_ARGS__)
+    #define DEBUG_SOCKETS_W(...) PM_LOG_WARNING(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT, ##__VA_ARGS__)
+    #define DEBUG_SOCKETS_M(...) PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT, ##__VA_ARGS__)
 #else
     #define DEBUG_SOCKETS(...)
     #define DEBUG_SOCKETS_W(...)
@@ -187,8 +187,8 @@ bool IPC_Socket::send(const void * data,
 {
     if (!isConnected())
     {
-        g_warning("IPC_SocketServer::send: socket '%s/%d' not connected.",
-                                                                  mName, mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::send: socket '%s/%d' not connected.",mName, mFD);
         return false;
     }
 
@@ -197,8 +197,9 @@ bool IPC_Socket::send(const void * data,
         IPC_Header    header(size + size2);
         if (::send(mFD, &header, sizeof(header), MSG_DONTWAIT) != sizeof(header))
         {
-            g_warning("IPC_SocketServer::send: error '%s' on socket '%s/%d'.",
-                                                  strerror(errno), mName, mFD);
+            PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                "IPC_SocketServer::send: error '%s' on socket '%s/%d'.",
+                strerror(errno), mName, mFD);
             return false;
         }
     }
@@ -206,9 +207,10 @@ bool IPC_Socket::send(const void * data,
     {
         if (size != mMessageSize)
         {
-            g_warning("IPC_SocketServer::send: incorrect packet size  \
-                                    (%d instead of %d) on socket '%s/%d'.",
-                                     size, mMessageSize, mName, mFD);
+            PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                "IPC_SocketServer::send: incorrect packet size  \
+                (%d instead of %d) on socket '%s/%d'.",
+                size, mMessageSize, mName, mFD);
             return false;
         }
     }
@@ -216,8 +218,9 @@ bool IPC_Socket::send(const void * data,
               (size2 > 0 && data2 &&
               ::send(mFD, data2, size2, MSG_DONTWAIT) != size2))
     {
-        g_warning("IPC_SocketServer::send: error '%s' on socket '%s/%d'.",
-                                                strerror(errno), mName, mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::send: error '%s' on socket '%s/%d'.",
+            strerror(errno), mName, mFD);
         return false;
     }
     DEBUG_SOCKETS("IPC_Socket::send: sent %d bytes on '%s/%d'",
@@ -299,8 +302,9 @@ bool IPC_SocketClient::connect(const char * name,
 
     if (length > maxLength)
     {
-        g_warning("IPC_SocketClient::IPC_SocketClient: socket name '%s'  \
-                             is too long (%i > %i),", name, length, maxLength);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketClient::IPC_SocketClient: socket name '%s'  \
+            is too long (%i > %i),", name, length, maxLength);
         return false;
     }
 
@@ -337,8 +341,9 @@ bool IPC_SocketClient::tryToConnectOnce()
 
     if (-1 == (mSocket.mFD = ::socket(AF_UNIX, SOCK_STREAM, 0)))
     {
-        g_warning("IPC_SocketClient::connect: error '%s' on socket '%s/%d'.",
-                                  strerror(errno), socketName(), mSocket.mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketClient::connect: error '%s' on socket '%s/%d'.",
+            strerror(errno), socketName(), mSocket.mFD);
         return false;
     }
 
@@ -352,9 +357,10 @@ bool IPC_SocketClient::tryToConnectOnce()
                                   strerror(errno), socketName(), mSocket.mFD);
         if (::close(mSocket.mFD))
         {
-            g_warning("IPC_SocketClient::connect: close error '%s'   \
-                                on socket '%s/%d'.",
-                                 strerror(errno), socketName(), mSocket.mFD);
+            PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                "IPC_SocketClient::connect: close error '%s'   \
+                on socket '%s/%d'.",
+                strerror(errno), socketName(), mSocket.mFD);
         }
         mSocket.mFD = -1;
         return false;
@@ -368,9 +374,10 @@ bool IPC_SocketClient::tryToConnectOnce()
                                        IPC_SocketClient::socketStatusCallback,
                                        this);
 
-    g_message("IPC_SocketClient::connect: successfully connected socket  \
-                                     '%s/%d' on attempt #%i.",
-                                      socketName(), mSocket.mFD, mConnectAttempt);
+    PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+        "IPC_SocketClient::connect: successfully connected socket  \
+        '%s/%d' on attempt #%i.",
+        socketName(), mSocket.mFD, mConnectAttempt);
     mSocket.connectionEstablished();
     mConnectAttempt = 0;
 
@@ -402,21 +409,24 @@ void IPC_SocketClient::statusCallback(GIOChannel *ch, GIOCondition condition)
     {
         if (!mSocket.receiveData())
         {
-            g_warning("IPC_Socket::statusCallback: receive error on socket  \
-             '%s/%d' (%s).", socketName(), mSocket.mFD, strerror(errno));
+            PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                "IPC_Socket::statusCallback: receive error on socket  \
+                '%s/%d' (%s).", socketName(), mSocket.mFD, strerror(errno));
         }
     }
 
     if (condition & G_IO_ERR)
     {
-        g_warning("IPC_Socket::statusCallback: error condition on socket  \
-                                         '%s/%d'.", socketName(), mSocket.mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_Socket::statusCallback: error condition on socket  \
+            '%s/%d'.", socketName(), mSocket.mFD);
     }
 
     if (condition & G_IO_HUP)
     {
-        g_warning("IPC_Socket::statusCallback: socket '%s/%d'  \
-                                         hung up.", socketName(), mSocket.mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_Socket::statusCallback: socket '%s/%d'  \
+            hung up.", socketName(), mSocket.mFD);
         mSocket.close(false);
         if (mAutoConnect)
             tryAndRetryToConnect();
@@ -466,7 +476,8 @@ bool IPC_SocketServer::listen(const char * name,
 
     if (nameLength > maxLength)
     {
-        g_warning("IPC_SocketServer::create: name too long '%s'.", name);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::create: name too long '%s'.", name);
         return false;
     }
 
@@ -475,8 +486,9 @@ bool IPC_SocketServer::listen(const char * name,
     /* build the socket */
     if (-1 == (mSocket.mFD = socket(AF_UNIX, SOCK_STREAM, 0)))
     {
-        g_warning("IPC_SocketServer::create: error creating socket   \
-                                            '%s': %s ", name, strerror(errno));
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::create: error creating socket   \
+            '%s': %s ", name, strerror(errno));
         return false;
     }
 
@@ -485,8 +497,9 @@ bool IPC_SocketServer::listen(const char * name,
                                     _NAME_STRUCT_OFFSET (struct sockaddr_un,
                                                       sun_path) + nameLength))
     {
-        g_warning("IPC_SocketServer::create: error binding socket   \
-                            '%s/%d': %s ", name, mSocket.mFD, strerror(errno));
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::create: error binding socket   \
+            '%s/%d': %s ", name, mSocket.mFD, strerror(errno));
         ::close(mSocket.mFD);
         mSocket.mFD = -1;
         return false;
@@ -494,8 +507,9 @@ bool IPC_SocketServer::listen(const char * name,
 
     if (-1 == ::listen(mSocket.mFD, 5))
     {
-        g_warning("IPC_SocketServer::create: error listening to socket   \
-                            '%s/%d': %s ", name, mSocket.mFD, strerror(errno));
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::create: error listening to socket   \
+            '%s/%d': %s ", name, mSocket.mFD, strerror(errno));
         ::close(mSocket.mFD);
         mSocket.mFD = -1;
         return false;
@@ -540,15 +554,17 @@ void IPC_SocketServer::listenCallback(GIOChannel * ch, GIOCondition condition)
             if (-1 == (fd = ::accept(mSocket.mFD,
                                    (struct sockaddr*) &mAddressName, &len)))
             {
-                g_warning("IPC_SocketServer::listenCallback: could not   \
-                               create new connection on socket: '%s/%d' (%s)",
-                                socketName(), mSocket.mFD, strerror(errno));
+                PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                    "IPC_SocketServer::listenCallback: could not   \
+                    create new connection on socket: '%s/%d' (%s)",
+                    socketName(), mSocket.mFD, strerror(errno));
             }
             else
             {
-                g_message("IPC_SocketServer::listenCallback: created   \
-                                     connection '%s/%d' on socket '%s/%d'",
-                                     socketName(), fd, socketName(), mSocket.mFD);
+                PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                    "IPC_SocketServer::listenCallback: created   \
+                    connection '%s/%d' on socket '%s/%d'",
+                    socketName(), fd, socketName(), mSocket.mFD);
                 GIOChannel * channel = g_io_channel_unix_new(fd);
                 IPC_Socket & socket = mConnections[channel];
                 socket.mName = socketName();
@@ -571,22 +587,25 @@ void IPC_SocketServer::listenCallback(GIOChannel * ch, GIOCondition condition)
         }
         else
         {
-            g_warning("IPC_SocketServer::listenCallback: declined new   \
-                         connection on '%s/%d': too many connections (%u)!...",
-                         socketName(), mSocket.mFD, mConnections.size());
+            PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                "IPC_SocketServer::listenCallback: declined new   \
+                connection on '%s/%d': too many connections (%u)!...",
+                socketName(), mSocket.mFD, mConnections.size());
         }
     }
 
     if (condition & G_IO_ERR)
     {
-        g_warning("IPC_SocketServer::listenCallback: error condition   \
-                               on socket '%s/%d'.", socketName(), mSocket.mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::listenCallback: error condition   \
+            on socket '%s/%d'.", socketName(), mSocket.mFD);
     }
 
     if (condition & G_IO_HUP)
     {
-        g_warning("IPC_SocketServer::listenCallback: socket   \
-                                 '%s/%d' hung up.", socketName(), mSocket.mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::listenCallback: socket   \
+            '%s/%d' hung up.", socketName(), mSocket.mFD);
         this->closeAll();
     }
 }
@@ -615,23 +634,26 @@ void IPC_SocketServer::connectionCallback(GIOChannel * ch,
     if (condition & G_IO_IN)
     {
         if (!connection.receiveData())
-            g_warning("IPC_SocketServer::socketConnectionCallback:   \
-                                       receive error on socket '%s/%d' (%s).",
-                                        connection.mName, connection.mFD,
-                                         strerror(errno));
+            PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+                "IPC_SocketServer::socketConnectionCallback:   \
+                receive error on socket '%s/%d' (%s).",
+                connection.mName, connection.mFD,
+                strerror(errno));
     }
 
     if (condition & G_IO_HUP)
     {
-        g_warning("IPC_SocketServer::socketConnectionCallback:   \
-                    socket '%s/%d' hung up.", connection.mName, connection.mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::socketConnectionCallback:   \
+            socket '%s/%d' hung up.", connection.mName, connection.mFD);
         mConnections.erase(iter);
     }
     else if (condition & G_IO_ERR)
     {
-        g_warning("IPC_SocketServer::socketConnectionCallback: error   \
-                                  condition on socket '%s/%d'. Closing it...",
-                                  connection.mName, connection.mFD);
+        PM_LOG_INFO(MSGID_DEBUG_SOCKETS, INIT_KVCOUNT,
+            "IPC_SocketServer::socketConnectionCallback: error   \
+            condition on socket '%s/%d'. Closing it...",
+            connection.mName, connection.mFD);
         mConnections.erase(iter);
     }
 }

@@ -41,11 +41,20 @@ public:
     RefObj():refCount(1){
         int rc;
         rc = pthread_mutexattr_init(&mta);
-        if (rc!=0) g_error("Failed pthread_mutexattr_init");
+        if (rc!=0) {
+            PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                "Failed pthread_mutexattr_init");
+        }
         rc = pthread_mutexattr_settype(&mta, PTHREAD_MUTEX_RECURSIVE);
-        if (rc!=0) g_error("Failed pthread_mutexattr_settype");
+        if (rc!=0) {
+            PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                "Failed pthread_mutexattr_settype");
+        }
         rc = pthread_mutex_init(&mutex, &mta);
-        if (rc!=0) g_error("Failed pthread_mutex_init");
+        if (rc!=0) {
+            PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                "Failed pthread_mutex_init");
+        }
     }
     void lock() {
         pthread_mutex_lock(&mutex);

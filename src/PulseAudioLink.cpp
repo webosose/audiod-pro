@@ -610,8 +610,9 @@ static void initializeDtmf() {
     delete[] sine_buffer;
 #undef FLOAT_TYPE
     gettimeofday(&tv2, NULL);
-    printf("initializeDtmf in %d ms\n",(int)((tv2.tv_sec - tv1.tv_sec)*1000) + \
-                                       (int)((tv2.tv_usec - tv1.tv_usec)/1000));
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+        "initializeDtmf in %d ms\n",(int)((tv2.tv_sec - tv1.tv_sec)*1000) + \
+        (int)((tv2.tv_usec - tv1.tv_usec)/1000));
 
 }
 

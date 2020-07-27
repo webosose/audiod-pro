@@ -187,9 +187,9 @@ main(int argc, char **argv)
     moduleConfigPath << CONFIG_DIR_PATH << "/" << "audiod_module_config.json";
     ModuleInitializer mObjModuleInit(moduleConfigPath);
     if (mObjModuleInit.registerAudioModules())
-        g_message("audio modules registered successfully");
+        PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "audio modules registered successfully");
     else
-        g_error("could not register audio modules");
+        PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT,"could not register audio modules");
     oneInitForAll (gMainLoop, GetPalmService());
 
     PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting main loop!");

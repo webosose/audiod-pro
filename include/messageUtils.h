@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@
 #include <lunaservice.h>
 #include <pbnjson.h>
 #include <pbnjson.hpp>
+#include "log.h"
 
 /*
  * Small wrapper around LSError. User is responsible for calling Print or Free after the error has been set.

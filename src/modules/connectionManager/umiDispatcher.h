@@ -27,7 +27,6 @@
 #include <lunaservice.h>
 #include "utils.h"
 #include "messageUtils.h"
-#include "module.h"
 #include "audioMixer.h"
 
 #define UMI_CATEGORY_NAME                "/UMI"

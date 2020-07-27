@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,10 +22,11 @@ void CLSError::Print(const char * where, int line, GLogLevelFlags logLevel)
 {
     if (LSErrorIsSet(this))
     {
-        g_log(G_LOG_DOMAIN, logLevel, "%s(%d): Luna Service Error #%d \"%s\",  \
-                                      \nin %s line #%d.", where, line,
-                                      this->error_code, this->message,
-                                      this->file, this->line);
+        PM_LOG_ERROR(MSGID_LUNA_SERVICE_ERROR, INIT_KVCOUNT,\
+            "%s(%d): Luna Service Error #%d \"%s\",  \
+            \nin %s line #%d.", where, line,
+            this->error_code, this->message,
+            this->file, this->line);
         LSErrorFree(this);
     }
 }
@@ -43,7 +44,8 @@ bool JsonMessageParser::parse(const char * callerFunction)
         pbnjson::JSchemaFragment    genericSchema(SCHEMA_ANY);
         if (!mParser.parse(mJson, genericSchema))
             errorText = "Invalid json message";
-        g_critical("%s: %s '%s'", callerFunction, errorText, mJson);
+        PM_LOG_ERROR(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT,\
+            "%s: %s '%s'", callerFunction, errorText, mJson);
         return false;
     }
     return true;
@@ -72,7 +74,8 @@ bool LSMessageJsonParser::parse(const char * callerFunction,
         context = "";
 
     if (logOption != eLogOption_DontLogMessage)
-        g_debug("%s%s: got '%s'", callerFunction, context, payload);
+        PM_LOG_INFO(MSGID_PARSE_JSON, INIT_KVCOUNT,\
+            "%s%s: got '%s'", callerFunction, context, payload);
     if (!mParser.parse(payload, mSchema))
     {
         const char *    sender = LSMessageGetSenderServiceName(mMessage);
@@ -89,17 +92,19 @@ bool LSMessageJsonParser::parse(const char * callerFunction,
         }
         if (notJson)
         {
-            g_critical("%s%s: The message '%s' sent by '%s' is not a valid  \
-                       json message.", callerFunction, context,
-                                       payload, sender);
+            PM_LOG_ERROR(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT,\
+                "%s%s: The message '%s' sent by '%s' is not a valid  \
+                json message.", callerFunction, context,
+                payload, sender);
             errorText = "Not a valid json message";
         }
         else
         {
-            g_critical("%s%s: Could not validate json message '%s' sent by   \
-                          '%s' against schema '%s'.",
-                            callerFunction, context,
-                            payload, sender, mSchemaText);
+            PM_LOG_ERROR(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT,\
+                 "%s%s: Could not validate json message '%s' sent by   \
+                 '%s' against schema '%s'.",
+                 callerFunction, context,
+                 payload, sender, mSchemaText);
         }
         if (sender)
         {
@@ -150,14 +155,15 @@ std::string createJsonReplyString(bool returnValue,
     return reply;
 }
 
-std::string    jsonToString(pbnjson::JValue & reply, const char * schema)
+std::string jsonToString(pbnjson::JValue & reply, const char * schema)
 {
     pbnjson::JGenerator serializer(NULL);// our schema that we will be using
                                         // does not have any external references
     std::string serialized;
     pbnjson::JSchemaFragment responseSchema(schema);
     if (!serializer.toString(reply, responseSchema, serialized)) {
-        g_critical("serializeJsonReply: failed to generate json reply");
+        PM_LOG_ERROR(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT,\
+            "serializeJsonReply: failed to generate json reply");
         return "{\"returnValue\":false,\"errorText\":\"audiod error: Failed to generate a valid json reply...\"}";
     }
     return serialized;
