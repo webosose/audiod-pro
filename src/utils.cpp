@@ -19,8 +19,6 @@
 
 #include "utils.h"
 #include "messageUtils.h"
-#include "log.h"
-#include "main.h"
 
 static GHookList *sInitList         = NULL;
 static GHookList *sModuleStartList  = NULL;
@@ -30,6 +28,7 @@ static GHookList *sCancelSubscriptionCallbackList = NULL;
 
 static GMainLoop *sCurrentLoop = NULL;
 static LSHandle *sCurrentHandle =NULL;
+static LSHandle *gLSHandle = NULL;
 
 void utils::LSMessageResponse(LSHandle* handle, LSMessage * message, const char* reply, utils::EReplyType eType, bool isReferenced)
 {
@@ -201,8 +200,6 @@ _cancelSubscription (LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.parse(__FUNCTION__))
         return true;
 
-    LogIndent    indentLogs("| ");
-
     sCancelSubscription_MessageParser = &msg;
     sCancelSubscription_LSMessage = message;
 
@@ -238,6 +235,19 @@ void registerCancelSubscription(LSHandle *handle) {
                                               NULL, &lserror);
     if (!result)
         lserror.Print(__FUNCTION__, __LINE__);
+}
+
+//return palmservice handle of "com.webos.service.audio"
+LSHandle *
+GetPalmService()
+{
+    return gLSHandle;
+}
+
+LSHandle**
+GetAddressPalmService()
+{
+    return &gLSHandle;
 }
 
 void oneInitForAll(GMainLoop *loop, LSHandle *handle)
@@ -364,13 +374,13 @@ const char * virtualSourceName(EVirtualSource source, bool prettyName)
     return name;
 }
 
-EVirtualSource getSourceByName(const char * name)
+EVirtualSource getSourceByName(const char* sourceName)
 {
     EVirtualSource source = eVirtualSource_None;
     for (int i = eVirtualSource_First; i <= eVirtualSource_Last; i++)
     {
-        if (0 == strcmp(name, systemdependantvirtualsourcemap[i].virtualsourcename) ||
-            0 == strcmp(name, systemdependantvirtualsourcemap[i].virtualsourcename + 1))
+        if (0 == strcmp(sourceName, systemdependantvirtualsourcemap[i].virtualsourcename) ||
+            0 == strcmp(sourceName, systemdependantvirtualsourcemap[i].virtualsourcename + 1))
         {
             source = (EVirtualSource) systemdependantvirtualsourcemap[i].virtualsourceidentifier;
             break;

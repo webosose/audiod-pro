@@ -949,10 +949,11 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         int volume = 0;
         bool ramp = false;
         std::string streamType = " ";
-        int sessionId;
+        int sessionId = 0;
 
         msg.get ("volume", volume);
-        msg.get ("sessionId", sessionId);
+        if (!msg.get ("sessionId", sessionId))
+            sessionId = 0;
 
         if (DISPLAY_ONE == sessionId)
         {

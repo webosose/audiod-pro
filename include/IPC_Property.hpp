@@ -168,7 +168,6 @@ public:
                 message.mHeader.mID = id;
                 message.mHeader.mOperation = operation;
                 ::memcpy(message.mData, value, size);
-                ClosedSocketsCollector    collector(*this);
                 for (Clients::iterator iter = mClients.begin();
                                                  iter != mClients.end(); ++iter)
                 {
@@ -181,7 +180,6 @@ public:
                 IPC_MessageHeader    message;
                 message.mID = id;
                 message.mOperation = operation;
-                ClosedSocketsCollector    collector(*this);
                 for (Clients::iterator iter = mClients.begin();
                                                 iter != mClients.end(); ++iter)
                 {
@@ -201,7 +199,6 @@ public:
 
     void    sendChangeNotification(IPC_PropertyID id)
     {
-        ClosedSocketsCollector    collector(*this);
         for (Clients::iterator iter = mClients.begin();
                                          iter != mClients.end(); ++iter)
         {

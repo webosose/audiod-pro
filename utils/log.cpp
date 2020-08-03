@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -112,8 +112,6 @@ static const char * logLevelName(GLogLevelFlags logLevel)
     return name;
 }
 
-static GStaticMutex slogFilter_mutex = G_STATIC_MUTEX_INIT;
-
 void logFilter(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer unused_data)
 {
     if (log_level > sLogLevel || sLogDestination == eLogDestination_None || message == 0 || *message == 0)
@@ -148,8 +146,6 @@ void logFilter(const gchar *log_domain, GLogLevelFlags log_level, const gchar *m
 
     if (sLogDestination & (eLogDestination_PrivateLogFiles | eLogDestination_Terminal))
     {
-        GStaticMutexLocker            lock(slogFilter_mutex);    // race protection only needed for terminal and file logging
-
         static int                     sLogFile = 0;
         static struct timespec        sLogStartSeconds = { 0 };
         static struct tm            sLogStartTime = { 0 };
@@ -368,13 +364,9 @@ static void traceContext(GLogLevelFlags logLevel)
     g_log(G_LOG_DOMAIN, logLevel, "FYI, errno is: %d '%s'", err, errorName);
 }
 
-static GStaticMutex sLog_and_filter_mutex = G_STATIC_MUTEX_INIT;
-
 /// log a failure, but filter out repeated occurrences to avoid filling-in the logs
 static void log_and_filter(GLogLevelFlags logLevel, const char * name, const char * error, const char * description, const char * function, const char * file, int line)
 {
-    GStaticMutexLocker    lock(sLog_and_filter_mutex);
-
     static std::map<Location, Details>    sFailureLog;
     Details    & details = sFailureLog[Location(file, line)];
     struct timespec    now;

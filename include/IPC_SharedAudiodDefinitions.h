@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2020 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -129,8 +129,8 @@ enum EAudiodCommand
 #define VOICE_COMMAND_MIC_HEADSET_MIC        "voice_command_mic_headset_mic"
 #define VOICE_COMMAND_MIC_BLUETOOTH_SCO      "voice_command_mic_bluetooth_sco"
 
-// Names of the TV master scenario
-#define SCENARIO_TV_SPEAKER         "tv_speaker"
+// Names of the master scenario
+#define SCENARIO_SPEAKER         "speaker"
 #define SCENARIO_EXT_SPEAKER_OPTICAL        "ext_speaker_optical"
 #define SCENARIO_EXT_SPEAKER_LG_OPTICAL     "ext_speaker_lg_optical"
 #define SCENARIO_EXT_SPEAKER_ARC        "ext_speaker_arc"

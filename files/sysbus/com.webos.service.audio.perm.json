@@ -4,7 +4,6 @@
         "system",
         "settings",
         "media",
-        "tv.services",
         "applications.query"
     ],
     "com.webos.service.audio": [
@@ -14,7 +13,6 @@
         "telephony",
         "settings",
         "media",
-        "tv.services",
         "applications.query",
         "audiooutputd"
     ]

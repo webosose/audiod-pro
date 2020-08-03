@@ -245,6 +245,8 @@ const char * virtualSinkName(EVirtualAudioSink sink, bool prettyName = true);
 EVirtualAudioSink getSinkByName(const char * name);
 const char * virtualSourceName(EVirtualSource source, bool prettyName = true);
 EVirtualSource getSourceByName(const char * name);
+LSHandle * GetPalmService();
+LSHandle** GetAddressPalmService();
 
 class LSMessageJsonParser;
 

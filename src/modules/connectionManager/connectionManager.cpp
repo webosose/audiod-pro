@@ -195,7 +195,6 @@ bool ConnectionManager::_connectStatusCallback(LSHandle *sh, LSMessage *reply, v
     {
         envelopeRef *handle = (envelopeRef *)ctx;
         LSMessage *messageptr = (LSMessage*)handle->message;
-        ConnectionManager *connectionManagerObj = (ConnectionManager*)handle->context;
 
         if (nullptr != messageptr)
         {
@@ -336,7 +335,6 @@ bool ConnectionManager::_disConnectStatusCallback (LSHandle *sh, LSMessage *repl
     {
         envelopeRef *handle = (envelopeRef *)ctx;
         LSMessage *messageptr = (LSMessage*)handle->message;
-        ConnectionManager *connectionManagerObj = (ConnectionManager*)handle->context;
 
         if (nullptr != messageptr)
         {

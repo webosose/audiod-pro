@@ -24,8 +24,6 @@
 #include <sstream>
 #include <lunaservice.h>
 #include "log.h"
-#include "utils.h"
-#include "messageUtils.h"
 #include "main.h"
 #include "moduleInitializer.h"
 
@@ -41,7 +39,6 @@
 #endif
 
 static GMainLoop * gMainLoop = NULL;
-static LSHandle *gLSHandle = NULL;
 
 static const char* const logContextName = "AudioD";
 static const char* const logPrefix= "[audiod]";
@@ -73,22 +70,14 @@ GetMainLoopContext()
     return g_main_loop_get_context(gMainLoop);
 }
 
-//return palmservice handle of "com.webos.service.audio"
-LSHandle *
-GetPalmService()
-{
-    return gLSHandle;
-}
-
-
 bool RegisterPalmService()
 {
     CLSError lserror;
     bool retVal;
-    retVal = LSRegister(AUDIOD_SERVICE_PATH, &gLSHandle, &lserror);
+    retVal = LSRegister(AUDIOD_SERVICE_PATH, GetAddressPalmService(), &lserror);
     if(retVal)
     {
-        if(!LSGmainAttach(gLSHandle, gMainLoop, &lserror))
+        if (!LSGmainAttach(GetPalmService(), gMainLoop, &lserror))
         {
           lserror.Print(__FUNCTION__, __LINE__, G_LOG_LEVEL_CRITICAL);
           return false ;
@@ -147,7 +136,7 @@ main(int argc, char **argv)
         case 'n':
             niceme = atoi(optarg);
             break;
-        // simple sleep in ms, not available on device
+        // simple sleep in milliseconds, not available on device
         case 's':
             usleep(atoi(optarg) * 1000);
             return 0;

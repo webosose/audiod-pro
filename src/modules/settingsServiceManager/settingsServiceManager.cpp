@@ -71,8 +71,7 @@ bool SettingsServiceManager::settingsMediaDNDEvent(LSMessage *message)
     PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
                 "Called settingsMediaDNDEvent() function for Media and DND setting");
 
-    bool touchEnable;
-    bool dndEnable;
+    bool dndEnable = false;
     int amplitude = 0;
     pbnjson::JValue json_status = msg.get();
     pbnjson::JValue object = json_status["settings"];

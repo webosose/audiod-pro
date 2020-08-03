@@ -415,7 +415,6 @@ bool MasterVolumeManager::_getVolumeCallBack(LSHandle *sh, LSMessage *reply, voi
     {
          envelopeRef *envelope = (envelopeRef*)ctx;
          LSMessage *message = (LSMessage*)envelope->message;
-         MasterVolumeManager* masterVolumeManagerObj = (MasterVolumeManager*)envelope->context;
          if (nullptr != message)
          {
              CLSError lserror;

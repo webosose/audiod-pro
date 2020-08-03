@@ -182,8 +182,6 @@ bool SoundOutputManager::_updateSoundOutStatus(LSHandle *sh, LSMessage *reply, v
     {
         envelopeRef *envelopeObj = (envelopeRef*)ctx;
         LSMessage *message = (LSMessage*)envelopeObj->message;
-        SoundOutputManager* soundOutputManagerObj = (SoundOutputManager*)envelopeObj->context;
-
         if (nullptr != message)
         {
             CLSError lserror;
