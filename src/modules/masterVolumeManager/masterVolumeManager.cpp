@@ -1110,7 +1110,7 @@ void MasterVolumeManager::loadModuleMasterVolumeManager(GMainLoop *loop, LSHandl
 }
 
 MasterVolumeManager::MasterVolumeManager(): mObjAudioMixer(AudioMixer::getAudioMixerInstance()), mVolume(0), mMuteStatus(false), \
-                                            displayOneVolume(100), displayTwoVolume(100)
+                                            displayOneVolume(100), displayTwoVolume(100), displayOneMuteStatus(0), displayTwoMuteStatus(0)
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeManager: constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();

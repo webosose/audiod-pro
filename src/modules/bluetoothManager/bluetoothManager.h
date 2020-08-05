@@ -31,15 +31,19 @@
 #include "moduleManager.h"
 #include "moduleInterface.h"
 
+#define BT_ADAPTER_SUBSCRIBE_PAYLOAD "{\"subscribe\":true}"
 #define BT_DEVICE_GET_STATUS    "luna://com.webos.service.bluetooth2/device/getStatus"
 #define BT_A2DP_GET_STATUS      "luna://com.webos.service.bluetooth2/a2dp/getStatus"
+#define BT_ADAPTER_GET_STATUS   "luna://com.webos.service.bluetooth2/adapter/getStatus"
 
 class BluetoothManager : public ModuleInterface
 {
     private:
 
         bool mA2dpConnected;
+        bool mDefaultDeviceConnected;
         std::string mConnectedDevice;
+        std::string mDefaultAdapterAddress;
 
         BluetoothManager (const BluetoothManager&) = delete;
         BluetoothManager& operator=(const BluetoothManager&) = delete;
@@ -57,7 +61,9 @@ class BluetoothManager : public ModuleInterface
         void eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message);
 
         void setBlueToothA2DPActive (bool state, char *address, char *profile);
+        void btAdapterQueryInfo (LSMessage *message);
         void btDeviceGetStatusInfo (LSMessage *message);
         void btA2DPGetStatusInfo (LSMessage *message);
+        void a2dpDeviceGetStatus(LSMessage *message);
 };
 #endif //_BLUETOOTH_MANAGER_
