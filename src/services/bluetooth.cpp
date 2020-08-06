@@ -28,25 +28,36 @@
 #define BLUETOOTH_SERVICE       "com.webos.service.bluetooth2"
 #define BT_DEVICE_GET_STATUS    "luna://com.webos.service.bluetooth2/device/getStatus"
 #define BT_A2DP_GET_STATUS      "luna://com.webos.service.bluetooth2/a2dp/getStatus"
+#define BT_ADAPTER_GET_STATUS   "luna://com.webos.service.bluetooth2/adapter/getStatus"
 #define BT_DEVICE_SUBSCRIBE_PAYLOAD "{\"subscribe\":true}"
 
 static bool a2dpConnected = false;
+static bool defaultDeviceConnected = false;
 static std::string connectedDevice;
+static std::string mDefaultAdapterAddress;
 
 static void _setBlueToothA2DPActive (bool state, char *address, char *profile)
 {
     ScenarioModule * media = getMediaModule();
 
     g_message ("_setBlueToothA2DPActive : state = %d, address = %s, profile = %s", state, address, profile);
+
     if (state)
     {
-        gAudioMixer.programLoadBluetooth(address, profile);
-        media->enableScenario(cMedia_A2DP);
+        if (!defaultDeviceConnected)
+        {
+            gAudioMixer.programLoadBluetooth(address, profile);
+            g_message ("_setBlueToothA2DPActive : loaded bluetooth device");
+            defaultDeviceConnected = true;
+        }
+        else
+            g_message ("_setBlueToothA2DPActive : BT device is already in connected state");
     }
     else
     {
-        media->disableScenario(cMedia_A2DP);
         gAudioMixer.programUnloadBluetooth(profile);
+        g_message ("_setBlueToothA2DPActive : unloaded bluetooth device");
+        defaultDeviceConnected = false;
     }
 }
 
@@ -67,6 +78,7 @@ static bool btA2DPGetStatusCallback (LSHandle *lshandle, LSMessage *message, voi
     bool returnValue = false;
     bool connected = false;
     bool streamStatus = false;
+    std::string adapterAddress;
     getMediaModule()->setCurrentState(false);
     msg.get("returnValue", returnValue);
 
@@ -74,7 +86,8 @@ static bool btA2DPGetStatusCallback (LSHandle *lshandle, LSMessage *message, voi
     {
         msg.get("connected", connected);
         msg.get("address", a2dpDeviceAddress);
-        g_debug ("Device MAC address %s Connection Status %d", a2dpDeviceAddress.c_str(), connected);
+        msg.get("adapterAddress", adapterAddress);
+        g_debug ("Device MAC address %s Connection Status %d adapter address %s", a2dpDeviceAddress.c_str(), connected, adapterAddress.c_str());
         if(nullptr == a2dpDeviceAddress.c_str())
         {
             g_debug ("Device MAC address field not found");
@@ -82,13 +95,17 @@ static bool btA2DPGetStatusCallback (LSHandle *lshandle, LSMessage *message, voi
         }
         if (connected)
         {
-            g_debug("BT device is already in connected state");
+            char * device_address = (char*)a2dpDeviceAddress.c_str();
+            g_debug("btA2DPGetStatusCallback : Send info to PA for loading the bluez module active = %d, address = %s",\
+                     connected, a2dpDeviceAddress.c_str());
+            _setBlueToothA2DPActive(connected, device_address, "a2dp");
         }
         else
         {
             a2dpConnected = false;
             char * device_address = (char*)a2dpDeviceAddress.c_str();
-            g_debug("Send info to PA for unloading the bluez module active = %d, address = %s", a2dpConnected, (char*)a2dpDeviceAddress.c_str());
+            g_debug("btA2DPGetStatusCallback : Send info to PA for unloading the bluez module active = %d, address = %s",\
+                     a2dpConnected, a2dpDeviceAddress.c_str());
             _setBlueToothA2DPActive(false, device_address, "a2dp");
         }
     }
@@ -135,6 +152,7 @@ static bool btDeviceGetStatusCallback (LSHandle *lshandle, LSMessage *message, v
             pbnjson::JValue connectedProfiles = devices[i]["connectedProfiles"];
             std::string profile;
             std::string address;
+            std::string adapterAddress;
             if (0 == connectedProfiles.arraySize())
                 continue;
 
@@ -145,12 +163,13 @@ static bool btDeviceGetStatusCallback (LSHandle *lshandle, LSMessage *message, v
                 if ("a2dp" == profile )
                 {
                     address = devices[i]["address"].asString();
+                    adapterAddress = devices[i]["adapterAddress"].asString();
                     a2dpConnected = true;
                     char * device_address = (char*)address.c_str();
 
                     g_debug("Send info to PA for loading the bluez module active = %d", a2dpConnected);
                     _setBlueToothA2DPActive(a2dpConnected, device_address, "a2dp");
-                    std::string payload = string_printf("{\"address\":\"%s\",\"subscribe\":true}",address.c_str());
+                    std::string payload = string_printf("{\"adapterAddress\":\"%s\",\"address\":\"%s\",\"subscribe\":true}",adapterAddress.c_str(),address.c_str());
                     result = LSCall(lshandle, BT_A2DP_GET_STATUS, (char*)payload.c_str(), btA2DPGetStatusCallback,
                                     ctx, NULL, &lserror);
                     if (!result)
@@ -175,6 +194,59 @@ static bool btDeviceGetStatusCallback (LSHandle *lshandle, LSMessage *message, v
     return true;
 }
 
+static bool _btAdapterQueryCallback (LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    g_message ("%s", __FUNCTION__);
+
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_5(PROP(subscribed, boolean),
+    PROP(adapters, array), PROP(returnValue, boolean),
+    PROP(errorCode, integer), PROP(errorText, string))
+    REQUIRED_1(returnValue)));
+
+    if (!msg.parse(__FUNCTION__))
+        return false;
+    bool returnValue = false;
+    bool result = false;
+    std::string adapterAddress;
+    CLSError lserror;
+    msg.get("returnValue", returnValue);
+    if (returnValue)
+    {
+        pbnjson::JValue adapterStatus = msg.get();
+        pbnjson::JValue adapters = adapterStatus["adapters"];
+        if (!adapters.isArray())
+            return true;
+        if (0 == adapters.arraySize())
+        {
+            g_message ("%s: adapters array size is zero", __FUNCTION__);
+            return true;
+        }
+        for (int i = 0; i < adapters.arraySize(); i++)
+        {
+            std::string adapterName = adapters[i]["interfaceName"].asString();
+            adapterAddress = adapters[i]["adapterAddress"].asString();
+            g_message ("%s: adapterAddress = %s ", __FUNCTION__, adapterAddress.c_str());
+            if ("hci0" == adapterName)
+            {
+                if (mDefaultAdapterAddress != adapterAddress)
+                {
+                    mDefaultAdapterAddress = adapterAddress;
+                    std::string payload = string_printf("{\"adapterAddress\":\"%s\",\"subscribe\":true}", adapterAddress.c_str());
+                    g_message ("%s : payload = %s", __FUNCTION__, payload.c_str());
+                    result = LSCall(lshandle, BT_DEVICE_GET_STATUS, (char*)payload.c_str(), btDeviceGetStatusCallback,
+                                    ctx, NULL, &lserror);
+                    if (!result)
+                        lserror.Print(__FUNCTION__, __LINE__);
+                    break;
+                }
+                else
+                    g_message ("%s : Already subscribe for default adapter: %s", __FUNCTION__, adapterAddress.c_str());
+            }
+        }
+    }
+    return true;
+}
+
 static bool
 bluetoothServerStatus(LSHandle *sh,
                       const char *serviceName,
@@ -187,9 +259,9 @@ bluetoothServerStatus(LSHandle *sh,
 
     if (connected)
     {
-        result = LSCall(sh, BT_DEVICE_GET_STATUS,
+        result = LSCall(sh, BT_ADAPTER_GET_STATUS,
                         BT_DEVICE_SUBSCRIBE_PAYLOAD,
-                        btDeviceGetStatusCallback, ctx, NULL, &lserror);
+                        _btAdapterQueryCallback, ctx, NULL, &lserror);
         if (!result)
             lserror.Print(__FUNCTION__, __LINE__);
     }
