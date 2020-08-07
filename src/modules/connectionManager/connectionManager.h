@@ -36,10 +36,14 @@ class ConnectionManager : public ModuleInterface
         AudioMixer* mAudioMixer;
 
         bool getAudioOutputStatus (LSHandle *lshandle, LSMessage *message, void *ctx);
+        bool connect(LSHandle *lshandle, LSMessage *message, void *ctx);
+        bool disconnect(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _connectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _disconnectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getStatus (LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _mute (LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _connectStatusCallback(LSHandle *sh, LSMessage *reply, void *ctx);
+        static bool _disConnectStatusCallback(LSHandle *sh, LSMessage *reply, void *ctx);
         static bool _getAudioOutputStatusCallback (LSHandle *sh, LSMessage *reply, void *ctx);
     public:
         ~ConnectionManager();

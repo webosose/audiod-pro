@@ -80,7 +80,73 @@ bool ConnectionManager::_mute(LSHandle *lshandle, LSMessage *message, void *ctx)
     return true;
 }
 
-bool ConnectionManager::_connectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx)
+bool ConnectionManager::connect(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, "{}");
+    if(!msg.parse(__FUNCTION__, lshandle))
+        return true;
+    std::string sourceName;
+    std::string sinkName;
+    int sourcePort = 0;
+
+    msg.get("source", sourceName);
+    msg.get("sink", sinkName);
+    msg.get("sourcePort", sourcePort);
+
+    std::string source = sourceName;
+    if ("AMIXER" != sourceName)
+        source = sourceName + std::to_string(sourcePort);
+    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, \
+                "ConnectionManager::_connectAudioOut Audio connect request for source %s, sink %s source port %d source %s", \
+                sourceName.c_str(), sinkName.c_str(), sourcePort, source.c_str());
+
+    sourceName = source;
+
+    envelopeRef *handle = new (std::nothrow) envelopeRef();
+    std::string reply = STANDARD_JSON_SUCCESS;
+    bool returnvalue = false;
+    if (nullptr != handle)
+    {
+        handle->message = message;
+        handle->context = this;
+        if (nullptr != mAudioMixer)
+        {
+            if (mAudioMixer->connectAudio(source, sinkName, _connectStatusCallback, handle))
+            {
+                LSMessageRef(message);
+                returnvalue = true;
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "connect umimixer call failed");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+            }
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Audio connect: mAudioMixer is nullptr");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+        }
+    }
+    else
+    {
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE, "Internal error");
+    }
+    if (false == returnvalue)
+    {
+        CLSError lserror;
+        if (!LSMessageRespond(message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        if (nullptr != handle)
+        {
+            delete handle;
+            handle = nullptr;
+        }
+    }
+    return true;
+}
+
+bool ConnectionManager::_connectAudioOut(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_6(PROP(source, string),
     PROP(sourcePort, integer), PROP(sink, string), PROP(audioType,string),
@@ -91,18 +157,71 @@ bool ConnectionManager::_connectAudioOut (LSHandle *lshandle, LSMessage *message
         return true;
     std::string audioType;
     msg.get("audioType", audioType);
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "ConnectionManager::_connectAudioOut Audio connect request");
-    CLSError lserror;
-    std::string reply = STANDARD_JSON_SUCCESS;
-    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_AUDIO_TYPE, "Internal error");
-    if (!LSMessageRespond(message, reply.c_str(), &lserror))
-    {
-        lserror.Print(__FUNCTION__, __LINE__);
-    }
+    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Calling connect for audiotype : %s", audioType.c_str());
+    if (mConnectionManager)
+        mConnectionManager->connect(lshandle, message, ctx);
     return true;
 }
 
-bool ConnectionManager::_disconnectAudioOut (LSHandle *lshandle, LSMessage *message, void *ctx)
+bool ConnectionManager::_connectStatusCallback(LSHandle *sh, LSMessage *reply, void *ctx)
+{
+    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "_connectStatusCallback Received");
+
+    LSMessageJsonParser msg(reply, NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean))
+                                                 REQUIRED_1(returnValue)));
+    if(!msg.parse(__FUNCTION__, sh))
+        return true;
+
+    bool returnValue = false;
+    msg.get("returnValue", returnValue);
+
+    if (false == returnValue)
+    {
+        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "%s %d Could not Connect", __FUNCTION__, __LINE__);
+    }
+    else
+    {
+        LSMessageJsonParser msgData (reply, STRICT_SCHEMA(PROPS_3(PROP(returnValue, boolean),
+        PROP(source, string), PROP(sink, string)) REQUIRED_3(returnValue, source, sink)));
+        std::string sourceString;
+        std::string sinkString;
+        msgData.get("source", sourceString);
+        msgData.get("sink", sinkString);
+        PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Connected successfully for source %s Physicalsink %s", \
+                    sourceString.c_str(), sinkString.c_str());
+    }
+
+    if (nullptr != ctx)
+    {
+        envelopeRef *handle = (envelopeRef *)ctx;
+        LSMessage *messageptr = (LSMessage*)handle->message;
+        ConnectionManager *connectionManagerObj = (ConnectionManager*)handle->context;
+
+        if (nullptr != messageptr)
+        {
+            CLSError lserror;
+            std::string payload = LSMessageGetPayload(reply);
+            if (!LSMessageRespond(messageptr, payload.c_str(), &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+                PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Inside LSMessageReply if");
+            }
+            LSMessageUnref(messageptr);
+        }
+        delete handle;
+        handle = nullptr;
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "context is null");
+    }
+    //Reply for Subscribers of get status
+    if (mConnectionManager)
+        mConnectionManager->notifyGetStatusSubscribers();
+    return true;
+}
+
+bool ConnectionManager::_disconnectAudioOut(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_5(PROP(source, string),
     PROP(sourcePort, integer), PROP(sink, string), PROP(audioType,string), PROP(context,string))
@@ -114,13 +233,132 @@ bool ConnectionManager::_disconnectAudioOut (LSHandle *lshandle, LSMessage *mess
     std::string audioType;
     msg.get("audioType",audioType);
     PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "ConnectionManager::_disconnectAudioOut Audio disconnect request");
-    CLSError lserror;
+    if (mConnectionManager)
+        mConnectionManager->disconnect(lshandle, message, ctx);
+    return true;
+}
+
+bool ConnectionManager::disconnect(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, "{}");
+    if(!msg.parse(__FUNCTION__, lshandle))
+        return true;
+    std::string sourceName;
+    std::string sinkName;
+    int sourcePort = 0;
+
+    msg.get("source", sourceName);
+    msg.get("sink", sinkName);
+    msg.get("sourcePort",sourcePort);
+
+    std::string source = sourceName;
+    if ("AMIXER" != sourceName)
+        source = sourceName + std::to_string(sourcePort);
+
+    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, \
+               "ConnectionManager::_disconnectAudioOut Audio disconnect request for source %s, sink %s source port %d source %s", \
+               sourceName.c_str(), sinkName.c_str(), sourcePort, source.c_str());
+
+    sourceName = source;
+
+    envelopeRef *handle = new (std::nothrow)envelopeRef();
+    bool returnvalue = false;
     std::string reply = STANDARD_JSON_SUCCESS;
-    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_AUDIO_TYPE, "Internal error");
-    if (!LSMessageRespond(message, reply.c_str(), &lserror))
+    if(nullptr != handle)
     {
-        lserror.Print(__FUNCTION__, __LINE__);
+        handle->message = message;
+        handle->context = this;
+        if(nullptr != mAudioMixer)
+        {
+            if (mAudioMixer->disconnectAudio(source, sinkName,_disConnectStatusCallback, handle))
+            {
+                LSMessageRef(message);
+                returnvalue = true;
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "disconnect umimixer call failed");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+            }
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Audio disconnect mAudioMixer is NULL");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+        }
     }
+    else
+    {
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
+    }
+    if (false == returnvalue)
+    {
+        CLSError lserror;
+        if (!LSMessageRespond(message, reply.c_str(), &lserror))
+        lserror.Print(__FUNCTION__, __LINE__);
+        if (nullptr != handle)
+        {
+            delete handle;
+            handle = nullptr;
+        }
+    }
+    return true;
+}
+
+bool ConnectionManager::_disConnectStatusCallback (LSHandle *sh, LSMessage *reply, void *ctx)
+{
+    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "_disConnectStatusCallback Received");
+
+    LSMessageJsonParser msg(reply, NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean))
+                                                 REQUIRED_1(returnValue)));
+    if(!msg.parse(__FUNCTION__, sh))
+        return true;
+
+    bool returnValue = false;
+    msg.get("returnValue", returnValue);
+
+    if (false == returnValue)
+    {
+        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "%s:%d no update. Could not DisConnect", __FUNCTION__, __LINE__);
+    }
+    else
+    {
+        LSMessageJsonParser msgData (reply, STRICT_SCHEMA(PROPS_3(PROP(returnValue, boolean),
+        PROP(source, string), PROP(sink, string)) REQUIRED_3(returnValue, source, sink)));
+        std::string sourceString;
+        std::string sinkString;
+        msgData.get("source", sourceString);
+        msgData.get("sink", sinkString);
+        PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Disconnected successfully for source %s Physicalsink %s ",\
+                    sourceString.c_str(), sinkString.c_str());
+    }
+    if (nullptr != ctx)
+    {
+        envelopeRef *handle = (envelopeRef *)ctx;
+        LSMessage *messageptr = (LSMessage*)handle->message;
+        ConnectionManager *connectionManagerObj = (ConnectionManager*)handle->context;
+
+        if (nullptr != messageptr)
+        {
+            CLSError lserror;
+            std::string payload = LSMessageGetPayload(reply);
+            if (!LSMessageRespond(messageptr, payload.c_str(), &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+                PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Inside LSMessageReply if");
+            }
+            LSMessageUnref(messageptr);
+        }
+        delete handle;
+        handle = nullptr;
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "context is null");
+    }
+    //Reply for Subscribers of get status
+    if (mConnectionManager)
+        mConnectionManager->notifyGetStatusSubscribers();
     return true;
 }
 
