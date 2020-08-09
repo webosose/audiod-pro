@@ -114,11 +114,11 @@ private:
     PulseAudioLink mPulseLink;
     PulseDtmfGenerator* mCurrentDtmf;
     VirtualSinkSet mActiveStreams;
-    int mPulseStateVolume[eVirtualSink_Count];
-    int mPulseStateVolumeHeadset[eVirtualSink_Count];
-    int mPulseStateRoute[eVirtualSink_Count];
-    int mPulseStateSourceRoute[eVirtualSource_Count];
-    int mPulseStateActiveStreamCount[eVirtualSink_Count];
+    int mPulseStateVolume[eVirtualSink_Count+1];
+    int mPulseStateVolumeHeadset[eVirtualSink_Count+1];
+    int mPulseStateRoute[eVirtualSink_Count+1];
+    int mPulseStateSourceRoute[eVirtualSource_Count+1];
+    int mPulseStateActiveStreamCount[eVirtualSink_Count+1];
     bool mPulseFilterEnabled;
     int mPulseStateFilter;
     int mPulseStateLatency;

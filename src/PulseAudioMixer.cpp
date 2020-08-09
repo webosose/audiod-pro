@@ -550,16 +550,14 @@ bool PulseAudioMixer::programFilter (int filterTable)
     return programSource ('f', eVirtualSink_None, filterTable);
 }
 
-bool PulseAudioMixer::muteAll ()
+bool PulseAudioMixer::muteAll()
 {
     for (EVirtualAudioSink sink = eVirtualSink_First;
          sink <= eVirtualSink_Last;
          sink = EVirtualAudioSink(sink + 1))
     {
-        if (sink != ecallertone)
-            programSource ('m', sink, 0);
+        programSource ('m', sink, 0);
     }
-
     return true;
 }
 
@@ -804,11 +802,6 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     if (VERIFY(IsValidVirtualSink(sink)))
                     {
                         outputStreamClosed (sink);
-                        if(eeffects == sink || eDTMF == sink)
-                        {
-                            //Will be removed or updated once DAP design is updated
-                            //gAudioDevice.disableHW();
-                        }
 
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
                          "%s: sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
