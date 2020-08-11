@@ -480,7 +480,7 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
             masterVolumeInstance->notifyVolumeSubscriber(displayId, callerId);
             pbnjson::JValue muteVolumeResponse = pbnjson::Object();
             muteVolumeResponse.put("returnValue", true);
-            muteVolumeResponse.put("muteStatus", mute);
+            muteVolumeResponse.put("mute", mute);
             muteVolumeResponse.put("soundOutput", soundOutput);
             reply = muteVolumeResponse.stringify();
         }
@@ -1037,10 +1037,10 @@ void MasterVolumeManager::setCurrentMuteStatus(bool bMuteStatus)
 void MasterVolumeManager::eventMasterVolumeStatus()
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "eventMasterVolumeStatus: setMuteStatus and setVolume");
-    setMuteStatus(DISPLAY_ONE);
-    setVolume(DISPLAY_ONE);
-    setMuteStatus(DISPLAY_TWO);
-    setVolume(DISPLAY_TWO);
+    setMuteStatus(DEFAULT_ONE_DISPLAY_ID);
+    setVolume(DEFAULT_ONE_DISPLAY_ID);
+    setMuteStatus(DEFAULT_TWO_DISPLAY_ID);
+    setVolume(DEFAULT_TWO_DISPLAY_ID);
 }
 
 /* TODO
