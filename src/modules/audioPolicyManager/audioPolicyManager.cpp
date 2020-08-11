@@ -978,7 +978,6 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         {
             isValidVolume = true;
         }
-
         if (audioPolicyManagerInstance->getStreamActiveStatus(streamType))
         {
             isStreamActive = true;
@@ -1000,8 +999,30 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
             else
                 PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "_setMediaInputVolume: mObjModuleManager is null");
-            PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "Volume updated successfully");
+
+            if (DISPLAY_ONE == sessionId)
+            {
+                EVirtualAudioSink mediaSink = audioPolicyManagerInstance->getSinkType("pmedia");
+                EVirtualAudioSink defaultappSink = audioPolicyManagerInstance->getSinkType("pdefaultapp");
+                if (audioPolicyManagerInstance->getStreamActiveStatus("pmedia"))
+                {
+                    audioPolicyManagerInstance->setVolume(mediaSink, volume, audioPolicyManagerInstance->getMixerType("pmedia"), ramp);
+                }
+                if (audioPolicyManagerInstance->getStreamActiveStatus("pdefaultapp"))
+                {
+                    audioPolicyManagerInstance->setVolume(defaultappSink, volume, audioPolicyManagerInstance->getMixerType("pdefaultapp"), ramp);
+                }
+
+                audioPolicyManagerInstance->updateCurrentVolume("pmedia", volume);
+                audioPolicyManagerInstance->updateCurrentVolume("pdefaultapp", volume);
+
+                if (audioPolicyManagerInstance->mObjModuleManager)
+                {
+                    audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(defaultappSink, volume, ramp);
+                    audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(mediaSink, volume, ramp);
+                }
+            }
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
         }
 
         if (status)
