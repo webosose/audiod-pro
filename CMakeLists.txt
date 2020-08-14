@@ -28,13 +28,6 @@ webos_add_compiler_flags(ALL "-Wall")
 
 webos_machine_dep()
 
-# These variables can change the default behaviour and need to be set before calling find_package
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED OFF)
-set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED COMPONENTS regex system filesystem)
-include_directories(Boost_INCLUDE_DIRS)
-
 include(FindPkgConfig)
 
 pkg_check_modules(GLIB2 REQUIRED glib-2.0)
