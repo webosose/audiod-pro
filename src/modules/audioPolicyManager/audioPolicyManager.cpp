@@ -292,6 +292,8 @@ void AudioPolicyManager::createMapSinkToStream()
     mSinkToStream[eeffects] = "peffects";
     mSinkToStream[evoicerecognition] = "pvoicerecognition";
     mSinkToStream[etts] = "ptts";
+    mSinkToStream[ebtcall] = "btcall";
+    mSinkToStream[ebtstream] = "btstream";
     mSinkToStream[edefault1] = "default1";
     mSinkToStream[etts1] = "tts1";
     mSinkToStream[edefault2] = "default2";
@@ -310,6 +312,8 @@ void AudioPolicyManager::createMapStreamToSink()
     mStreamToSink["peffects"] = eeffects;
     mStreamToSink["pvoicerecognition"] = evoicerecognition;
     mStreamToSink["ptts"] = etts;
+    mStreamToSink["btcall"] = ebtcall;
+    mStreamToSink["btstream"] = ebtstream;
     mStreamToSink["default1"] = edefault1;
     mStreamToSink["tts1"] = etts1;
     mStreamToSink["default2"] = edefault2;

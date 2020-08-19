@@ -113,6 +113,34 @@
             "category": "display1"
         },
         {
+            "streamType": "btcall",
+            "policyVolume":50,
+            "priority":0,
+            "group":0,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
+            "streamType": "btstream",
+            "policyVolume":50,
+            "priority":3,
+            "group":3,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
             "streamType": "default1",
             "policyVolume":50,
             "priority":3,

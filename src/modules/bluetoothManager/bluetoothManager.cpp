@@ -110,6 +110,21 @@ void BluetoothManager::btAdapterQueryInfo(LSMessage *message)
                     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                     "%s: Already subscribe for default adapter: %s", __FUNCTION__, adapterAddress.c_str());
             }
+            else if ("hci1" == adapterName)
+            {
+               if (mSecondAdapterAddress != adapterAddress)
+                {
+                    mSecondAdapterAddress = adapterAddress;
+                    std::string payload = string_printf("{\"adapterAddress\":\"%s\",\"subscribe\":true}", adapterAddress.c_str());
+                    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                        "%s : payload = %s", __FUNCTION__, payload.c_str());
+                    mObjModuleManager->subscribeKeyInfo(this, true, eEventA2DPDeviceStatus, eBluetoothService2,
+                        BT_DEVICE_GET_STATUS, payload);
+                }
+                else
+                    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                    "%s: Already subscribe for adapter: %s", __FUNCTION__, adapterAddress.c_str());
+            }
         }
     }
 }
@@ -153,6 +168,7 @@ void BluetoothManager::btDeviceGetStatusInfo (LSMessage *message)
         {
             pbnjson::JValue connectedProfiles = devices[i]["connectedProfiles"];
             std::string profile;
+            std::string role;
             std::string address;
             std::string adapterAddress;
             if (0 == connectedProfiles.arraySize())
@@ -168,6 +184,21 @@ void BluetoothManager::btDeviceGetStatusInfo (LSMessage *message)
                     " inside for getting connectedProfiles : %s", profile.c_str());
                 if ("a2dp" == profile )
                 {
+                    pbnjson::JValue connectedRoles = devices[i]["connectedRoles"];
+                    if (0 == connectedRoles.arraySize())
+                        return;
+                    for (int k = 0; k < connectedRoles.arraySize(); k++)
+                    {
+                        PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                            "%s profile = %s and role = %s", __FUNCTION__, profile.c_str(), role.c_str());
+                        role = connectedRoles[k].asString();
+                        if (("A2DP_SRC" == role) || ("HFP_AG" == role))
+                        {
+                            PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                                 "%s Not considering bluetooth loading as profile is A2DP_SRC/HFP", __FUNCTION__);
+                            return;
+                        }
+                    }
                     address = devices[i]["address"].asString();
                     adapterAddress = devices[i]["adapterAddress"].asString();
                     mA2dpConnected = true;
@@ -262,6 +293,121 @@ void BluetoothManager:: btA2DPGetStatusInfo (LSMessage *message)
     }
 }
 
+void BluetoothManager::setBluetoothA2DPSource(bool state)
+{
+    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+        "%s : state = %d", __FUNCTION__, state);
+    if (mObjAudioMixer && mObjAudioMixer->programA2dpSource(state))
+    {
+        PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+        "Sending programA2dpSource to PA is success");
+    }
+}
+
+void BluetoothManager::btA2DPSourceGetStatus(LSMessage *message)
+{
+    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+        "%s ", __FUNCTION__);
+
+    LSMessageJsonParser msg(message,SCHEMA_9(REQUIRED(subscribed, boolean),
+    REQUIRED(adapterAddress, string),REQUIRED(returnValue, boolean),REQUIRED
+    (connecting, boolean),REQUIRED(connected, boolean),REQUIRED(playing, boolean),
+    REQUIRED(address, string),OPTIONAL(errorCode, integer),OPTIONAL(errorText, string)));
+
+    if (!msg.parse(__FUNCTION__))
+        return;
+    bool returnValue = false;
+
+    msg.get("returnValue", returnValue);
+
+    if (returnValue)
+    {
+        std::string a2dpDeviceAddress;
+        std::string adapterAddress;
+        bool connected = false;
+        msg.get("connected", connected);
+        msg.get("address", a2dpDeviceAddress);
+        msg.get("adapterAddress", adapterAddress);
+        PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+            "Device MAC address %s Connection Status %d adapter address %s", a2dpDeviceAddress.c_str(), connected, adapterAddress.c_str());
+        setBluetoothA2DPSource(connected);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+            "%s : a2dp status subscription failed", __FUNCTION__);
+    }
+}
+
+void BluetoothManager::a2dpDeviceGetStatus (LSMessage *message)
+{
+    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+        "%s ", __FUNCTION__);
+    bool result = false;
+
+    std::string payload = LSMessageGetPayload(message);
+
+    LSMessageJsonParser msg(message,SCHEMA_6(REQUIRED(subscribed, boolean),
+    REQUIRED(adapterAddress, string),REQUIRED(returnValue, boolean),REQUIRED
+    (devices,array),OPTIONAL(errorCode, integer),OPTIONAL(errorText, string)));
+    if (!msg.parse(__FUNCTION__))
+        return;
+    bool returnValue = false;
+    msg.get("returnValue", returnValue);
+
+    if (returnValue)
+    {
+        pbnjson::JValue deviceStatus = msg.get();
+        pbnjson::JValue devices = deviceStatus["devices"];
+        if (!devices.isArray())
+            return;
+
+        for (int i = 0; i < devices.arraySize(); i++)
+        {
+            pbnjson::JValue connectedProfiles = devices[i]["connectedProfiles"];
+            std::string profile;
+            std::string role;
+            std::string address;
+            std::string adapterAddress;
+            if (0 == connectedProfiles.arraySize())
+                continue;
+
+            for (int j = 0; j < connectedProfiles.arraySize(); j++)
+            {
+                pbnjson::JValue connectedRoles = devices[i]["connectedRoles"];
+                for (int k = 0; k < connectedRoles.arraySize(); k++)
+                {
+                    role = connectedRoles[k].asString();
+                    if ("A2DP_SRC" == role)
+                    {
+                        mA2dpSource = true;
+                        break;
+                    }
+                    mA2dpSource = false;
+                }
+                profile = connectedProfiles[j].asString();
+                PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                    "Getting connectedProfiles and connectedRole: %s %s",profile.c_str(), role.c_str());
+                if (("a2dp" == profile) && mA2dpSource)
+                {
+                    address = devices[i]["address"].asString();
+                    adapterAddress = devices[i]["adapterAddress"].asString();
+                    char * device_address = (char*)address.c_str();
+                    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                        "Send info to PA for a2dpSource %d", mA2dpSource);
+                    setBluetoothA2DPSource(true);
+                    std::string payload = string_printf("{\"adapterAddress\":\"%s\",\"address\":\"%s\",\"subscribe\":true}",adapterAddress.c_str(), address.c_str());
+                    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                        "%s : payload = %s", __FUNCTION__, payload.c_str());
+                    mObjModuleManager->subscribeKeyInfo(this, true, eEventA2DPSourceStatus, eBluetoothService2,
+                        BT_A2DP_GET_STATUS, payload);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void BluetoothManager::eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message)
 {
     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
@@ -278,6 +424,14 @@ void BluetoothManager::eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message)
     {
         btA2DPGetStatusInfo(message);
     }
+    else if (type == eEventA2DPDeviceStatus)
+    {
+        a2dpDeviceGetStatus(message);
+    }
+    else if (type == eEventA2DPSourceStatus)
+    {
+        btA2DPSourceGetStatus(message);
+    }
 }
 
 void BluetoothManager::eventServerStatusInfo(SERVER_TYPE_E serviceName, bool connected)
@@ -290,6 +444,7 @@ void BluetoothManager::eventServerStatusInfo(SERVER_TYPE_E serviceName, bool con
         btManagerInstance->mA2dpConnected = false;
         btManagerInstance->mConnectedDevice.clear();
         btManagerInstance->mDefaultAdapterAddress.clear();
+        btManagerInstance->mSecondAdapterAddress.clear();
         btManagerInstance->mDefaultDeviceConnected = false;
     }
     else
@@ -299,7 +454,7 @@ void BluetoothManager::eventServerStatusInfo(SERVER_TYPE_E serviceName, bool con
     }
 }
 
-BluetoothManager::BluetoothManager():mA2dpConnected(false),
+BluetoothManager::BluetoothManager():mA2dpConnected(false), mA2dpSource(false),
     mDefaultDeviceConnected(false)
 {
     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \

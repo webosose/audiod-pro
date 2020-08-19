@@ -358,6 +358,47 @@ bool PulseAudioMixer::programUnloadBluetooth (const char *profile)
     return ret;
 }
 
+bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
+{
+    bool ret = false;
+
+    if (!mPulseLink.checkConnection())
+    {
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "Pulseaudio is not running");
+        return ret;
+    }
+    if (!mChannel)
+    {
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "There is no socket connection to pulseaudio");
+        return ret;
+    }
+
+    char cmd = 'o';
+    char buffer[SIZE_MESG_TO_PULSE];
+    memset(buffer, 0, SIZE_MESG_TO_PULSE);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, a2dpSource);
+
+    PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+        "%s: sending message '%s'", __FUNCTION__, buffer);
+    int sockfd = g_io_channel_unix_get_fd (mChannel);
+    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
+
+    if (bytes != SIZE_MESG_TO_PULSE)
+    {
+       PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "Error sending msg for A2DP source(%d)", bytes);
+    }
+    else
+    {
+       PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "msg send for A2DP Source(%d)", bytes);
+       ret = true;
+    }
+    return ret;
+}
+
 bool PulseAudioMixer::programHeadsetRoute(int route) {
     char cmd = 'w';
     char buffer[SIZE_MESG_TO_PULSE]="";

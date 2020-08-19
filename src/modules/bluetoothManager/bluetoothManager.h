@@ -41,9 +41,11 @@ class BluetoothManager : public ModuleInterface
     private:
 
         bool mA2dpConnected;
+        bool mA2dpSource;
         bool mDefaultDeviceConnected;
         std::string mConnectedDevice;
         std::string mDefaultAdapterAddress;
+        std::string mSecondAdapterAddress;
 
         BluetoothManager (const BluetoothManager&) = delete;
         BluetoothManager& operator=(const BluetoothManager&) = delete;
@@ -65,5 +67,7 @@ class BluetoothManager : public ModuleInterface
         void btDeviceGetStatusInfo (LSMessage *message);
         void btA2DPGetStatusInfo (LSMessage *message);
         void a2dpDeviceGetStatus(LSMessage *message);
+        void btA2DPSourceGetStatus(LSMessage *message);
+        void setBluetoothA2DPSource (bool state);
 };
 #endif //_BLUETOOTH_MANAGER_

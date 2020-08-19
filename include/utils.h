@@ -76,6 +76,8 @@ typedef enum LunaKeyType {
     eLunaEventSettingDNDParam,
     eEventBTAdapter,
     eEventBTDeviceStatus,
+    eEventA2DPDeviceStatus,
+    eEventA2DPSourceStatus,
     eLunaEventCount,     //Last element should be eLunaEventCount
     eLunaEventKeyFirst = eLunaEventBTDeviceStatus,
 }LUNA_KEY_TYPE_E;

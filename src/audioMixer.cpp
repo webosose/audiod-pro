@@ -621,6 +621,20 @@ bool AudioMixer::programUnloadBluetooth(const char *profile)
     }
 }
 
+bool AudioMixer::programA2dpSource(const bool & a2dpSource)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: programA2dpSource");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->programA2dpSource(a2dpSource);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "programA2dpSource: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
 bool AudioMixer::setRouting(const ConstString & scenario)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: setRouting");

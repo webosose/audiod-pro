@@ -96,6 +96,7 @@ public:
     void setNREC(bool value);
     bool programLoadBluetooth (const char * address , const char *profile);
     bool programUnloadBluetooth (const char *profile);
+    bool programA2dpSource (const bool& a2dpSource);
     bool setRouting(const ConstString & scenario);
     int loopback_set_parameters(const char * value);
     void init(GMainLoop * loop, LSHandle * handle);
