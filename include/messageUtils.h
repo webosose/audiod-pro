@@ -77,8 +77,8 @@ typedef struct envelope
 extern const char * STANDARD_JSON_SUCCESS;
 
 // Build a standard reply as a const char * string consistently
-#define STANDARD_JSON_SUCCESS                         "{\"returnValue\":true}"
-#define STANDARD_JSON_ERROR(errorCode, errorText)    "{\"returnValue\":false,\"errorCode\":"STR(errorCode)",\"errorText\":\"" errorText "\"}"
+#define STANDARD_JSON_SUCCESS                          "{\"returnValue\":true}"
+#define STANDARD_JSON_ERROR(errorCode, errorText)      "{\"returnValue\":false,\"errorCode\":" STR(errorCode) ",\"errorText\":\"" errorText "\"}"
 #define MISSING_PARAMETER_ERROR(name, type)            "{\"returnValue\":false,\"errorCode\":2,\"errorText\":\"Missing '" STR(name) "' " STR(type) " parameter.\"}"
 #define INVALID_PARAMETER_ERROR(name, type)            "{\"returnValue\":false,\"errorCode\":3,\"errorText\":\"Invalid '" STR(name) "' " STR(type) " parameter value or file not found.\"}"
 
