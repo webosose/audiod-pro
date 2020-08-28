@@ -193,7 +193,7 @@ void AudioMixer::callBackSinkStatus(const std::string& source, const std::string
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
                 "callBackSinkStatus::source:%s sink:%s sinkId:%d sinkStatus:%d mixerType:%d",\
-                source.c_str(), sink.c_str(), audioSink, sinkStatus, mixerType);
+                source.c_str(), sink.c_str(), (int)audioSink, (int)sinkStatus, (int)mixerType);
     if (IsValidVirtualSink(audioSink))
     {
         if (utils::eSinkOpened == sinkStatus)

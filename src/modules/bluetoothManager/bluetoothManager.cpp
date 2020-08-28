@@ -253,7 +253,7 @@ void BluetoothManager:: btA2DPGetStatusInfo (LSMessage *message)
         std::string a2dpDeviceAddress;
         std::string adapterAddress;
         bool connected = false;
-        char * profile = "a2dp";
+        char * profile = static_cast<char*>("a2dp");
         msg.get("connected", connected);
         msg.get("address", a2dpDeviceAddress);
         msg.get("adapterAddress", adapterAddress);

@@ -101,7 +101,7 @@ class ExtendEnum
         explicit ExtendEnum( int val):enum_(static_cast<EnumT>(val)) {}
         operator EnumT() const { return enum_; }
     private:
-        EnumT enum_;
+        EnumT enum_ = eVirtualUMISink_First;
 };
 
 typedef ExtendEnum<EUMISink, EVirtualSink> EVirtualAudioSink;

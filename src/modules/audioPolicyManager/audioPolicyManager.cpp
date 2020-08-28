@@ -246,7 +246,7 @@ void AudioPolicyManager::printActivePolicyInfo()
 std::string AudioPolicyManager::getStreamType(EVirtualAudioSink audioSink)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager: getStreamType:%d", audioSink);
+        "AudioPolicyManager: getStreamType:%d", (int)audioSink);
      utils::itMapSinkToStream it = mSinkToStream.find(audioSink);
      if (it != mSinkToStream.end())
          return it->second;
@@ -448,7 +448,7 @@ bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volum
     utils::EMIXER_TYPE mixerType, bool ramp)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager:setVolume:%d for sink:%d, ramp = %d", volume, audioSink, mixerType, ramp);
+        "AudioPolicyManager:setVolume:%d for sink:%d, mixerType = %d, ramp = %d", volume, (int)audioSink, (int)mixerType, ramp);
     bool returnStatus = false;
     if (mObjAudioMixer)
     {
@@ -1111,7 +1111,7 @@ AudioPolicyManager::AudioPolicyManager():mObjModuleManager(nullptr),\
 AudioPolicyManager::~AudioPolicyManager()
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: destructor");
-    if (!mObjPolicyInfoParser)
+    if (mObjPolicyInfoParser)
     {
         delete mObjPolicyInfoParser;
         mObjPolicyInfoParser = nullptr;

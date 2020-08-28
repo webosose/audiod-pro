@@ -97,7 +97,7 @@ bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink)
     if (!IsValidVirtualSink(sink))
     {
         PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
-            "'%d' is not a valid sink id", sink);
+            "'%d' is not a valid sink id", (int)sink);
         return false;
     }
     //will be implemented as per DAP design
@@ -321,11 +321,11 @@ bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink, const char *f
     PMTRACE_FUNCTION;
     PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
         "Inside play function with filename %s, sink %d, format %s, rate %d and channels %d", \
-                 snd, sink, format, rate, channels);
+                 snd, (int)sink, format, rate, channels);
     if (!IsValidVirtualSink(sink))
     {
         PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
-            "'%d' is not a valid sink id", sink);
+            "'%d' is not a valid sink id", (int)sink);
         return false;
     }
     return play(snd, virtualSinkName(sink, false), format, rate, channels);
@@ -365,6 +365,9 @@ class PreloadDeferCBData : public RefObj {
 public:
     PreloadDeferCBData() {
         memset(&snd, 0, sizeof(snd));
+        mainloop = NULL;
+        context = NULL;
+        s = NULL;
     }
     ~PreloadDeferCBData() {
         if (s) {
@@ -415,7 +418,25 @@ static void preload_stream_state_cb(pa_stream * s, void *userdata)
             break;
    }
     data->unlock();
-    if (unref) data->unref();
+    if (unref)
+    {
+        if (data->snd.file)
+        {
+            if (fclose(data->snd.file))
+            {
+                PM_LOG_DEBUG("PulseAudioLink::stream_state_cb: Failed to close the file");
+            }
+            else
+            {
+                PM_LOG_DEBUG("PulseAudioLink::stream_state_cb: Successfully closed the file");
+            }
+        }
+        else
+        {
+            PM_LOG_DEBUG("PulseAudioLink::stream_state_cb: File was already closed");
+        }
+        data->unref();
+    }
 }
 
 static void preload_stream_write_cb(pa_stream * s, size_t length, void * userdata)
@@ -464,6 +485,21 @@ static void preloadDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userdata
     }
     cbdata->unlock();
     if (unref) {
+        if (cbdata->snd.file)
+        {
+            if (fclose(cbdata->snd.file))
+            {
+                PM_LOG_DEBUG("PulseAudioLink::preloadDeferCB: Failed to close the file");
+            }
+            else
+            {
+                PM_LOG_DEBUG("PulseAudioLink::preloadDeferCB: Successfully closed the file");
+            }
+        }
+        else
+        {
+            PM_LOG_DEBUG("PulseAudioLink::preloadDeferCB: File was already closed");
+        }
         cbdata->unref();
     }
 }
@@ -477,58 +513,80 @@ void PulseAudioLink::preload(const char * samplename, const char * format, int r
         return;
 
     struct stat fileStat;
+    FILE* f = fopen(path, "r");
+    if (!f)
+    {
+        PM_LOG_DEBUG("PulseAudioLink::preload:File Open Failed for %s. Returning from Here", path);
+        return;
+    }
     if (stat(path, &fileStat) == 0)
     {
         // can we talk to Pulse to load it?
         if (!VERIFY(checkConnection()))
-            return;
-
-        FILE* f = fopen(path, "r");
-        if (VERIFY(f)) {
-            PreloadDeferCBData* data = new PreloadDeferCBData();
-            data->snd.file = f;
-            strcpy(data->snd.samplename, samplename);
-            data->snd.length = fileStat.st_size;
-            data->snd.tot_written = 0;
-            if (std::strncmp(format, "PA_SAMPLE_S16LE", 15) == 0)
-                data->snd.spec.format = PA_SAMPLE_S16LE;
-            else if (std::strncmp(format,"PA_SAMPLE_S24LE", 15) == 0)
-                data->snd.spec.format = PA_SAMPLE_S24LE;
+        {
+            if (fclose(f))
+            {
+                PM_LOG_DEBUG("PulseAudioLink::preload: Failed to close the file");
+            }
             else
-                data->snd.spec.format = PA_SAMPLE_S32LE;
-            data->snd.spec.rate = rate;
-            data->snd.spec.channels = channels;
-            data->snd.loading = true;
-            data->snd.isSuccess = false;
-            data->context = mContext;
-            data->mainloop = mMainLoop;
-            data->ref();
-            pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
+            {
+                PM_LOG_DEBUG("PulseAudioLink::preload: Successfully closed the file");
+            }
+            return;
+        }
+        PreloadDeferCBData* data = new PreloadDeferCBData();
+        data->snd.file = f;
+        strncpy(data->snd.samplename, samplename, sizeof(data->snd.samplename)-1);
+        data->snd.length = fileStat.st_size;
+        data->snd.tot_written = 0;
+        if (std::strncmp(format, "PA_SAMPLE_S16LE", 15) == 0)
+            data->snd.spec.format = PA_SAMPLE_S16LE;
+        else if (std::strncmp(format,"PA_SAMPLE_S24LE", 15) == 0)
+            data->snd.spec.format = PA_SAMPLE_S24LE;
+        else
+            data->snd.spec.format = PA_SAMPLE_S32LE;
+        data->snd.spec.rate = rate;
+        data->snd.spec.channels = channels;
+        data->snd.loading = true;
+        data->snd.isSuccess = false;
+        data->context = mContext;
+        data->mainloop = mMainLoop;
+        data->ref();
+        pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
                                                       &preloadDeferCB,
                                                       data);
 
-            // make sure we never loop for ever trying to load...
-            guint64 maxTime = getCurrentTimeInMs() + 5000;
-            while (data->snd.loading && getCurrentTimeInMs() < maxTime)
-            {
-                usleep(1000);
-            }
-            data->lock();
-            if (data->snd.loading)
-            {
-                PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
-                    "PulseAudioLink::preload: failed to load sample");
-            } else {
-                if (!data->snd.isSuccess && data->s) pa_stream_disconnect(data->s);
-            }
-            data->unlock();
-            data->unref();
+        // make sure we never loop for ever trying to load...
+        guint64 maxTime = getCurrentTimeInMs() + 5000;
+        while (data->snd.loading && getCurrentTimeInMs() < maxTime)
+        {
+            usleep(1000);
         }
-
+        data->lock();
+        if (data->snd.loading)
+        {
+            PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                    "PulseAudioLink::preload: failed to load sample");
+        }
+        else
+        {
+            if (!data->snd.isSuccess && data->s) pa_stream_disconnect(data->s);
+        }
+        data->unlock();
+        data->unref();
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT, \
+                "fstat Operation failed returning from here");
+        return;
     }
 
     // success or failure, no need to try again
-    mLoadedSounds.insert(samplename);
+    if (mLoadedSounds.find(samplename) == mLoadedSounds.end())
+        mLoadedSounds.insert(samplename);
+    else
+        PM_LOG_DEBUG("sample name %s already loaded", samplename);
 }
 
 void* PulseAudioLink::pathread_func(void* p) {

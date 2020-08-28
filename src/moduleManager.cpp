@@ -195,7 +195,7 @@ void ModuleManager::notifyKeySubscription(LUNA_KEY_TYPE_E event, SERVER_TYPE_E e
 
     PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
         "ModuleManager:notifyKeySubscription %s LUNA_KEY_TYPE_E = %d key = %s, payload = %s",
-        __FUNCTION__, (int)event, key, payload);
+        __FUNCTION__, (int)event, key.c_str(), payload.c_str());
     for (const auto &it : listKeySubscriptionSubscribers)
        it->eventSubscribeKey(event, eService, key, payload);
 }

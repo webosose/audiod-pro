@@ -67,24 +67,6 @@ GLogLevelFlags getLogLevel (void)
     return sLogLevel;
 }
 
-// local utility to shift file by renaming them in sequence  "basename", "basename.1", "basename.2", etc
-// optional arguments should not be used and left for the recursive implementation.
-void static sMoveLogFile(const char * baseName, int maxIndex, int index = 0, std::string * nextFileNamePtr = 0)
-{
-    const char * name = baseName;
-    if (nextFileNamePtr)
-    {
-        *nextFileNamePtr = string_printf("%s.%d", baseName, index);
-        name = nextFileNamePtr->c_str();
-    }
-    if (index < maxIndex && g_file_test(name, (GFileTest) (G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)))
-    {
-        std::string nextFileName;
-        sMoveLogFile(baseName, maxIndex, index + 1, &nextFileName);
-        ::rename(name, nextFileName.c_str());
-    }
-}
-
 static const char * logLevelName(GLogLevelFlags logLevel)
 {
     const char * name = "unknown";
@@ -153,7 +135,6 @@ void logFilter(const gchar *log_domain, GLogLevelFlags log_level, const gchar *m
         if (sLogFile == 0)
         {
             std::string    baseName = string_printf("/var/log/%s.log", sProcessName);
-            sMoveLogFile(baseName.c_str(), 5);
             if (sLogDestination & eLogDestination_PrivateLogFiles)
                 sLogFile = ::open(baseName.c_str(), O_CREAT | O_WRONLY | O_TRUNC | O_NONBLOCK, 0644);
             else

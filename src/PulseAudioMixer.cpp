@@ -246,7 +246,7 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
 bool PulseAudioMixer::programVolume (EVirtualAudioSink sink, int volume, bool ramp)
 {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "programVolume: sink:%d, volume:%d, ramp%d", sink, volume, ramp);
+        "programVolume: sink:%d, volume:%d, ramp%d", (int)sink, volume, ramp);
     return programSource ( (ramp ? 'r' : 'v'), sink, volume);
 }
 
@@ -488,11 +488,11 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
     if (bytes != SIZE_MESG_TO_PULSE)
     {
-        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Error sending msg from loadUSBSinkSource", bytes);
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Error sending msg from loadUSBSinkSource(%d)", bytes);
     }
     else
     {
-        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "msg sent from loadUSBSinkSource from audiod", bytes);
+        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "msg sent from loadUSBSinkSource from audiod(%d)", bytes);
         ret = true;
     }
 
@@ -757,7 +757,7 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose)
     if (streamCount < 0)
     {
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "openCloseSink: adjusting the stream %i-%s count to 0", \
-                                                  sink, virtualSinkName(sink));
+                                                  (int)sink, virtualSinkName(sink));
         streamCount = 0;
     }
 
@@ -831,7 +831,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         outputStreamOpened (sink);
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
                         "%s: sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
-                                __FUNCTION__, sink, virtualSinkName(sink), \
+                                __FUNCTION__, (int)sink, virtualSinkName(sink), \
                                 info, mPulseStateVolume[sink],\
                                 mPulseStateVolumeHeadset[sink], \
                                 mPulseStateRoute[sink], \
@@ -846,7 +846,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
 
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
                          "%s: sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
-                                __FUNCTION__, sink, virtualSinkName(sink),\
+                                __FUNCTION__, (int)sink, virtualSinkName(sink),\
                                  info, mPulseStateVolume[sink], \
                                  mPulseStateVolumeHeadset[sink], \
                                  mPulseStateRoute[sink], \
@@ -859,7 +859,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: pulse says %i sink%s of type %i-%s %s already opened", \
                                    __FUNCTION__, info, \
                                    ((info > 1) ? "s" : ""), \
-                                   sink, virtualSinkName(sink), \
+                                   (int)sink, virtualSinkName(sink), \
                                    ((info > 1) ? "are" : "is"));
                         while (mPulseStateActiveStreamCount[sink] < info)
                             outputStreamOpened (sink);
