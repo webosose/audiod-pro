@@ -298,6 +298,9 @@ void AudioPolicyManager::createMapSinkToStream()
     mSinkToStream[etts1] = "tts1";
     mSinkToStream[edefault2] = "default2";
     mSinkToStream[etts2] = "tts2";
+    mSinkToStream[efm] = "fm";
+    mSinkToStream[eam] = "am";
+    mSinkToStream[ehdradio] = "hdradio";
 }
 
 void AudioPolicyManager::createMapStreamToSink()
@@ -318,6 +321,9 @@ void AudioPolicyManager::createMapStreamToSink()
     mStreamToSink["tts1"] = etts1;
     mStreamToSink["default2"] = edefault2;
     mStreamToSink["tts2"] = etts2;
+    mStreamToSink["fm"] = efm;
+    mStreamToSink["am"] = eam;
+    mStreamToSink["hdradio"] = ehdradio;
 }
 
 void AudioPolicyManager::applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority)
