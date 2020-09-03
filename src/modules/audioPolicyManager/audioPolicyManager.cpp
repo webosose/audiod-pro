@@ -950,6 +950,7 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         bool isValidVolume = false;
         bool isValidStream = false;
         bool isStreamActive = false;
+        bool isValidSessionId = false;
         int volume = 0;
         bool ramp = false;
         std::string streamType = " ";
@@ -987,8 +988,12 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         {
             isStreamActive = true;
         }
+        if ((DISPLAY_ONE == sessionId) || (DISPLAY_TWO == sessionId))
+        {
+            isValidSessionId = true;
+        }
 
-        if (isValidStream && isValidVolume)
+        if (isValidStream && isValidVolume && isValidSessionId)
         {
             if (isStreamActive)
             {
@@ -1048,6 +1053,12 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
                 PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "Volume Not in Range");
                 reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
+            }
+            else if (!isValidSessionId)
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "sessionId Not in Range");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
             }
             else
             {
