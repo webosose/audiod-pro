@@ -35,7 +35,7 @@ bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, voi
     std::string soundOutput;
     int display = DISPLAY_ONE;
     bool isValidVolume = false;
-    int displayId = DISPLAY_ONE;
+    int displayId = -1;
     int volume = MIN_VOLUME;
     std::string reply = STANDARD_JSON_SUCCESS;
 
@@ -48,8 +48,17 @@ bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, voi
 
     if (DISPLAY_TWO == display)
         displayId = DEFAULT_TWO_DISPLAY_ID;
-    else
+    else if (DISPLAY_ONE == display)
         displayId = DEFAULT_ONE_DISPLAY_ID;
+    else
+    {
+        PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+                    "sessionId Not in Range");
+        reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
 
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "SetMasterVolume with soundout: %s volume: %d display: %d", \
                 soundOutput.c_str(), volume, displayId);
@@ -84,7 +93,7 @@ bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, voi
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
     }
-    else
+    else if (DISPLAY_ONE == display)
     {
         if ((masterVolumeInstance) && (isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(displayId, volume)))
         {
@@ -345,8 +354,17 @@ bool MasterVolumeManager::_getVolume(LSHandle *lshandle, LSMessage *message, voi
             std::string callerId = LSMessageGetSenderServiceName(message);
             if (DISPLAY_TWO == display)
                 displayId = DEFAULT_TWO_DISPLAY_ID;
+            else if (DISPLAY_ONE == display)
+                displayId = DEFAULT_ONE_DISPLAY_ID;
+            else
+            {
+                PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+                            "sessionId Not in Range");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
+            }
 
-            reply = masterVolumeManagerInstance->getVolumeInfo(displayId, callerId);
+            if ((DISPLAY_TWO == display) || (DISPLAY_ONE == display))
+                reply = masterVolumeManagerInstance->getVolumeInfo(displayId, callerId);
         }
         else
         {
@@ -451,19 +469,32 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
     bool mute = false;
     bool status = false;
     int displayId = DISPLAY_ONE;
-    int display;
+    int display = -1;
     std::string reply = STANDARD_JSON_SUCCESS;
 
     msg.get("soundOutput", soundOutput);
     msg.get("mute", mute);
-    msg.get("sessionId", display);
-
-    if (DISPLAY_ONE == display)
-        displayId = 1;
-    else if (DISPLAY_TWO == display)
-        displayId = 2;
-    else
+    if (!msg.get("sessionId", display))
+    {
+        display = DISPLAY_ONE;
         displayId = 3;
+    }
+    else
+    {
+        if (DISPLAY_ONE == display)
+            displayId = 1;
+        else if (DISPLAY_TWO == display)
+            displayId = 2;
+        else
+        {
+            PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+                    "sessionId Not in Range");
+            reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
+            CLSError lserror;
+            if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+                lserror.Print(__FUNCTION__, __LINE__);
+        }
+    }
 
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "muteVolume with soundout: %s mute status: %d", \
                 soundOutput.c_str(),(int)mute);
@@ -494,7 +525,7 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
     }
-    else
+    else if (DISPLAY_ONE == display)
     {
         if (audioMixerObj && audioMixerObj->setMute(displayId, mute))
         {
@@ -641,7 +672,7 @@ bool MasterVolumeManager::_volumeUp(LSHandle *lshandle, LSMessage *message, void
     int display = DISPLAY_ONE;
     bool isValidVolume = false;
     int volume = MIN_VOLUME;
-    int displayId = DISPLAY_ONE;
+    int displayId = -1;
     std::string reply = STANDARD_JSON_SUCCESS;
 
     msg.get("soundOutput", soundOutput);
@@ -649,8 +680,17 @@ bool MasterVolumeManager::_volumeUp(LSHandle *lshandle, LSMessage *message, void
 
     if (DISPLAY_TWO == display)
         displayId = 2;
-    else
+    else if (DISPLAY_ONE == display)
         displayId = 1;
+    else
+    {
+        PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+                    "sessionId Not in Range");
+        reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
 
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeUp with soundout: %s", soundOutput.c_str());
     MasterVolumeManager* masterVolumeManagerInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
@@ -685,7 +725,7 @@ bool MasterVolumeManager::_volumeUp(LSHandle *lshandle, LSMessage *message, void
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
     }
-    else
+    else if (DISPLAY_ONE == display)
     {
         if ((masterVolumeManagerInstance->displayOneVolume+1) <= MAX_VOLUME)
         {
@@ -833,7 +873,7 @@ bool MasterVolumeManager::_volumeDown(LSHandle *lshandle, LSMessage *message, vo
         return true;
     std::string soundOutput;
     bool status = false;
-    int displayId = DISPLAY_ONE;
+    int displayId = -1;
     bool isValidVolume = false;
     int volume = MIN_VOLUME;
     int display = DISPLAY_ONE;
@@ -844,8 +884,17 @@ bool MasterVolumeManager::_volumeDown(LSHandle *lshandle, LSMessage *message, vo
 
     if (DISPLAY_TWO == display)
         displayId = 2;
-    else
+    else if (DISPLAY_ONE == display)
         displayId = 1;
+    else
+    {
+        PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+                    "sessionId Not in Range");
+        reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
 
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDown with soundout: %s", soundOutput.c_str());
     MasterVolumeManager* masterVolumeManagerInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
@@ -880,7 +929,7 @@ bool MasterVolumeManager::_volumeDown(LSHandle *lshandle, LSMessage *message, vo
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
     }
-    else
+    else if (DISPLAY_ONE == display)
     {
         if ((masterVolumeManagerInstance->displayOneVolume-1) >= MIN_VOLUME)
         {
