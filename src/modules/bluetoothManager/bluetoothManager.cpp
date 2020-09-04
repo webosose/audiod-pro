@@ -253,7 +253,7 @@ void BluetoothManager:: btA2DPGetStatusInfo (LSMessage *message)
         std::string a2dpDeviceAddress;
         std::string adapterAddress;
         bool connected = false;
-        char * profile = static_cast<char*>("a2dp");
+        std::string profile = "a2dp";
         msg.get("connected", connected);
         msg.get("address", a2dpDeviceAddress);
         msg.get("adapterAddress", adapterAddress);
@@ -272,7 +272,7 @@ void BluetoothManager:: btA2DPGetStatusInfo (LSMessage *message)
             PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                 "%s Send info to PA for loading the bluez module active = %d, address = %s",\
                      __FUNCTION__, connected, a2dpDeviceAddress.c_str());
-            setBlueToothA2DPActive(connected, device_address, profile);
+            setBlueToothA2DPActive(connected, device_address, (char*)profile.c_str());
         }
         else
         {
@@ -281,7 +281,7 @@ void BluetoothManager:: btA2DPGetStatusInfo (LSMessage *message)
             PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                 "Send info to PA for unloading the bluez module active = %d, address = %s",\
                 mA2dpConnected, a2dpDeviceAddress.c_str());
-            setBlueToothA2DPActive(false, device_address, profile);
+            setBlueToothA2DPActive(false, device_address, (char*)profile.c_str());
         }
     }
     else

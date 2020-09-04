@@ -298,7 +298,7 @@ bool umiaudiomixer::onSinkChangedReply(const std::string& source, const std::str
                                          utils::ESINK_STATUS eSinkStatus, utils::EMIXER_TYPE eMixerType)
 {
     PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "OnSinkChangedReply: source:%s sink:%s sinkId:%d, Sink status: %d sink type %d",\
-        source.c_str(), sink.c_str(), eVirtualSink, (int)eSinkStatus, (int)eMixerType);
+        source.c_str(), sink.c_str(), (int)eVirtualSink, (int)eSinkStatus, (int)eMixerType);
     if (mObjMixerCallBack)
         mObjMixerCallBack->callBackSinkStatus(source, sink, eVirtualSink, eSinkStatus, utils::eUmiMixer);
     else

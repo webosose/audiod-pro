@@ -75,7 +75,7 @@ utils::vectorVirtualSink AudioMixer::getActiveStreams()
 bool AudioMixer::isStreamActive(EVirtualAudioSink sink)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-        "AudioMixer:: isStreamActive sinkId:%d", sink);
+        "AudioMixer:: isStreamActive sinkId:%d", (int)sink);
     if (IsValidVirtualSink(sink))
     {
         utils::itVirtualSink it;

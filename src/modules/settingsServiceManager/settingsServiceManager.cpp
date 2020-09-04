@@ -127,25 +127,25 @@ void SettingsServiceManager::loadSettingsServiceManager(GMainLoop *loop, LSHandl
         {
             PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
                        "SettingsServiceManager init success");
+            if (mSettingsServiceManager->mObjModuleManager)
+            {
+                PM_LOG_DEBUG("Subscribing to setting service");
+                mSettingsServiceManager->mObjModuleManager->subscribeServerStatusInfo(mSettingsServiceManager, false, eSettingsService);
+                mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingMediaParam, eSettingsService,\
+                                                                             GET_SYSTEM_SETTINGS, MEDIA_PARAMS);
+                mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingDNDParam, eSettingsService,\
+                                                                             GET_SYSTEM_SETTINGS, DND_PARAMS);
+            }
+            else
+            {
+                PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
+                    "Modulemanager instance is null");
+            }
         }
         else
         {
             PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
                        "SettingsServiceManager init failed");
-        }
-        if (mSettingsServiceManager->mObjModuleManager)
-        {
-            PM_LOG_DEBUG("Subscribing to setting service");
-            mSettingsServiceManager->mObjModuleManager->subscribeServerStatusInfo(mSettingsServiceManager, false, eSettingsService);
-            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingMediaParam, eSettingsService,\
-                                                                         GET_SYSTEM_SETTINGS, MEDIA_PARAMS);
-            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingDNDParam, eSettingsService,\
-                                                                         GET_SYSTEM_SETTINGS, DND_PARAMS);
-        }
-        else
-        {
-            PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-                "Modulemanager instance is null");
         }
     }
 }

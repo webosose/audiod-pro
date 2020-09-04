@@ -401,7 +401,7 @@ void AudioPolicyManager::removeVolumePolicy(EVirtualAudioSink audioSink, const s
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
         "AudioPolicyManager:removeVolumePolicy sink:%d streamType:%s priority:%d",\
-        audioSink, streamType.c_str(), priority);
+        (int)audioSink, streamType.c_str(), priority);
     if (mObjAudioMixer)
     {
         int policyPriority = MAX_PRIORITY;
@@ -1022,11 +1022,16 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
                 EVirtualAudioSink defaultappSink = audioPolicyManagerInstance->getSinkType("pdefaultapp");
                 if (audioPolicyManagerInstance->getStreamActiveStatus("pmedia"))
                 {
-                    audioPolicyManagerInstance->setVolume(mediaSink, volume, audioPolicyManagerInstance->getMixerType("pmedia"), ramp);
+                    if (!audioPolicyManagerInstance->setVolume(mediaSink, volume, audioPolicyManagerInstance->getMixerType("pmedia"), ramp))
+                        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                            "AudioPolicyManager::_setMediaInputVolume volume could not be set for stream pmedia");
                 }
                 if (audioPolicyManagerInstance->getStreamActiveStatus("pdefaultapp"))
                 {
-                    audioPolicyManagerInstance->setVolume(defaultappSink, volume, audioPolicyManagerInstance->getMixerType("pdefaultapp"), ramp);
+                    if (!audioPolicyManagerInstance->setVolume(defaultappSink, volume, audioPolicyManagerInstance->getMixerType("pdefaultapp"), ramp))
+                        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                            "AudioPolicyManager::_setMediaInputVolume volume could not be set for stream pdefaultapp");
+
                 }
 
                 audioPolicyManagerInstance->updateCurrentVolume("pmedia", volume);
