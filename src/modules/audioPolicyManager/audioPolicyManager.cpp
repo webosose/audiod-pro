@@ -618,10 +618,9 @@ bool AudioPolicyManager::isRampPolicyActive(const std::string& streamType)
 bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setInputVolume");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(streamType, string), PROP(volume, integer),
+                                                           PROP(ramp, boolean)) REQUIRED_2(streamType, volume)));
 
-    LSMessageJsonParser msg(message, SCHEMA_3(REQUIRED(streamType, string),
-                                            REQUIRED(volume, integer),
-                                            OPTIONAL(ramp, boolean)));
     std::string reply;
     if (!msg.parse(__FUNCTION__,lshandle))
        return true;
@@ -725,8 +724,7 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
 
 bool AudioPolicyManager::_getInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    LSMessageJsonParser msg (message, SCHEMA_2(REQUIRED(streamType, string),
-       OPTIONAL(subscribe, boolean)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(streamType, string), PROP(subscribe, boolean)) REQUIRED_1(streamType)));
     if (!msg.parse(__FUNCTION__,lshandle))
     {
         PM_LOG_CRITICAL(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT, "msg.parse failed");
@@ -863,8 +861,7 @@ std::string AudioPolicyManager::getStreamStatus(bool subscribed)
 
 bool AudioPolicyManager::_getStreamStatus(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    LSMessageJsonParser msg (message, SCHEMA_2(OPTIONAL(streamType, string),
-       OPTIONAL(subscribe, boolean)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(streamType, string), PROP(subscribe, boolean))));
     if (!msg.parse(__FUNCTION__,lshandle))
     {
         PM_LOG_CRITICAL(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT, "msg parse failed");
@@ -942,9 +939,7 @@ void AudioPolicyManager::notifyGetStreamStatusSubscribers(const std::string& pay
 bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setMediaInputVolume");
-
-    LSMessageJsonParser msg(message, SCHEMA_2(REQUIRED(volume, integer),
-                                            OPTIONAL(sessionId, integer)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(volume, integer), PROP(sessionId, integer)) REQUIRED_1(volume)));
     std::string reply ;
     if (!msg.parse(__FUNCTION__,lshandle))
        return true;
