@@ -43,6 +43,20 @@
             "category": "display1"
         },
         {
+            "streamType": "radio",
+            "policyVolume":50,
+            "priority":3,
+            "group":3,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
             "streamType": "palerts",
             "policyVolume":50,
             "priority":1,
