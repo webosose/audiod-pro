@@ -332,7 +332,7 @@ void AudioPolicyManager::applyVolumePolicy(EVirtualAudioSink audioSink, const st
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
         "AudioPolicyManager:applyVolumePolicy sink:%d streamType:%s priority:%d",\
-        audioSink, streamType.c_str(), priority);
+        (int)audioSink, streamType.c_str(), priority);
     if (mObjAudioMixer)
     {
         int policyPriority = MAX_PRIORITY;

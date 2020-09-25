@@ -82,7 +82,6 @@ class MasterVolumeManager : public ModuleInterface
 
         //Luna API callbacks
         static bool _setVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
-        static bool _getVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
         static bool _muteVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
         static bool _volumeUpCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
         static bool _volumeDownCallBack(LSHandle *sh, LSMessage *reply, void *ctx);

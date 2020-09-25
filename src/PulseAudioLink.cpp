@@ -419,24 +419,7 @@ static void preload_stream_state_cb(pa_stream * s, void *userdata)
    }
     data->unlock();
     if (unref)
-    {
-        if (data->snd.file)
-        {
-            if (fclose(data->snd.file))
-            {
-                PM_LOG_DEBUG("PulseAudioLink::stream_state_cb: Failed to close the file");
-            }
-            else
-            {
-                PM_LOG_DEBUG("PulseAudioLink::stream_state_cb: Successfully closed the file");
-            }
-        }
-        else
-        {
-            PM_LOG_DEBUG("PulseAudioLink::stream_state_cb: File was already closed");
-        }
         data->unref();
-    }
 }
 
 static void preload_stream_write_cb(pa_stream * s, size_t length, void * userdata)
@@ -484,24 +467,8 @@ static void preloadDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userdata
         unref = true;
     }
     cbdata->unlock();
-    if (unref) {
-        if (cbdata->snd.file)
-        {
-            if (fclose(cbdata->snd.file))
-            {
-                PM_LOG_DEBUG("PulseAudioLink::preloadDeferCB: Failed to close the file");
-            }
-            else
-            {
-                PM_LOG_DEBUG("PulseAudioLink::preloadDeferCB: Successfully closed the file");
-            }
-        }
-        else
-        {
-            PM_LOG_DEBUG("PulseAudioLink::preloadDeferCB: File was already closed");
-        }
+    if (unref)
         cbdata->unref();
-    }
 }
 
 void PulseAudioLink::preload(const char * samplename, const char * format, int rate, int channels, const char * path)

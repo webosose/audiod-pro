@@ -341,121 +341,34 @@ bool MasterVolumeManager::_getVolume(LSHandle *lshandle, LSMessage *message, voi
         }
     }
 
-    envelopeRef *envelope = new (std::nothrow)envelopeRef;
-    MasterVolumeManager* masterVolumeManagerInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
-    if (nullptr != envelope)
+    MasterVolumeManager *masterVolumeManagerObj = (MasterVolumeManager*)ctx;
+    if (nullptr != masterVolumeManagerObj)
     {
-        envelope->message = message;
-        envelope->context = (MasterVolumeManager*)ctx;
-        MasterVolumeManager *masterVolumeManagerObj = (MasterVolumeManager*)ctx;
-        if (nullptr != masterVolumeManagerObj)
-        {
-            int displayId = DEFAULT_ONE_DISPLAY_ID;
-            std::string callerId = LSMessageGetSenderServiceName(message);
-            if (DISPLAY_TWO == display)
-                displayId = DEFAULT_TWO_DISPLAY_ID;
-            else if (DISPLAY_ONE == display)
-                displayId = DEFAULT_ONE_DISPLAY_ID;
-            else
-            {
-                PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
-                            "sessionId Not in Range");
-                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
-            }
-
-            if ((DISPLAY_TWO == display) || (DISPLAY_ONE == display))
-                reply = masterVolumeManagerInstance->getVolumeInfo(displayId, callerId);
-        }
+        int displayId = DEFAULT_ONE_DISPLAY_ID;
+        std::string callerId = LSMessageGetSenderServiceName(message);
+        if (DISPLAY_TWO == display)
+            displayId = DEFAULT_TWO_DISPLAY_ID;
+        else if (DISPLAY_ONE == display)
+            displayId = DEFAULT_ONE_DISPLAY_ID;
         else
         {
-            PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeManagerObj is NULL");
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+            PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+                        "sessionId Not in Range");
+            reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
         }
+
+        if ((DISPLAY_TWO == display) || (DISPLAY_ONE == display))
+            reply = masterVolumeManagerObj->getVolumeInfo(displayId, callerId);
     }
     else
     {
-        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getVolume envelope is NULL");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeManagerObj is NULL");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
     }
 
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s : Reply:%s", reply.c_str(), __FUNCTION__);
     if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
         lserror.Print(__FUNCTION__, __LINE__);
-    return true;
-}
-bool MasterVolumeManager::_getVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx)
-{
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getVolumeCallBack");
-    std::string payload = LSMessageGetPayload(reply);
-    JsonMessageParser ret(payload.c_str(), NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean)) REQUIRED_1(returnValue)));
-    bool returnValue = false;
-    if (ret.parse(__FUNCTION__))
-    {
-        ret.get("returnValue", returnValue);
-    }
-    if (returnValue)
-    {
-        JsonMessageParser data(payload.c_str(), NORMAL_SCHEMA(PROPS_1(PROP(volumeStatus, array)) REQUIRED_1(volumeStatus)));
-        if (data.parse(__FUNCTION__))
-        {
-            pbnjson::JSchemaFragment inputSchema("{}");
-            pbnjson::JDomParser parser(NULL);
-            parser.parse(payload, inputSchema, NULL);
-            pbnjson::JValue parsed = parser.getDom();
-            pbnjson::JValue volumeStatus = parsed["volumeStatus"];
-            if (!parsed["volumeStatus"].isArray())
-            {
-                PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: invalid volumeStatus array");
-            }
-            else
-            {
-                returnValue = true;
-                for (int i = 0; i < volumeStatus.arraySize(); ++i)
-                {
-                    bool bMuteSstatus = volumeStatus[i]["muted"].asBool();
-                    std::string strSoundOutput = volumeStatus[i]["SoundOutput"].asString();
-                    int iVolume = volumeStatus[i]["volume"].asNumber<int>();
-                    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: MuteStatus: %d Soundout: %s volume: %d \n", \
-                                (int)bMuteSstatus, strSoundOutput.c_str(), iVolume);
-                }
-            }
-        }
-        else
-        {
-            returnValue = false;
-        }
-    }
-    else
-    {
-        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: Could not GetMasterVolume");
-    }
-    if (nullptr != ctx)
-    {
-         envelopeRef *envelope = (envelopeRef*)ctx;
-         LSMessage *message = (LSMessage*)envelope->message;
-         if (nullptr != message)
-         {
-             CLSError lserror;
-             if (!LSMessageRespond(message, payload.c_str(), &lserror))
-             {
-                 lserror.Print(__FUNCTION__, __LINE__);
-             }
-             LSMessageUnref(message);
-         }
-         else
-         {
-             PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: internal mixer call");
-         }
-         if (nullptr != envelope)
-         {
-             delete envelope;
-             envelope = nullptr;
-         }
-    }
-    else
-    {
-        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: context is null");
-    }
     return true;
 }
 
@@ -498,7 +411,6 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
 
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "muteVolume with soundout: %s mute status: %d", \
                 soundOutput.c_str(),(int)mute);
-    envelopeRef *envelope = new (std::nothrow)envelopeRef;
     MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     std::string callerId = LSMessageGetSenderServiceName(message);
@@ -544,6 +456,7 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
         {
             PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to mute volume %d for display: %d", mute, displayId);
         }
+        envelopeRef *envelope = new (std::nothrow)envelopeRef;
         if(nullptr != envelope)
         {
             envelope->message = message;
