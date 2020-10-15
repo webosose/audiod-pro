@@ -35,7 +35,7 @@ void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::s
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
         "AudioPolicyManager::eventSinkStatus source:%s sink:%s sinkId:%d sinkStatus:%d mixerType:%d",\
-        source.c_str(), sink.c_str(), audioSink, sinkStatus, mixerType);
+        source.c_str(), sink.c_str(), (int)audioSink, (int)sinkStatus, (int)mixerType);
     if (IsValidVirtualSink(audioSink))
     {
         std::string streamType = getStreamType(audioSink);
@@ -85,7 +85,7 @@ void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::s
 void AudioPolicyManager::eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager::eventMixerStatus mixerStatus:%d mixerType:%d", mixerStatus, mixerType);
+        "AudioPolicyManager::eventMixerStatus mixerStatus:%d mixerType:%d", (int)mixerStatus, (int)mixerType);
     if (utils::ePulseMixer == mixerType)
         initStreamVolume();
 }
@@ -93,7 +93,7 @@ void AudioPolicyManager::eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE m
 void AudioPolicyManager::eventCurrentInputVolume(EVirtualAudioSink audioSink, const int& volume)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager::eventCurrentInputVolume audioSink:%d volume:%d", audioSink, volume);
+        "AudioPolicyManager::eventCurrentInputVolume audioSink:%d volume:%d", (int)audioSink, volume);
     std::string streamType = getStreamType(audioSink);
     updateCurrentVolume(streamType, volume);
 }
@@ -203,14 +203,14 @@ void AudioPolicyManager::printPolicyInfo()
             elements.priority, elements.groupId, elements.defaultVolume);
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
             "maxVolume:%d minVolume:%d volumeAdjustable:%d",\
-             elements.maxVolume, elements.minVolume, elements.volumeAdjustable);
+             elements.maxVolume, elements.minVolume, (int)elements.volumeAdjustable);
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
             "currentVolume:%d muteStatus:%d source:%s sinkId:%s mixerType:%d ramp:%d",\
-            elements.currentVolume, elements.muteStatus, elements.source.c_str(),\
-            elements.sink.c_str(), elements.mixerType, (int)elements.ramp);
+            elements.currentVolume, (int)elements.muteStatus, elements.source.c_str(),\
+            elements.sink.c_str(), (int)elements.mixerType, (int)elements.ramp);
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
             "isPolicyInProgress:%d activeStatus:%d category:%s",\
-            elements.isPolicyInProgress, elements.isStreamActive, elements.category.c_str());
+            (int)elements.isPolicyInProgress, (int)elements.isStreamActive, elements.category.c_str());
     }
 }
 
@@ -231,14 +231,14 @@ void AudioPolicyManager::printActivePolicyInfo()
                 elements.priority, elements.groupId, elements.defaultVolume);
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                 "maxVolume:%d minVolume:%d volumeAdjustable:%d",\
-                 elements.maxVolume, elements.minVolume, elements.volumeAdjustable);
+                 elements.maxVolume, elements.minVolume, (int)elements.volumeAdjustable);
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                 "currentVolume:%d muteStatus:%d source:%s sinkId:%s mixerType:%d ramp:%d",\
-                elements.currentVolume, elements.muteStatus, elements.source.c_str(),\
-                elements.sink.c_str(), elements.mixerType, (int)elements.ramp);
+                elements.currentVolume, (int)elements.muteStatus, elements.source.c_str(),\
+                elements.sink.c_str(), (int)elements.mixerType, (int)elements.ramp);
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                 "isPolicyInProgress:%d activeStatus:%d category:%s",\
-                elements.isPolicyInProgress, elements.isStreamActive, elements.category.c_str());
+                (int)elements.isPolicyInProgress, (int)elements.isStreamActive, elements.category.c_str());
         }
     }
 }
@@ -456,7 +456,7 @@ bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volum
     utils::EMIXER_TYPE mixerType, bool ramp)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager:setVolume:%d for sink:%d, mixerType = %d, ramp = %d", volume, (int)audioSink, (int)mixerType, ramp);
+        "AudioPolicyManager:setVolume:%d for sink:%d, mixerType = %d, ramp = %d", volume, (int)audioSink, (int)mixerType, (int)ramp);
     bool returnStatus = false;
     if (mObjAudioMixer)
     {
@@ -804,7 +804,7 @@ void AudioPolicyManager::notifyGetVolumeSubscribers(const std::string& streamTyp
 std::string AudioPolicyManager::getStreamStatus(const std::string& streamType, bool subscribed)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "getStreamStatus streamType %s subscribed %d", streamType.c_str(), subscribed);
+                "getStreamStatus streamType %s subscribed %d", streamType.c_str(), (int)subscribed);
     pbnjson::JValue streamObjectArray = pbnjson::Array();
     pbnjson::JObject streamObject = pbnjson::JObject();
     pbnjson::JObject finalString = pbnjson::JObject();
@@ -834,7 +834,7 @@ std::string AudioPolicyManager::getStreamStatus(const std::string& streamType, b
 std::string AudioPolicyManager::getStreamStatus(bool subscribed)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "getStreamStatus subscribed %d", subscribed);
+                "getStreamStatus subscribed %d", (int)subscribed);
     pbnjson::JValue streamObjectArray = pbnjson::Array();
     pbnjson::JObject streamObject = pbnjson::JObject();
     pbnjson::JObject finalString = pbnjson::JObject();
