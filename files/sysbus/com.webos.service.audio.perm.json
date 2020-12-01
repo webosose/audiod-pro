@@ -1,19 +1,7 @@
 {
-    "com.webos.audio": [
-        "devices",
-        "system",
-        "settings",
-        "media",
-        "applications.query"
-    ],
     "com.webos.service.audio": [
-        "devices",
-        "services",
-        "system",
-        "telephony",
-        "settings",
-        "media",
-        "applications.query",
-        "audiooutputd"
+        "settings.query",
+        "bluetooth.query",
+        "audiooutput.management"
     ]
 }

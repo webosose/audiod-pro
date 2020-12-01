@@ -1,4 +1,4 @@
 [D-BUS Service]
-Name=com.webos.audio;com.webos.service.audio
+Name=com.webos.service.audio
 Exec=/usr/sbin/audiod
 Type=static
