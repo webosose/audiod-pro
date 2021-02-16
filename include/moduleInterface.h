@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,5 +38,7 @@ class ModuleInterface
         virtual void eventInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp){}
         virtual void eventMasterVolumeStatus(){}
         virtual void eventSubscribeServerStatus(SERVER_TYPE_E eService){}
+        //Every module must override this method
+        virtual void initialize(){}
 };
 #endif//_MODULE_INTERFACE_H_

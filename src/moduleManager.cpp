@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,16 +16,102 @@
 
 #include "moduleManager.h"
 
-ModuleManager* ModuleManager::getModuleManagerInstance()
-{
-    static ModuleManager moduleManagerInstance;
-    return &moduleManagerInstance;
-}
-
-ModuleManager::ModuleManager()
+ModuleManager* ModuleManager::mObjModuleManager = nullptr;
+ModuleManager::ModuleManager(const std::string &audioModuleConfigPath)
 {
     PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
         "ModuleManager constructor");
+    readConfig(audioModuleConfigPath);
+    mModuleFactory = ModuleFactory::getInstance();
+    if (!mModuleFactory)
+        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+            "ModuleManager: Failed to get ModuleFactory instance");
+}
+
+ModuleManager* ModuleManager::initialize(const std::string &audioModuleConfigPath)
+{
+   if (!ModuleManager::mObjModuleManager)
+       ModuleManager::mObjModuleManager = new ModuleManager(audioModuleConfigPath);
+   if (ModuleManager::mObjModuleManager)
+       PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+            "ModuleManager initialized successfully");
+
+   return ModuleManager::mObjModuleManager;
+}
+
+ModuleManager* ModuleManager::getModuleManagerInstance()
+{
+   return ModuleManager::mObjModuleManager;
+}
+
+bool ModuleManager::readConfig(const std::string &audioModuleConfigPath)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "readConfig");
+    JValue configJson = JDomParser::fromFile(audioModuleConfigPath.c_str(), JSchema::AllSchema());
+    if (!configJson.isValid() || !configJson.isObject())
+    {
+        PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "failed to parse file using defaults. File: %s. Error: %s",\
+            audioModuleConfigPath.c_str(), configJson.errorString().c_str());
+        return false;
+    }
+    if (configJson.hasKey("load_module"))
+    {
+        PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "found load_module key");
+        JValue moduleInfo = configJson["load_module"];
+        if (!moduleInfo.isArray())
+        {
+            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "moduleInfo is not an array");
+            return false;
+        }
+        else
+        {
+            std::string strModule;
+            for (auto &elements:moduleInfo.items())
+            {
+                strModule = elements.asString();
+                std::vector<std::string>::iterator it = std::find(mSupportedModulesVector.begin(), mSupportedModulesVector.end(), strModule);
+                if (it == mSupportedModulesVector.end())
+                {
+                    mSupportedModulesVector.push_back(strModule);
+                }
+            }
+            return true;
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "load_module key not found");
+        return false;
+    }
+}
+
+bool ModuleManager::createModules()
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "ModuleManager: createModules");
+    if (mModuleFactory)
+    {
+        mModulesCreatorMap modulesCreatorMap = mModuleFactory->getModulesCreatorMap();
+        for (mModulesCreatorMapItr it = modulesCreatorMap.begin(); it != modulesCreatorMap.end(); ++it)
+        {
+            if (std::find (mSupportedModulesVector.begin(), mSupportedModulesVector.end(), it->first) != mSupportedModulesVector.end())
+                mModuleFactory->CreateObject(it->first, nullptr);
+        }
+    }
+    return true;
+}
+
+bool ModuleManager::removeModules()
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+        "ModuleManager: removeModules");
+    if (mModuleFactory)
+    {
+        mRegisteredHandlersMap registeredHandlersMap = mModuleFactory->getRegisteredHandlersMap();
+        for (mRegisteredHandlersMapItr it = registeredHandlersMap.begin(); it != registeredHandlersMap.end(); ++it)
+            mModuleFactory->UnRegister(it->first);
+    }
+    return true;
 }
 
 ModuleManager::~ModuleManager()

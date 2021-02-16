@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 LG Electronics, Inc.
+// Copyright (c) 2012-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -133,6 +133,8 @@ extern PmLogContext audiodLogContext;
 
 #define MSGID_MODULE_INITIALIZER                       "INITIALIZE_MODULE"                 //module initialiser
 #define MSGID_MODULE_MANAGER                           "AUDIO_MODULE_MANAGER"              //module manager
+#define MSGID_MODULE_FACTORY                           "AUDIO_MODULE_FACTORY"              //module factory
+#define MSGID_MODULE_CONFIG                            "AUDIO_MODULE_CONFIG"               //module config
 #define MSGID_MODULE_INTERFACE                         "MODULE_INTERFACE"                  //module interface
 #define MSGID_POLICY_CONFIGURATOR                      "POLICY_CONFIGURATOR"               //Policy Configuration
 #define MSGID_INVALID_INPUT                            "INVALID_INPUT"                     //For invalid input values

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,11 @@
 #include <string>
 #include <algorithm>
 #include "moduleInterface.h"
+#include "moduleFactory.h"
+#include <pbnjson/cxx/JValue.h>
+#include <pbnjson/cxx/JDomParser.h>
+
+using namespace pbnjson;
 
 class ModuleManager
 {
@@ -30,7 +35,7 @@ class ModuleManager
 
         ModuleManager(const ModuleManager&) = delete;
         ModuleManager& operator=(const ModuleManager&) = delete;
-        ModuleManager();
+        ModuleManager(const std::string &audioModuleConfigPath);
         std::list<ModuleInterface*> listSinkStatusSubscribers;
         std::list<ModuleInterface*> listMixerStatusSubscribers;
         std::list<ModuleInterface*> listInputVolumeSubscribers;
@@ -40,9 +45,21 @@ class ModuleManager
         std::list<ModuleInterface*> listKeySubscriptionSubscribers;
         std::list<ModuleInterface*> listKeyInfoSubscribers[eLunaEventCount];
 
+        std::vector<std::string> mSupportedModulesVector;
+        ModuleFactory *mModuleFactory;
+        using mModulesCreatorMap = std::map<std::string, pFuncModuleCreator>;
+        using mModulesCreatorMapItr = std::map<std::string, pFuncModuleCreator>::iterator;
+        using mRegisteredHandlersMap = std::map<std::string, ModuleInterface*>;
+        using mRegisteredHandlersMapItr = std::map<std::string, ModuleInterface*>::iterator;
+
     public:
-        ~ModuleManager();
+        bool createModules();
+        bool removeModules();
+        bool readConfig(const std::string &audioModuleConfigPath);
+        static ModuleManager* initialize(const std::string &audioModuleConfigPath);
         static ModuleManager* getModuleManagerInstance();
+        static ModuleManager* mObjModuleManager;
+        ~ModuleManager();
         //subscription events
         void subscribeModuleEvent(ModuleInterface* module, bool first, utils::EVENT_TYPE_E eventType);
         void subscribeKeyInfo(ModuleInterface* module, bool first, LUNA_KEY_TYPE_E event, \

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 LG Electronics, Inc.
+// Copyright (c) 2012-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@
 #include <lunaservice.h>
 #include "log.h"
 #include "main.h"
-#include "moduleInitializer.h"
+#include "messageUtils.h"
+#include "moduleManager.h"
 
 #define CONFIG_DIR_PATH "/etc/palm/audiod"
 
@@ -168,17 +169,24 @@ main(int argc, char **argv)
      *  initialize the lunaservice and we want it before all the init
      *  stuff happening.
      */
-    if(RegisterPalmService() == false)
+    if (RegisterPalmService() == false)
         return -1;
     PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Register [com.webos.service.audio] Successful");
 
-    std::stringstream moduleConfigPath;
-    moduleConfigPath << CONFIG_DIR_PATH << "/" << "audiod_module_config.json";
-    ModuleInitializer mObjModuleInit(moduleConfigPath);
-    if (mObjModuleInit.registerAudioModules())
-        PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "audio modules registered successfully");
-    else
-        PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT,"could not register audio modules");
+    std::string moduleConfigPath = "/etc/palm/audiod/audiod_module_config.json";
+    ModuleManager *objModuleManager = nullptr;
+    objModuleManager = ModuleManager::initialize(moduleConfigPath);
+    if (objModuleManager)
+    {
+        if (objModuleManager->createModules())
+            PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "audio modules registered successfully");
+        else
+        {
+            PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT,"could not register audio modules");
+            delete objModuleManager;
+            exit(0);
+        }
+    }
     oneInitForAll (gMainLoop, GetPalmService());
 
     PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting main loop!");
@@ -189,6 +197,16 @@ main(int argc, char **argv)
     oneFreeForAll();
 
     PM_LOG_INFO(MSGID_SHUTDOWN, INIT_KVCOUNT, "audiod terminated");
+
+    if (objModuleManager)
+    {
+        if (!objModuleManager->removeModules())
+        {
+            PM_LOG_INFO(MSGID_SHUTDOWN, INIT_KVCOUNT, "Failed to remove audio modules");
+        }
+        delete objModuleManager;
+        objModuleManager = nullptr;
+    }
 
     exit(0);
 }
