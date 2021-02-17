@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,6 @@
 
 using namespace pbnjson;
 
-int load_audio_policy_manager(GMainLoop *loop, LSHandle* handle);
 int load_udev_event_manager(GMainLoop *loop, LSHandle* handle);
 int load_master_volume_manager(GMainLoop *loop, LSHandle* handle);
 int load_bluetooth_manager (GMainLoop *loop, LSHandle* handle);
@@ -42,7 +41,6 @@ int load_playback_manager(GMainLoop *loop, LSHandle* handle);
 int load_settings_service_manager(GMainLoop *loop, LSHandle* handle);
 int load_system_sounds_manager(GMainLoop *loop, LSHandle* handle);
 int load_connection_manager(GMainLoop *loop, LSHandle* handle);
-void unload_audio_policy_manager();
 void unload_udev_event_manager();
 void unload_master_volume_manager();
 void unload_bluetooth_manager ();

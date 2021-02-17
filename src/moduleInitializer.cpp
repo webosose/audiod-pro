@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,9 +35,7 @@ ModuleInitializer::~ModuleInitializer()
     PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "ModuleInitializer destructor");
     for (const auto& it : mSetAudioModules)
     {
-        if (it == "load_audio_policy_manager")
-            unload_audio_policy_manager();
-        else if (it == "load_udev_event_manager")
+        if (it == "load_udev_event_manager")
             unload_udev_event_manager();
         else if (it == "load_master_volume_manager")
             unload_master_volume_manager();
@@ -59,8 +57,6 @@ ModuleInitializer::~ModuleInitializer()
 void ModuleInitializer::initializeModuleInfo()
 {
     PM_LOG_INFO(MSGID_MODULE_INITIALIZER, INIT_KVCOUNT, "initializeModuleInfo");
-    moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
-        ("load_audio_policy_manager", load_audio_policy_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\
         ("load_udev_event_manager", load_udev_event_manager));
     moduleMap.insert(std::pair<std::string, ModuleInitFunction>\

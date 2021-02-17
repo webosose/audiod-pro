@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@
 #define AUDIOD_API_SET_INPUT_VOLUME    "/setInputVolume"
 #define AUDIOD_API_GET_INPUT_VOLUME    "/getInputVolume"
 #define AUDIOD_API_GET_STREAM_STATUS   "/getStreamStatus"
+
+bool AudioPolicyManager::mIsObjRegistered = AudioPolicyManager::RegisterObject();
 
 //Event handling starts
 void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
@@ -1107,9 +1109,9 @@ AudioPolicyManager* AudioPolicyManager::getAudioPolicyManagerInstance()
     return mAudioPolicyManager;
 }
 
-AudioPolicyManager::AudioPolicyManager():mObjModuleManager(nullptr),\
-                                         mObjPolicyInfoParser(nullptr),\
-                                         mObjAudioMixer(nullptr)
+AudioPolicyManager::AudioPolicyManager(ModuleConfig* const pConfObj):mObjModuleManager(nullptr),\
+                                                                     mObjPolicyInfoParser(nullptr),\
+                                                                     mObjAudioMixer(nullptr)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
@@ -1137,53 +1139,29 @@ AudioPolicyManager::~AudioPolicyManager()
     }
 }
 
-void AudioPolicyManager::loadModuleAudioPolicyManager()
+void AudioPolicyManager::initialize()
 {
-    if (!mAudioPolicyManager)
+    if (mAudioPolicyManager)
     {
-        mAudioPolicyManager = new (std::nothrow)AudioPolicyManager();
-        if (mAudioPolicyManager)
+        CLSError lserror;
+        bool bRetVal;
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager module initialize is successful");
+        bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/", InputVolumeMethods, nullptr, &lserror);
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/", mAudioPolicyManager, &lserror))
         {
-            CLSError lserror;
-            bool bRetVal;
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "load module AudioPolicyManager successful");
-            bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/", InputVolumeMethods, nullptr, &lserror);
-            if (!bRetVal || !LSCategorySetData(GetPalmService(), "/", mAudioPolicyManager, &lserror))
-            {
-               PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "%s: Registering Service for '%s' category failed", __FUNCTION__, "/");
-               lserror.Print(__FUNCTION__, __LINE__);
-            }
-
-            bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/media", MediaInputVolumeMethods, nullptr, &lserror);
-            if (!bRetVal || !LSCategorySetData(GetPalmService(), "/media", mAudioPolicyManager, &lserror))
-            {
-               PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "%s: Registering Service for '%s' category failed", __FUNCTION__, "/media");
-               lserror.Print(__FUNCTION__, __LINE__);
-            }
+           PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+            "%s: Registering Service for '%s' category failed", __FUNCTION__, "/");
+           lserror.Print(__FUNCTION__, __LINE__);
         }
-        else
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Could not load module AudioPolicyManager");
-    }
-}
-//Class init ends
 
-//Load/Unload module starts
-int load_audio_policy_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "loading audio_policy_manager");
-    AudioPolicyManager::loadModuleAudioPolicyManager();
-    return 0;
-}
-
-void unload_audio_policy_manager()
-{
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "unloading audio_policy_manager");
-    if (AudioPolicyManager::mAudioPolicyManager)
-    {
-        delete AudioPolicyManager::mAudioPolicyManager;
-        AudioPolicyManager::mAudioPolicyManager = nullptr;
+        bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/media", MediaInputVolumeMethods, nullptr, &lserror);
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/media", mAudioPolicyManager, &lserror))
+        {
+           PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+            "%s: Registering Service for '%s' category failed", __FUNCTION__, "/media");
+           lserror.Print(__FUNCTION__, __LINE__);
+        }
     }
+    else
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mAudioPolicyManager is nullptr");
 }
-//Load/Unload module ends

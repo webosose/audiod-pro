@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "main.h"
 #include <cstdlib>
 #include "moduleInterface.h"
+#include "moduleFactory.h"
 #include "moduleManager.h"
 #include "volumePolicyInfoParser.h"
 #include "audioMixer.h"
@@ -33,13 +34,19 @@ class AudioPolicyManager : public ModuleInterface
     private:
         AudioPolicyManager(const AudioPolicyManager&) = delete;
         AudioPolicyManager& operator=(const AudioPolicyManager&) = delete;
-        AudioPolicyManager();
         ModuleManager* mObjModuleManager;
         VolumePolicyInfoParser* mObjPolicyInfoParser;
         AudioMixer* mObjAudioMixer;
         std::vector<utils::VOLUME_POLICY_INFO_T> mVolumePolicyInfo;
         utils::mapSinkToStream mSinkToStream;
         utils::mapStreamToSink mStreamToSink;
+        static bool mIsObjRegistered;
+        AudioPolicyManager(ModuleConfig* const pConfObj);
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (ModuleFactory::getInstance()->Register("load_audio_policy_manager", &AudioPolicyManager::CreateObject));
+        }
         void readPolicyInfo();
         void printPolicyInfo();
         void printActivePolicyInfo();
@@ -67,8 +74,19 @@ class AudioPolicyManager : public ModuleInterface
     public:
         ~AudioPolicyManager();
         static AudioPolicyManager* getAudioPolicyManagerInstance();
-        static void loadModuleAudioPolicyManager();
         static AudioPolicyManager *mAudioPolicyManager;
+        static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the AudioPolicyManager handler");
+                mAudioPolicyManager = new(std::nothrow) AudioPolicyManager(pConfObj);
+                if (mAudioPolicyManager)
+                    return mAudioPolicyManager;
+            }
+            return nullptr;
+        }
+        void initialize();
 
         //luna api's
         static bool _setInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
