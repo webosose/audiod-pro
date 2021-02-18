@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "systemSoundsManager.h"
 
+bool SystemSoundsManager::mIsObjRegistered = SystemSoundsManager::RegisterObject();
 SystemSoundsManager* SystemSoundsManager::mSystemSoundsManager = nullptr;
 
 SystemSoundsManager* SystemSoundsManager::getSystemSoundsManagerInstance()
@@ -25,7 +26,7 @@ SystemSoundsManager* SystemSoundsManager::getSystemSoundsManagerInstance()
     return mSystemSoundsManager;
 }
 
-SystemSoundsManager::SystemSoundsManager()
+SystemSoundsManager::SystemSoundsManager(ModuleConfig* const pConfObj)
 {
     mObjAudioMixer = AudioMixer::getAudioMixerInstance();
     if (!mObjAudioMixer)
@@ -149,51 +150,26 @@ error:
     return true;
 }
 
-void SystemSoundsManager::loadSystemSoundsManager(GMainLoop *loop, LSHandle* handle)
+void SystemSoundsManager::initialize()
 {
-    if (!mSystemSoundsManager)
+    if (mSystemSoundsManager)
     {
-        mSystemSoundsManager = new (std::nothrow) SystemSoundsManager();
-        if (mSystemSoundsManager)
-        {
-            PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-                "load SystemSoundsManager successful");
-            bool result = false;
-            CLSError lserror;
+        bool result = false;
+        CLSError lserror;
 
-            result = ServiceRegisterCategory ("/systemsounds", SystemSoundsManager::systemsoundsMethods, NULL, NULL);
-            if (!result)
-            {
-                lserror.Print(__FUNCTION__, __LINE__);
-                PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-                    "%s: Registering Service for '%s' category failed", __FUNCTION__, "/systemsounds");
-            }
-            PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-                "SystemSoundsManager init done");
-        }
-        else
+        result = ServiceRegisterCategory ("/systemsounds", SystemSoundsManager::systemsoundsMethods, NULL, NULL);
+        if (!result)
         {
+            lserror.Print(__FUNCTION__, __LINE__);
             PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-                "SystemSoundsManager module load failed");
+                "%s: Registering Service for '%s' category failed", __FUNCTION__, "/systemsounds");
         }
+        PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+            "Successfully initialized SystemSoundsManager");
     }
-}
-
-int load_system_sounds_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-        "Load system sound manager");
-    SystemSoundsManager::loadSystemSoundsManager(loop, handle);
-    return 0;
-}
-
-void unload_system_sounds_manager()
-{
-    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-        "unload system sound manager");
-    if (SystemSoundsManager::mSystemSoundsManager)
+    else
     {
-        delete SystemSoundsManager::mSystemSoundsManager;
-        SystemSoundsManager::mSystemSoundsManager = nullptr;
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+            "mSystemSoundsManager is nullptr");
     }
 }

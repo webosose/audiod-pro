@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,20 +15,38 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "audioMixer.h"
+#include "moduleFactory.h"
 
 class SystemSoundsManager : public ModuleInterface
 {
     private:
         SystemSoundsManager(const SystemSoundsManager&) = delete;
         SystemSoundsManager& operator=(const SystemSoundsManager&) = delete;
-        SystemSoundsManager();
+        SystemSoundsManager(ModuleConfig* const pConfObj);
         AudioMixer *mObjAudioMixer;
+        static bool mIsObjRegistered;
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (ModuleFactory::getInstance()->Register("load_system_sounds_manager", &SystemSoundsManager::CreateObject));
+        }
 
     public:
         ~SystemSoundsManager();
         static LSMethod systemsoundsMethods[];
         static SystemSoundsManager* getSystemSoundsManagerInstance();
         static SystemSoundsManager* mSystemSoundsManager;
-        static void loadSystemSoundsManager(GMainLoop *loop, LSHandle* handle);
+        static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the SystemSoundsManager handler");
+                mSystemSoundsManager = new(std::nothrow) SystemSoundsManager(pConfObj);
+                if (mSystemSoundsManager)
+                    return mSystemSoundsManager;
+            }
+            return nullptr;
+        }
+        void initialize();
         static bool _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx);
 };
