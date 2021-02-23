@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 #include <map>
 #include <string>
 #include "audioMixer.h"
+#include "moduleFactory.h"
 
 #define UMI_CATEGORY_NAME                "/UMI"
 #define GET_STATUS_CATEGORY_AND_KEY      "/UMI/getStatus"
@@ -31,9 +32,15 @@ class ConnectionManager : public ModuleInterface
     private:
         ConnectionManager(const ConnectionManager&) = delete;
         ConnectionManager& operator=(const ConnectionManager&) = delete;
-        ConnectionManager();
+        ConnectionManager(ModuleConfig* const pConfObj);
         ModuleManager* mObjModuleManager;
         AudioMixer* mAudioMixer;
+        static bool mIsObjRegistered;
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (ModuleFactory::getInstance()->Register("load_connection_manager", &ConnectionManager::CreateObject));
+        }
 
         bool getAudioOutputStatus (LSHandle *lshandle, LSMessage *message, void *ctx);
         bool connect(LSHandle *lshandle, LSMessage *message, void *ctx);
@@ -50,7 +57,18 @@ class ConnectionManager : public ModuleInterface
         static ConnectionManager *mConnectionManager;
         static ConnectionManager *getConnectionManager();
         static LSMethod connectionManagerMethods[];
-        static void loadModuleConnectionManager(GMainLoop *loop, LSHandle* handle);
+        static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the ConnectionManager handler");
+                mConnectionManager = new(std::nothrow) ConnectionManager(pConfObj);
+                if (mConnectionManager)
+                    return mConnectionManager;
+            }
+            return nullptr;
+        }
+        void initialize();
         void notifyGetStatusSubscribers();
 };
 #endif //_CONNECTION_MANAGER_H_

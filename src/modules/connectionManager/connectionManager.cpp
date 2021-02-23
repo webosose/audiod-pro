@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -19,13 +19,14 @@
 #include "connectionManager.h"
 
 ConnectionManager* ConnectionManager::mConnectionManager = nullptr;
+bool ConnectionManager::mIsObjRegistered = ConnectionManager::RegisterObject();
 
 ConnectionManager* ConnectionManager::getConnectionManager()
 {
     return mConnectionManager;
 }
 
-ConnectionManager::ConnectionManager()
+ConnectionManager::ConnectionManager(ModuleConfig* const pConfObj)
 {
     PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, \
                "ConnectionManager constructor");
@@ -490,42 +491,20 @@ LSMethod ConnectionManager::connectionManagerMethods[] =
     { },
 };
 
-void ConnectionManager::loadModuleConnectionManager(GMainLoop *loop, LSHandle* handle)
+void ConnectionManager::initialize()
 {
-    CLSError lserror;
-    if (!mConnectionManager)
+    if (mConnectionManager)
     {
-        mConnectionManager = new (std::nothrow)ConnectionManager();
-        if (mConnectionManager)
+        CLSError lserror;
+        bool bRetVal = LSRegisterCategoryAppend(GetPalmService(), UMI_CATEGORY_NAME, connectionManagerMethods, nullptr, &lserror);
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), UMI_CATEGORY_NAME, mConnectionManager, &lserror))
         {
-            PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "load module ConnectionManager successful");
-            bool bRetVal = LSRegisterCategoryAppend(handle, UMI_CATEGORY_NAME, connectionManagerMethods, nullptr, &lserror);
-            if (!bRetVal || !LSCategorySetData(handle, UMI_CATEGORY_NAME, mConnectionManager, &lserror))
-            {
-                PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT,\
-                            "%s: Registering Service for '%s' category failed", __FUNCTION__, UMI_CATEGORY_NAME);
-                lserror.Print(__FUNCTION__, __LINE__);
-            }
-            PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "load module ConnectionManager Init Done");
+            PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT,\
+                        "%s: Registering Service for '%s' category failed", __FUNCTION__, UMI_CATEGORY_NAME);
+            lserror.Print(__FUNCTION__, __LINE__);
         }
-        else
-            PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Could not load module ConnectionManager");
+        PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Successfully initialized ConnectionManager");
     }
-}
-
-int load_connection_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "initializing connection_manager");
-    ConnectionManager::loadModuleConnectionManager(loop, handle);
-    return 0;
-}
-
-void unload_connection_manager()
-{
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "unloading connection_manager");
-    if (ConnectionManager::mConnectionManager)
-    {
-        delete ConnectionManager::mConnectionManager;
-        ConnectionManager::mConnectionManager = nullptr;
-    }
+    else
+        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "mConnectionManager is nullptr");
 }
