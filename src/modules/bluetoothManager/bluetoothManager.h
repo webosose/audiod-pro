@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -28,8 +28,7 @@
 #include "messageUtils.h"
 #include "audioMixer.h"
 #include "log.h"
-#include "moduleManager.h"
-#include "moduleInterface.h"
+#include "moduleFactory.h"
 
 #define BT_ADAPTER_SUBSCRIBE_PAYLOAD "{\"subscribe\":true}"
 #define BT_DEVICE_GET_STATUS    "luna://com.webos.service.bluetooth2/device/getStatus"
@@ -49,15 +48,32 @@ class BluetoothManager : public ModuleInterface
 
         BluetoothManager (const BluetoothManager&) = delete;
         BluetoothManager& operator=(const BluetoothManager&) = delete;
-        BluetoothManager ();
+        BluetoothManager(ModuleConfig* const pConfObj);
         ModuleManager* mObjModuleManager;
         AudioMixer *mObjAudioMixer;
+        static bool mIsObjRegistered;
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (ModuleFactory::getInstance()->Register("load_bluetooth_manager", &BluetoothManager::CreateObject));
+        }
 
     public:
         ~BluetoothManager();
-        static BluetoothManager* getBluetoothManagerInstance ();
-        static void loadModuleBluetoothManager (GMainLoop *loop, LSHandle* handle);
+        static BluetoothManager* getBluetoothManagerInstance();
         static BluetoothManager *mBluetoothManager;
+        static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the BluetoothManager handler");
+                mBluetoothManager = new(std::nothrow) BluetoothManager(pConfObj);
+                if (mBluetoothManager)
+                    return mBluetoothManager;
+            }
+            return nullptr;
+        }
+        void initialize();
 
         void eventServerStatusInfo (SERVER_TYPE_E serviceName, bool connected);
         void eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message);

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include "bluetoothManager.h"
 
+bool BluetoothManager::mIsObjRegistered = BluetoothManager::RegisterObject();
 BluetoothManager* BluetoothManager::mBluetoothManager = nullptr;
 
 BluetoothManager* BluetoothManager::getBluetoothManagerInstance()
@@ -454,7 +455,8 @@ void BluetoothManager::eventServerStatusInfo(SERVER_TYPE_E serviceName, bool con
     }
 }
 
-BluetoothManager::BluetoothManager():mA2dpConnected(false), mA2dpSource(false),
+BluetoothManager::BluetoothManager(ModuleConfig* const pConfObj):
+    mA2dpConnected(false), mA2dpSource(false),
     mDefaultDeviceConnected(false)
 {
     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
@@ -479,43 +481,20 @@ BluetoothManager::~BluetoothManager()
         "BT manager destructor");
 }
 
-void BluetoothManager::loadModuleBluetoothManager(GMainLoop *loop, LSHandle* handle)
+void BluetoothManager::initialize()
 {
-    if (!mBluetoothManager)
+    if (mBluetoothManager)
     {
-        mBluetoothManager = new (std::nothrow) BluetoothManager();
-        if (mBluetoothManager)
-        {
-            PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
-                "BluetoothManager load sucess");
-            mBluetoothManager->mObjModuleManager->subscribeServerStatusInfo(mBluetoothManager, true, \
-                eBluetoothService2);
-            mBluetoothManager->mObjModuleManager->subscribeKeyInfo(mBluetoothManager, true, eEventBTAdapter, \
-                eBluetoothService2, BT_ADAPTER_GET_STATUS, BT_ADAPTER_SUBSCRIBE_PAYLOAD);
-        }
-        else
-        {
-            PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
-                "load BT manger module failed, memory error");
-        }
+        mBluetoothManager->mObjModuleManager->subscribeServerStatusInfo(mBluetoothManager, true, \
+            eBluetoothService2);
+        mBluetoothManager->mObjModuleManager->subscribeKeyInfo(mBluetoothManager, true, eEventBTAdapter, \
+            eBluetoothService2, BT_ADAPTER_GET_STATUS, BT_ADAPTER_SUBSCRIBE_PAYLOAD);
+        PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
+            "Successfully initialized BluetoothManager");
     }
-}
-
-int load_bluetooth_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
-        "Load bluetooth Manager");
-    BluetoothManager::loadModuleBluetoothManager(loop, handle);
-    return 0;
-}
-
-void unload_bluetooth_manager()
-{
-    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
-        "unLoad bluetooth manager");
-    if (BluetoothManager::mBluetoothManager)
+    else
     {
-        delete BluetoothManager::mBluetoothManager;
-        BluetoothManager::mBluetoothManager = nullptr;
+        PM_LOG_ERROR(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
+            "mBluetoothManager is nullptr");
     }
 }
