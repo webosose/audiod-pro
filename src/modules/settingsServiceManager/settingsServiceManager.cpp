@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include "settingsServiceManager.h"
 
+bool SettingsServiceManager::mIsObjRegistered = SettingsServiceManager::RegisterObject();
 SettingsServiceManager* SettingsServiceManager::mSettingsServiceManager = nullptr;
 
 SettingsServiceManager* SettingsServiceManager::getSettingsServiceManager()
@@ -100,7 +101,7 @@ bool SettingsServiceManager::settingsMediaDNDEvent(LSMessage *message)
     return true;
 }
 
-SettingsServiceManager::SettingsServiceManager()
+SettingsServiceManager::SettingsServiceManager(ModuleConfig* const pConfObj)
 {
     PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
         "SettingsServiceManager Constructor");
@@ -118,53 +119,30 @@ SettingsServiceManager::~SettingsServiceManager()
         "SettingsServiceManager destructor");
 }
 
-void SettingsServiceManager::loadSettingsServiceManager(GMainLoop *loop, LSHandle* handle)
+void SettingsServiceManager::initialize()
 {
-    if (!mSettingsServiceManager)
+    if (mSettingsServiceManager)
     {
-        mSettingsServiceManager = new (std::nothrow) SettingsServiceManager();
-        if (mSettingsServiceManager)
+        if (mSettingsServiceManager->mObjModuleManager)
         {
-            PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-                       "SettingsServiceManager init success");
-            if (mSettingsServiceManager->mObjModuleManager)
-            {
-                PM_LOG_DEBUG("Subscribing to setting service");
-                mSettingsServiceManager->mObjModuleManager->subscribeServerStatusInfo(mSettingsServiceManager, false, eSettingsService);
-                mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingMediaParam, eSettingsService,\
-                                                                             GET_SYSTEM_SETTINGS, MEDIA_PARAMS);
-                mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingDNDParam, eSettingsService,\
-                                                                             GET_SYSTEM_SETTINGS, DND_PARAMS);
-            }
-            else
-            {
-                PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-                    "Modulemanager instance is null");
-            }
+            PM_LOG_DEBUG("Subscribing to setting service");
+            mSettingsServiceManager->mObjModuleManager->subscribeServerStatusInfo(mSettingsServiceManager, false, eSettingsService);
+            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingMediaParam, eSettingsService,\
+                                                                         GET_SYSTEM_SETTINGS, MEDIA_PARAMS);
+            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingDNDParam, eSettingsService,\
+                                                                         GET_SYSTEM_SETTINGS, DND_PARAMS);
         }
         else
         {
             PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-                       "SettingsServiceManager init failed");
+                "Modulemanager instance is null");
         }
+        PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
+            "Successfully initialized SettingsServiceManager");
     }
-}
-
-int load_settings_service_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-                "loading setting service manager");
-    SettingsServiceManager::loadSettingsServiceManager(loop, handle);
-    return 0;
-}
-
-void unload_settings_service_manager()
-{
-    PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-                "unloading setting service manager");
-    if  (SettingsServiceManager::mSettingsServiceManager)
+    else
     {
-        delete SettingsServiceManager::mSettingsServiceManager;
-        SettingsServiceManager::mSettingsServiceManager = nullptr;
+        PM_LOG_ERROR(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
+            "mSettingsServiceManager is nullptr");
     }
 }

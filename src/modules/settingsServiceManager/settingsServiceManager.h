@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #include "messageUtils.h"
 #include "utils.h"
 #include "log.h"
-#include "moduleInterface.h"
+#include "moduleFactory.h"
 #include "moduleManager.h"
 
 #define GET_SYSTEM_SETTINGS  "luna://com.webos.settingsservice/getSystemSettings"
@@ -34,14 +34,31 @@ class SettingsServiceManager : public ModuleInterface
     private:
         SettingsServiceManager(const SettingsServiceManager&) = delete;
         SettingsServiceManager& operator=(const SettingsServiceManager&) = delete;
-        SettingsServiceManager();
+        SettingsServiceManager(ModuleConfig* const pConfObj);
 
         ModuleManager *mObjModuleManager;
+        static bool mIsObjRegistered;
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (ModuleFactory::getInstance()->Register("load_settings_service_manager", &SettingsServiceManager::CreateObject));
+        }
     public:
         ~SettingsServiceManager();
         static SettingsServiceManager *mSettingsServiceManager;
         static SettingsServiceManager *getSettingsServiceManager();
-        static void loadSettingsServiceManager(GMainLoop *loop, LSHandle* handle);
+        static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the SettingsServiceManager handler");
+                mSettingsServiceManager = new(std::nothrow) SettingsServiceManager(pConfObj);
+                if (mSettingsServiceManager)
+                    return mSettingsServiceManager;
+            }
+            return nullptr;
+        }
+        void initialize();
 
         //Modulemanager events implementation
         void eventServerStatusInfo(SERVER_TYPE_E serviceName, bool connected);
