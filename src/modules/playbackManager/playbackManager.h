@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-* Copyright (c) 2020 LG Electronics Company.
+* Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "messageUtils.h"
 #include "log.h"
 #include "main.h"
+#include "moduleFactory.h"
 
 class PlaybackManager : public ModuleInterface
 {
@@ -37,15 +38,32 @@ private:
 
     PlaybackManager(const PlaybackManager&) = delete;
     PlaybackManager& operator=(const PlaybackManager&) = delete;
-    PlaybackManager();
+    PlaybackManager(ModuleConfig* const pConfObj);
     AudioMixer *mObjAudioMixer;
+    static bool mIsObjRegistered;
+    //Register Object to object factory. This is called automatically
+    static bool RegisterObject()
+    {
+        return (ModuleFactory::getInstance()->Register("load_playback_manager", &PlaybackManager::CreateObject));
+    }
 
 public:
     ~PlaybackManager();
     static LSMethod playbackMethods[];
     static PlaybackManager* getPlaybackManagerInstance();
     static PlaybackManager* mPlaybackManager;
-    static void loadPlaybackModuleManager(GMainLoop *loop, LSHandle* handle);
+    static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+    {
+        if (mIsObjRegistered)
+        {
+            PM_LOG_DEBUG("CreateObject - Creating the PlaybackManager handler");
+            mPlaybackManager = new(std::nothrow)PlaybackManager(pConfObj);
+            if (mPlaybackManager)
+                return mPlaybackManager;
+        }
+        return nullptr;
+    }
+    void initialize();
     static bool _playSound(LSHandle *lshandle, LSMessage *message, void *ctx);
 };
 #endif // _PLAYBACK_MANAGER_

@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-* Copyright (c) 2020 LG Electronics Company.
+* Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #define DEFAULT_SAMPLE_FORMAT "PA_SAMPLE_S32LE"
 
 PlaybackManager* PlaybackManager::mPlaybackManager = nullptr;
+bool PlaybackManager::mIsObjRegistered = PlaybackManager::RegisterObject();
 
 PlaybackManager* PlaybackManager::getPlaybackManagerInstance()
 {
@@ -173,7 +174,7 @@ LSMethod PlaybackManager::playbackMethods[] = {
     { },
 };
 
-PlaybackManager::PlaybackManager()
+PlaybackManager::PlaybackManager(ModuleConfig* const pConfObj)
 {
     mObjAudioMixer = AudioMixer::getAudioMixerInstance();
     if (!mObjAudioMixer)
@@ -191,50 +192,25 @@ PlaybackManager::~PlaybackManager()
         "Playback manager destructor");
 }
 
-void PlaybackManager::loadPlaybackModuleManager(GMainLoop *loop, LSHandle* handle)
+void PlaybackManager::initialize()
 {
-    if (!mPlaybackManager)
+    if (mPlaybackManager)
     {
-        mPlaybackManager = new (std::nothrow) PlaybackManager();
-        if (mPlaybackManager)
+        bool result = false;
+        CLSError lserror;
+        result = LSRegisterCategoryAppend(GetPalmService(), "/", PlaybackManager::playbackMethods, nullptr, &lserror);
+        if (!result || !LSCategorySetData(GetPalmService(), "/", mPlaybackManager, &lserror))
         {
             PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-                "load playback manager successful");
-            bool result = false;
-            CLSError lserror;
-            result = LSRegisterCategoryAppend(handle, "/", PlaybackManager::playbackMethods, nullptr, &lserror);
-            if (!result || !LSCategorySetData(handle, "/", mPlaybackManager, &lserror))
-            {
-                PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-                    "%s registering for %s category faled",  __FUNCTION__, "/");
-                lserror.Print(__FUNCTION__, __LINE__);
-            }
-            PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-                "loadPlaybackModuleManager done");
+                "%s registering for %s category faled",  __FUNCTION__, "/");
+            lserror.Print(__FUNCTION__, __LINE__);
         }
-        else
-        {
-            PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-                "loadPlaybackModuleManager failed");
-        }
+        PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
+            "Successfully initialized PlaybackManager");
     }
-}
-
-void unload_playback_manager()
-{
-    PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-        "unloading playback manager");
-    if (PlaybackManager::mPlaybackManager)
+    else
     {
-        delete PlaybackManager::mPlaybackManager;
-        PlaybackManager::mPlaybackManager = nullptr;
+        PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
+            "mPlaybackManager is nullptr");
     }
-}
-
-int load_playback_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-        "loading playback manager");
-    PlaybackManager::loadPlaybackModuleManager(loop, handle);
-    return 0;
 }
