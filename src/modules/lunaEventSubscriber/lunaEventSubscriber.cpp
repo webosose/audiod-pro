@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,13 +27,14 @@ serverNameMap statusSubscriptionMap =
 };
 
 lunaEventSubscriber * lunaEventSubscriber::mLunaEventSubscriber = nullptr;
+bool lunaEventSubscriber::mIsObjRegistered = lunaEventSubscriber::RegisterObject();
 
 lunaEventSubscriber * lunaEventSubscriber::getLunaEventSubscriber()
 {
     return mLunaEventSubscriber;
 }
 
-lunaEventSubscriber::lunaEventSubscriber() : mServerStatusSubscribed(false)
+lunaEventSubscriber::lunaEventSubscriber(ModuleConfig* const pConfObj) : mServerStatusSubscribed(false)
 {
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     mArrayKeySubscribed.fill(false);
@@ -61,20 +62,16 @@ lunaEventSubscriber::~lunaEventSubscriber()
     PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,"lunaEventSubscriber::Destructor");
 }
 
-void lunaEventSubscriber::loadLunaEventSubscriber(GMainLoop *loop)
+void lunaEventSubscriber::initialize()
 {
-    if (!mLunaEventSubscriber)
+    if (mLunaEventSubscriber == nullptr)
     {
-        mLunaEventSubscriber = new (std::nothrow)lunaEventSubscriber();
-        if (mLunaEventSubscriber == nullptr)
-        {
-            PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT, "loading Luna event subscriber failed");
-        }
-        else
-        {
-            PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT, "load module luna event subscriber success");
-            mLunaEventSubscriber->mLoop = loop;
-        }
+        PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT, "Initializing Luna event subscriber module failed");
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT, "Successfully initialized Luna event subscriber module");
+        mLunaEventSubscriber->mLoop = getMainLoop();
     }
 }
 
@@ -304,23 +301,4 @@ void lunaEventSubscriber::eventSubscribeKey(LUNA_KEY_TYPE_E event,
     mArrayKeyReceived[event]=true;
     mArrayKeySubscribed[event]=false;
     subscribeToKeys(sh, event);
-}
-
-int  load_luna_event_subscriber(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
-                    "Load luna event subscriber");
-    lunaEventSubscriber::loadLunaEventSubscriber(loop);
-    return 0;
-}
-
-void unload_luna_event_subscriber()
-{
-    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
-                    "Unloading luna event subscriber");
-    if (lunaEventSubscriber::mLunaEventSubscriber)
-    {
-        delete lunaEventSubscriber::mLunaEventSubscriber;
-        lunaEventSubscriber::mLunaEventSubscriber = nullptr;
-    }
 }
