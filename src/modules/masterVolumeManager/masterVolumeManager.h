@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 #include "moduleManager.h"
 #include "audioMixer.h"
 #include "soundOutputManager.h"
+#include "moduleFactory.h"
 
 #define AUDIOD_API_GET_VOLUME "/master/getVolume"
 #define DISPLAY_ONE 0
@@ -42,7 +43,7 @@ class MasterVolumeManager : public ModuleInterface
     private:
         MasterVolumeManager(const MasterVolumeManager&) = delete;
         MasterVolumeManager& operator=(const MasterVolumeManager&) = delete;
-        MasterVolumeManager();
+        MasterVolumeManager(ModuleConfig* const pConfObj);
 
         ModuleManager* mObjModuleManager;
         AudioMixer *mObjAudioMixer;
@@ -53,13 +54,30 @@ class MasterVolumeManager : public ModuleInterface
         int displayOneMuteStatus;
         int displayTwoMuteStatus;
         bool mMuteStatus;
+        static bool mIsObjRegistered;
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (ModuleFactory::getInstance()->Register("load_master_volume_manager", &MasterVolumeManager::CreateObject));
+        }
 
     public :
         ~MasterVolumeManager();
         static MasterVolumeManager* getMasterVolumeManagerInstance();
-        static void loadModuleMasterVolumeManager(GMainLoop *loop, LSHandle* handle);
         static MasterVolumeManager *mMasterVolumeManager;
-        static void initSoundOutputManager(GMainLoop *loop, LSHandle* handle);
+        static void initSoundOutputManager();
+        static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the MasterVolumeManager handler");
+                mMasterVolumeManager = new(std::nothrow) MasterVolumeManager(pConfObj);
+                if (mMasterVolumeManager)
+                    return mMasterVolumeManager;
+            }
+            return nullptr;
+        }
+        void initialize();
 
         void setCurrentVolume(int iVolume);
         void setCurrentMuteStatus(bool bMuteStatus);

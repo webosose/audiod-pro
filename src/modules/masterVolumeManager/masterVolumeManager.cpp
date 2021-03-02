@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include "masterVolumeManager.h"
 
+bool MasterVolumeManager::mIsObjRegistered = MasterVolumeManager::RegisterObject();
 MasterVolumeManager* MasterVolumeManager::mMasterVolumeManager = nullptr;
 SoundOutputManager* MasterVolumeManager::mObjSoundOutputManager = nullptr;
 
@@ -1024,7 +1025,7 @@ static LSMethod SoundOutputManagerMethods[] = {
     { },
 };
 
-void MasterVolumeManager::initSoundOutputManager(GMainLoop *loop, LSHandle* handle)
+void MasterVolumeManager::initSoundOutputManager()
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "initSoundOutputManager::initialising sound output manager module");
     CLSError lserror;
@@ -1034,8 +1035,8 @@ void MasterVolumeManager::initSoundOutputManager(GMainLoop *loop, LSHandle* hand
         if (mObjSoundOutputManager)
         {
             PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "load module soundOutputManager successful");
-            bool result = LSRegisterCategoryAppend(handle, "/soundSettings", SoundOutputManagerMethods, nullptr, &lserror);
-            if (!result || !LSCategorySetData(handle, "/soundSettings", mObjSoundOutputManager, &lserror))
+            bool result = LSRegisterCategoryAppend(GetPalmService(), "/soundSettings", SoundOutputManagerMethods, nullptr, &lserror);
+            if (!result || !LSCategorySetData(GetPalmService(), "/soundSettings", mObjSoundOutputManager, &lserror))
             {
                 PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
                     "%s: Registering Service for '%s' category failed", __FUNCTION__, "/soundSettings");
@@ -1047,30 +1048,27 @@ void MasterVolumeManager::initSoundOutputManager(GMainLoop *loop, LSHandle* hand
     }
 }
 
-void MasterVolumeManager::loadModuleMasterVolumeManager(GMainLoop *loop, LSHandle* handle)
+void MasterVolumeManager::initialize()
 {
     CLSError lserror;
-    if (!mMasterVolumeManager)
+    if (mMasterVolumeManager)
     {
-        mMasterVolumeManager = new (std::nothrow)MasterVolumeManager();
-        if (mMasterVolumeManager)
+        bool bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/master", MasterVolumeMethods, nullptr, &lserror);
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/master", mMasterVolumeManager, &lserror))
         {
-            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "load module MasterVolumeManager successful");
-            bool bRetVal = LSRegisterCategoryAppend(handle, "/master", MasterVolumeMethods, nullptr, &lserror);
-            if (!bRetVal || !LSCategorySetData(handle, "/master", mMasterVolumeManager, &lserror))
-            {
-               PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s: Registering Service for '%s' category failed", \
-                            __FUNCTION__, "/master");
-               lserror.Print(__FUNCTION__, __LINE__);
-            }
-            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "load module MasterVolumeManager Init Done");
+           PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s: Registering Service for '%s' category failed", \
+                        __FUNCTION__, "/master");
+           lserror.Print(__FUNCTION__, __LINE__);
         }
-        else
-            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module MasterVolumeManager");
+        initSoundOutputManager();
+        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+            "Successfully initialized MasterVolumeManager");
     }
+    else
+        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module MasterVolumeManager");
 }
 
-MasterVolumeManager::MasterVolumeManager(): mObjAudioMixer(AudioMixer::getAudioMixerInstance()), mVolume(0), mMuteStatus(false), \
+MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudioMixer(AudioMixer::getAudioMixerInstance()), mVolume(0), mMuteStatus(false), \
                                             displayOneVolume(100), displayTwoVolume(100), displayOneMuteStatus(0), displayTwoMuteStatus(0)
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeManager: constructor");
@@ -1088,23 +1086,5 @@ MasterVolumeManager::~MasterVolumeManager()
     {
         delete mObjSoundOutputManager;
         mObjSoundOutputManager = nullptr;
-    }
-}
-
-int load_master_volume_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "loading master_volume_manager");
-    MasterVolumeManager::loadModuleMasterVolumeManager(loop, handle);
-    MasterVolumeManager::initSoundOutputManager(loop, handle);
-    return 0;
-}
-
-void unload_master_volume_manager()
-{
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "unloading master_volume_manager");
-    if (MasterVolumeManager::mMasterVolumeManager)
-    {
-        delete MasterVolumeManager::mMasterVolumeManager;
-        MasterVolumeManager::mMasterVolumeManager = nullptr;
     }
 }
