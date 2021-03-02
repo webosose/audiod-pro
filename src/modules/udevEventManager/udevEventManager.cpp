@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #define SYSFS_HEADSET_MIC "/sys/devices/virtual/switch/h2w/state"
 
+bool UdevEventManager::mIsObjRegistered = UdevEventManager::RegisterObject();
 UdevEventManager* UdevEventManager::mObjUdevEventManager = nullptr;
 
 bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
@@ -105,7 +106,7 @@ UdevEventManager* UdevEventManager::getUdevEventManagerInstance()
     return mObjUdevEventManager;
 }
 
-UdevEventManager::UdevEventManager() : mObjAudioMixer(nullptr)
+UdevEventManager::UdevEventManager(ModuleConfig* const pConfObj) : mObjAudioMixer(nullptr)
 {
     PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
         "UdevEventManager constructor");
@@ -128,52 +129,25 @@ LSMethod UdevEventManager::udevMethods[] = {
     {},
 };
 
-void UdevEventManager::loadUdevEventManager(GMainLoop *loop, LSHandle* handle)
+void UdevEventManager::initialize()
 {
-    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-        "loadUdevEventManager");
-    if (!mObjUdevEventManager)
+    if (mObjUdevEventManager)
     {
-        mObjUdevEventManager = new (std::nothrow) UdevEventManager();
-        if (mObjUdevEventManager)
+        bool result = false;
+        CLSError lserror;
+
+        result = LSRegisterCategoryAppend(GetPalmService(), "/udev", UdevEventManager::udevMethods, nullptr, &lserror);
+        if (!result || !LSCategorySetData(GetPalmService(), "/udev", mObjUdevEventManager, &lserror))
         {
-            PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                "loadUdevEventManager: mObjUdevEventManager created successfullly ");
-            CLSError lserror;
-            bool result = LSRegisterCategoryAppend(handle, "/udev", UdevEventManager::udevMethods, nullptr, &lserror);
-            if (!result || !LSCategorySetData(handle, "/udev", mObjUdevEventManager, &lserror))
-            {
-                PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT,\
-                    "%s: Registering Service for '%s' category failed", __FUNCTION__, "/udev");
-                lserror.Print(__FUNCTION__, __LINE__);
-            }
-            PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                "loadUdevEventManager: module init done");
-        }
-        else
             PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                "loadUdevEventManager: Could not create mObjUdevEventManager");
+                "%s: Registering Service for '%s' category failed", __FUNCTION__, "/udev");
+        }
+        PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+            "Successfully initialized UdevEventManager");
     }
     else
-        PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-            "loadUdevEventManager: mObjUdevEventManager is already created");
-}
-
-int  load_udev_event_manager(GMainLoop *loop, LSHandle* handle)
-{
-    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-        "load_udev_event_manager");
-    UdevEventManager::loadUdevEventManager(loop, handle);
-    return 0;
-}
-
-void unload_udev_event_manager()
-{
-    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-        "unload_udev_event_manager");
-    if (UdevEventManager::mObjUdevEventManager)
     {
-        delete UdevEventManager::mObjUdevEventManager;
-        UdevEventManager::mObjUdevEventManager = nullptr;
+        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+            "mObjUdevEventManager is nullptr");
     }
 }

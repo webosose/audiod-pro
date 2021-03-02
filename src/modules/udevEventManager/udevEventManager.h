@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,39 @@
 #include "utils.h"
 #include "log.h"
 #include "audioMixer.h"
+#include "moduleFactory.h"
 
 class UdevEventManager : public ModuleInterface
 {
     private:
         UdevEventManager(const UdevEventManager&) = delete;
         UdevEventManager& operator=(const UdevEventManager&) = delete;
-        UdevEventManager();
+        UdevEventManager(ModuleConfig* const pConfObj);
         AudioMixer *mObjAudioMixer;
+        static bool mIsObjRegistered;
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (ModuleFactory::getInstance()->Register("load_udev_event_manager", &UdevEventManager::CreateObject));
+        }
 
     public:
         ~UdevEventManager();
         static LSMethod udevMethods[];
         static UdevEventManager* getUdevEventManagerInstance();
         static UdevEventManager* mObjUdevEventManager;
-        static void loadUdevEventManager(GMainLoop *loop, LSHandle* handle);
+        static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the UdevEventManager handler");
+                mObjUdevEventManager = new(std::nothrow) UdevEventManager(pConfObj);
+                if (mObjUdevEventManager)
+                    return mObjUdevEventManager;
+            }
+            return nullptr;
+        }
+        void initialize();
         static bool _event(LSHandle *lshandle, LSMessage *message, void *ctx);
 };
 #endif
