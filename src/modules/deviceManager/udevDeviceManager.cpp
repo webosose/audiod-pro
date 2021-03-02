@@ -15,14 +15,19 @@
 * limitations under the License.
 *
 * LICENSE@@@ */
-#include "udevEventManager.h"
+#include "udevDeviceManager.h"
 
 #define SYSFS_HEADSET_MIC "/sys/devices/virtual/switch/h2w/state"
 
-bool UdevEventManager::mIsObjRegistered = UdevEventManager::RegisterObject();
-UdevEventManager* UdevEventManager::mObjUdevEventManager = nullptr;
+bool UdevDeviceManager::mIsObjRegistered = UdevDeviceManager::CreateInstance();
 
-bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
+UdevDeviceManager* UdevDeviceManager::getInstance()
+{
+    static UdevDeviceManager objUdevDeviceManager;
+    return &objUdevDeviceManager;
+}
+
+bool UdevDeviceManager::event(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     bool returnValue = false;
     LSMessageJsonParser    msg(message, SCHEMA_3(REQUIRED(event, string),\
@@ -38,43 +43,44 @@ bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.get("device_no", device_no))
         device_no = 0;
     std::string event;
-    UdevEventManager* objUdevEventManager = UdevEventManager::getUdevEventManagerInstance();
-    if (objUdevEventManager)
+    UdevDeviceManager* objUdevDeviceManager = UdevDeviceManager::getInstance();
+    if (objUdevDeviceManager)
     {
         if (!msg.get("event", event)) {
             reply = MISSING_PARAMETER_ERROR(event, string);
         }
         else
         {
-            if (objUdevEventManager->mObjAudioMixer)
+            mObjAudioMixer = AudioMixer::getAudioMixerInstance();
+            if (mObjAudioMixer)
             {
                 if (event == "headset-removed") {
-                    returnValue = objUdevEventManager->mObjAudioMixer->programHeadsetRoute(0);
+                    returnValue = mObjAudioMixer->programHeadsetRoute(0);
                     if (false == returnValue)
                         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
                 }
                 else if (event == "headset-inserted") {
-                    returnValue = objUdevEventManager->mObjAudioMixer->programHeadsetRoute(1);
+                    returnValue = mObjAudioMixer->programHeadsetRoute(1);
                     if (false == returnValue)
                         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
                 }
                 else if (event == "usb-mic-inserted") {
-                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 1);
+                    returnValue = mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 1);
                     if (false == returnValue)
                         reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
                 }
                 else if (event == "usb-mic-removed") {
-                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 0);
+                    returnValue = mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 0);
                     if (false == returnValue)
                         reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
                 }
                 else if (event == "usb-headset-inserted") {
-                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 1);
+                    returnValue = mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 1);
                     if (false == returnValue)
                         reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
                 }
                 else if (event == "usb-headset-removed") {
-                    returnValue = objUdevEventManager->mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 0);
+                    returnValue = mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 0);
                     if (false == returnValue)
                         reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
                 }
@@ -84,7 +90,7 @@ bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
             else
             {
                 PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                    "loadUdevEventManager: mObjAudioMixer is null");
+                    "loadUdevDeviceManager: mObjAudioMixer is null");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
@@ -92,7 +98,7 @@ bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
     else
     {
         PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-            "loadUdevEventManager: mObjUdevEventManager is null");
+            "loadUdevDeviceManager: mObjUdevDeviceManager is null");
         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
     }
     CLSError lserror;
@@ -101,53 +107,14 @@ bool UdevEventManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
     return true;
 }
 
-UdevEventManager* UdevEventManager::getUdevEventManagerInstance()
-{
-    return mObjUdevEventManager;
-}
-
-UdevEventManager::UdevEventManager(ModuleConfig* const pConfObj) : mObjAudioMixer(nullptr)
+UdevDeviceManager::UdevDeviceManager() : mObjAudioMixer(nullptr)
 {
     PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-        "UdevEventManager constructor");
-    mObjAudioMixer = AudioMixer::getAudioMixerInstance();
-    if (!mObjAudioMixer)
-    {
-        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-            "AudioMixer instance is null");
-    }
+        "UdevDeviceManager constructor");
 }
 
-UdevEventManager::~UdevEventManager()
+UdevDeviceManager::~UdevDeviceManager()
 {
     PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-        "UdevEventManager destructor");
-}
-
-LSMethod UdevEventManager::udevMethods[] = {
-    { "event", _event},
-    {},
-};
-
-void UdevEventManager::initialize()
-{
-    if (mObjUdevEventManager)
-    {
-        bool result = false;
-        CLSError lserror;
-
-        result = LSRegisterCategoryAppend(GetPalmService(), "/udev", UdevEventManager::udevMethods, nullptr, &lserror);
-        if (!result || !LSCategorySetData(GetPalmService(), "/udev", mObjUdevEventManager, &lserror))
-        {
-            PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                "%s: Registering Service for '%s' category failed", __FUNCTION__, "/udev");
-        }
-        PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-            "Successfully initialized UdevEventManager");
-    }
-    else
-    {
-        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-            "mObjUdevEventManager is nullptr");
-    }
+        "UdevDeviceManager destructor");
 }

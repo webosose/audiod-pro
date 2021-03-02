@@ -91,7 +91,7 @@ include_directories(src/modules/connectionManager)
 include_directories(src/modules/masterVolumeManager)
 include_directories(src/modules/settingsServiceManager)
 include_directories(src/modules/systemSoundsManager)
-include_directories(src/modules/udevEventManager)
+include_directories(src/modules/deviceManager)
 include_directories(src/modules/lunaEventSubscriber)
 include_directories(src/modules/playbackManager)
 include_directories(include/public/)
@@ -128,7 +128,8 @@ SET (modules_files
         src/modules/masterVolumeManager/soundOutputListParser.cpp
         src/modules/settingsServiceManager/settingsServiceManager.cpp
         src/modules/systemSoundsManager/systemSoundsManager.cpp
-        src/modules/udevEventManager/udevEventManager.cpp
+        src/modules/deviceManager/deviceManager.cpp
+        src/modules/deviceManager/udevDeviceManager.cpp
         src/modules/lunaEventSubscriber/lunaEventSubscriber.cpp
         src/modules/playbackManager/playbackManager.cpp
     )

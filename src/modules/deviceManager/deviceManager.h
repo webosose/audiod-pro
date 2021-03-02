@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 LG Electronics, Inc.
+// Copyright (c) 2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,46 +14,49 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _UDEV_EVENT_MANAGER_H_
-#define _UDEV_EVENT_MANAGER_H_
+#ifndef _DEVICE_MANAGER_H_
+#define _DEVICE_MANAGER_H_
 
 #include <cstring>
 #include "utils.h"
 #include "log.h"
 #include "audioMixer.h"
 #include "moduleFactory.h"
+#include "deviceManagerInterface.h"
 
-class UdevEventManager : public ModuleInterface
+class DeviceManager : public ModuleInterface
 {
     private:
-        UdevEventManager(const UdevEventManager&) = delete;
-        UdevEventManager& operator=(const UdevEventManager&) = delete;
-        UdevEventManager(ModuleConfig* const pConfObj);
-        AudioMixer *mObjAudioMixer;
+        DeviceManager(const DeviceManager&) = delete;
+        DeviceManager& operator=(const DeviceManager&) = delete;
+        DeviceManager(ModuleConfig* const pConfObj);
         static bool mIsObjRegistered;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
         {
-            return (ModuleFactory::getInstance()->Register("load_udev_event_manager", &UdevEventManager::CreateObject));
+            return (ModuleFactory::getInstance()->Register("load_device_manager", &DeviceManager::CreateObject));
         }
 
     public:
-        ~UdevEventManager();
-        static LSMethod udevMethods[];
-        static UdevEventManager* getUdevEventManagerInstance();
-        static UdevEventManager* mObjUdevEventManager;
+        ~DeviceManager();
+        static LSMethod deviceManagerMethods[];
+        static DeviceManager* getDeviceManagerInstance();
+        static DeviceManager* mObjDeviceManager;
+        static DeviceManagerInterface* mClientDeviceManagerInstance;
+        static void setInstance(DeviceManagerInterface* clientDeviceManagerInstance);
+        DeviceManagerInterface* getClientDeviceManagerInstance();
         static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
         {
             if (mIsObjRegistered)
             {
-                PM_LOG_DEBUG("CreateObject - Creating the UdevEventManager handler");
-                mObjUdevEventManager = new(std::nothrow) UdevEventManager(pConfObj);
-                if (mObjUdevEventManager)
-                    return mObjUdevEventManager;
+                PM_LOG_DEBUG("CreateObject - Creating the DeviceManager handler");
+                mObjDeviceManager = new(std::nothrow) DeviceManager(pConfObj);
+                if (mObjDeviceManager)
+                    return mObjDeviceManager;
             }
             return nullptr;
         }
         void initialize();
         static bool _event(LSHandle *lshandle, LSMessage *message, void *ctx);
 };
-#endif
+#endif // _DEVICE_MANAGER_H_
