@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2020 LG Electronics, Inc.
+# Copyright (c) 2012-2021 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -123,6 +123,7 @@ SET (modules_files
         src/modules/bluetoothManager/bluetoothManager.cpp
         src/modules/connectionManager/connectionManager.cpp
         src/modules/masterVolumeManager/masterVolumeManager.cpp
+        src/modules/masterVolumeManager/OSEMasterVolumeManager.cpp
         src/modules/masterVolumeManager/soundOutputManager.cpp
         src/modules/masterVolumeManager/soundOutputListParser.cpp
         src/modules/settingsServiceManager/settingsServiceManager.cpp

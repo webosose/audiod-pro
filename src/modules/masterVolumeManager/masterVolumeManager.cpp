@@ -17,12 +17,19 @@
 #include "masterVolumeManager.h"
 
 bool MasterVolumeManager::mIsObjRegistered = MasterVolumeManager::RegisterObject();
+MasterVolumeInterface* MasterVolumeManager::mClientMasterInstance = nullptr;
 MasterVolumeManager* MasterVolumeManager::mMasterVolumeManager = nullptr;
 SoundOutputManager* MasterVolumeManager::mObjSoundOutputManager = nullptr;
 
 MasterVolumeManager* MasterVolumeManager::getMasterVolumeManagerInstance()
 {
     return mMasterVolumeManager;
+}
+
+void MasterVolumeManager::setInstance(MasterVolumeInterface* clientMasterVolumeInstance)
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setInstance");
+    MasterVolumeManager::mClientMasterInstance = clientMasterVolumeInstance;
 }
 
 bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, void *ctx)

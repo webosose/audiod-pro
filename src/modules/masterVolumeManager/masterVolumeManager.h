@@ -29,6 +29,7 @@
 #include "audioMixer.h"
 #include "soundOutputManager.h"
 #include "moduleFactory.h"
+#include "masterVolumeInterface.h"
 
 #define AUDIOD_API_GET_VOLUME "/master/getVolume"
 #define DISPLAY_ONE 0
@@ -66,6 +67,8 @@ class MasterVolumeManager : public ModuleInterface
         static MasterVolumeManager* getMasterVolumeManagerInstance();
         static MasterVolumeManager *mMasterVolumeManager;
         static void initSoundOutputManager();
+        static MasterVolumeInterface* mClientMasterInstance;
+        static void setInstance(MasterVolumeInterface* clientMasterVolumeInstance);
         static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
         {
             if (mIsObjRegistered)
