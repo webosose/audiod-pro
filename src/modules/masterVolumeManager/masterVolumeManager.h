@@ -69,6 +69,7 @@ class MasterVolumeManager : public ModuleInterface
         static void initSoundOutputManager();
         static MasterVolumeInterface* mClientMasterInstance;
         static void setInstance(MasterVolumeInterface* clientMasterVolumeInstance);
+        MasterVolumeInterface* getClientMasterInstance();
         static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
         {
             if (mIsObjRegistered)
@@ -102,7 +103,6 @@ class MasterVolumeManager : public ModuleInterface
         static bool _volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         //Luna API callbacks
-        static bool _setVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
         static bool _muteVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
         static bool _volumeUpCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
         static bool _volumeDownCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
