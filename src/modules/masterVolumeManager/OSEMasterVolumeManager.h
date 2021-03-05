@@ -19,6 +19,13 @@
 
 #include "masterVolumeInterface.h"
 #include "masterVolumeManager.h"
+#define AUDIOD_API_GET_VOLUME "/master/getVolume"
+#define DISPLAY_ONE 0
+#define DISPLAY_TWO 1
+#define MIN_VOLUME 0
+#define MAX_VOLUME 100
+#define DEFAULT_ONE_DISPLAY_ID 1
+#define DEFAULT_TWO_DISPLAY_ID 2
 
 class OSEMasterVolumeManager : public MasterVolumeInterface
 {

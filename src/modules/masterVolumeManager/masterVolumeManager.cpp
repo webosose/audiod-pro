@@ -148,56 +148,24 @@ void MasterVolumeManager::setVolume(const int &displayId)
 bool MasterVolumeManager::_getVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getVolume");
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(subscribe, boolean), PROP(sessionId, integer))));
-    if (!msg.parse(__FUNCTION__,lshandle))
-        return true;
-
-    int display = DISPLAY_ONE;
-    bool subscribed = false;
-    CLSError lserror;
     std::string reply = STANDARD_JSON_SUCCESS;
-
-    msg.get("subscribe", subscribed);
-    msg.get("sessionId", display);
-
-    if (LSMessageIsSubscription (message))
+    MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
+    MasterVolumeInterface* clientMasterInstance = nullptr;
+    clientMasterInstance = masterVolumeInstance->getClientMasterInstance();
+    if (clientMasterInstance)
     {
-        if (!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
-        {
-            lserror.Print(__FUNCTION__, __LINE__);
-            PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "LSSubscriptionProcess failed");
-            return true;
-        }
-    }
-
-    MasterVolumeManager *masterVolumeManagerObj = (MasterVolumeManager*)ctx;
-    if (nullptr != masterVolumeManagerObj)
-    {
-        int displayId = DEFAULT_ONE_DISPLAY_ID;
-        std::string callerId = LSMessageGetSenderServiceName(message);
-        if (DISPLAY_TWO == display)
-            displayId = DEFAULT_TWO_DISPLAY_ID;
-        else if (DISPLAY_ONE == display)
-            displayId = DEFAULT_ONE_DISPLAY_ID;
-        else
-        {
-            PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
-                        "sessionId Not in Range");
-            reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
-        }
-
-        if ((DISPLAY_TWO == display) || (DISPLAY_ONE == display))
-            reply = masterVolumeManagerObj->getVolumeInfo(displayId, callerId);
+        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getVolume call to master client object is success");
+        clientMasterInstance->getVolume(lshandle, message, ctx);
     }
     else
     {
-        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeManagerObj is NULL");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "MasterVolume Instance is nullptr");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        return true;
     }
-
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s : Reply:%s", reply.c_str(), __FUNCTION__);
-    if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
     return true;
 }
 
