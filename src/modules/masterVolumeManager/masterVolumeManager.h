@@ -31,14 +31,6 @@
 #include "moduleFactory.h"
 #include "masterVolumeInterface.h"
 
-#define AUDIOD_API_GET_VOLUME "/master/getVolume"
-#define DISPLAY_ONE 0
-#define DISPLAY_TWO 1
-#define MIN_VOLUME 0
-#define MAX_VOLUME 100
-#define DEFAULT_ONE_DISPLAY_ID 1
-#define DEFAULT_TWO_DISPLAY_ID 2
-
 class MasterVolumeManager : public ModuleInterface
 {
     private:
@@ -49,12 +41,6 @@ class MasterVolumeManager : public ModuleInterface
         ModuleManager* mObjModuleManager;
         AudioMixer *mObjAudioMixer;
         static SoundOutputManager *mObjSoundOutputManager;
-        int mVolume;
-        int displayOneVolume;
-        int displayTwoVolume;
-        int displayOneMuteStatus;
-        int displayTwoMuteStatus;
-        bool mMuteStatus;
         static bool mIsObjRegistered;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
@@ -82,13 +68,6 @@ class MasterVolumeManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
-
-        void setCurrentVolume(int iVolume);
-        void setCurrentMuteStatus(bool bMuteStatus);
-        void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
-        std::string getVolumeInfo(const int &displayId, const std::string &callerId);
-        void setVolume(const int &displayId);
-        void setMuteStatus(const int &displayId);
         void eventMasterVolumeStatus();
 
         //Internal API for Volume and Mute, will be implemented during dynamic audio policy handling redesign
@@ -101,8 +80,5 @@ class MasterVolumeManager : public ModuleInterface
         static bool _muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx);
-
-        //Luna API callbacks
-        static bool _muteVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
 };
 #endif

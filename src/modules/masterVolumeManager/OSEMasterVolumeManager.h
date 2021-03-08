@@ -51,7 +51,10 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         OSEMasterVolumeManager();
         static OSEMasterVolumeManager* getInstance();
         void setCurrentVolume(int iVolume);
+        void setCurrentMuteStatus(bool bMuteStatus);
         void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
+        void setVolume(const int &displayId);
+        void setMuteStatus(const int &displayId);
         std::string getVolumeInfo(const int &displayId, const std::string &callerId);
 
         void setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);

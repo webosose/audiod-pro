@@ -33,6 +33,8 @@ public:
     virtual void muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
+    virtual void setMuteStatus(const int &displayId) = 0;
+    virtual void setVolume(const int &displayId) = 0;
 };
 
 #endif //MASTERVOLUME_INTERFACE_H
