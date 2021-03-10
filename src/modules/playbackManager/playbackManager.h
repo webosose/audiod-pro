@@ -64,6 +64,7 @@ public:
         return nullptr;
     }
     void initialize();
+    void handleEvent(events::EVENTS_T* ev);
     static bool _playSound(LSHandle *lshandle, LSMessage *message, void *ctx);
 };
 #endif // _PLAYBACK_MANAGER_

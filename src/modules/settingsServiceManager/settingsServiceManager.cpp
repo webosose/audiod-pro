@@ -125,12 +125,12 @@ void SettingsServiceManager::initialize()
     {
         if (mSettingsServiceManager->mObjModuleManager)
         {
-            PM_LOG_DEBUG("Subscribing to setting service");
+            /*PM_LOG_DEBUG("Subscribing to setting service");
             mSettingsServiceManager->mObjModuleManager->subscribeServerStatusInfo(mSettingsServiceManager, false, eSettingsService);
             mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingMediaParam, eSettingsService,\
                                                                          GET_SYSTEM_SETTINGS, MEDIA_PARAMS);
             mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingDNDParam, eSettingsService,\
-                                                                         GET_SYSTEM_SETTINGS, DND_PARAMS);
+                                                                         GET_SYSTEM_SETTINGS, DND_PARAMS);*/
         }
         else
         {
@@ -145,4 +145,8 @@ void SettingsServiceManager::initialize()
         PM_LOG_ERROR(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
             "mSettingsServiceManager is nullptr");
     }
+}
+
+void SettingsServiceManager::handleEvent(events::EVENTS_T* ev)
+{
 }

@@ -65,6 +65,7 @@ class lunaEventSubscriber: public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void handleEvent(events::EVENTS_T* ev);
         static void subscribeToKeys(LSHandle * handle, LUNA_KEY_TYPE_E event = eLunaEventCount);
         static bool serviceStatusCallBack( LSHandle *sh, const char *serviceName,
             bool connected, void *ctx);

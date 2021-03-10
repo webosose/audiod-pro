@@ -33,7 +33,6 @@ class ConnectionManager : public ModuleInterface
         ConnectionManager(const ConnectionManager&) = delete;
         ConnectionManager& operator=(const ConnectionManager&) = delete;
         ConnectionManager(ModuleConfig* const pConfObj);
-        ModuleManager* mObjModuleManager;
         AudioMixer* mAudioMixer;
         static bool mIsObjRegistered;
         //Register Object to object factory. This is called automatically
@@ -69,6 +68,7 @@ class ConnectionManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void handleEvent(events::EVENTS_T* ev);
         void notifyGetStatusSubscribers();
 };
 #endif //_CONNECTION_MANAGER_H_

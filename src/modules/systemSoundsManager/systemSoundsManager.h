@@ -48,5 +48,6 @@ class SystemSoundsManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void handleEvent(events::EVENTS_T* ev);
         static bool _playFeedback(LSHandle *lshandle, LSMessage *message, void *ctx);
 };

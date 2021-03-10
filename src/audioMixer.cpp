@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -185,7 +185,9 @@ void AudioMixer::callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE
     if (!mixerStatus)
         resetStreamInfo(mixerType);
     if (mObjModuleManager)
-        mObjModuleManager->notifyMixerStatus(mixerStatus, mixerType);
+    {
+        //mObjModuleManager->notifyMixerStatus(mixerStatus, mixerType);
+    }
 }
 
 void AudioMixer::callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
@@ -201,7 +203,9 @@ void AudioMixer::callBackSinkStatus(const std::string& source, const std::string
         else if (utils::eSinkClosed == sinkStatus)
             removeAudioSink(audioSink, mixerType);
         if (mObjModuleManager)
-            mObjModuleManager->notifySinkStatusInfo(source, sink, audioSink, sinkStatus, mixerType);
+        {
+            //mObjModuleManager->notifySinkStatusInfo(source, sink, audioSink, sinkStatus, mixerType);
+        }
     }
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
@@ -212,7 +216,9 @@ void AudioMixer::callBackMasterVolumeStatus()
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "callBackMasterVolumeStatus");
     if (mObjModuleManager)
-        mObjModuleManager->notifyMasterVolumeStatus();
+    {
+        //mObjModuleManager->notifyMasterVolumeStatus();
+    }
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "callBackMasterVolumeStatus: mObjModuleManager is null");
 }

@@ -87,6 +87,7 @@ class AudioPolicyManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void handleEvent(events::EVENTS_T* ev);
 
         //luna api's
         static bool _setInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);

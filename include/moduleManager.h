@@ -19,11 +19,13 @@
 
 #include "utils.h"
 #include "log.h"
+#include "events.h"
+#include "moduleInterface.h"
+#include "moduleFactory.h"
+
 #include <list>
 #include <string>
 #include <algorithm>
-#include "moduleInterface.h"
-#include "moduleFactory.h"
 #include <pbnjson/cxx/JValue.h>
 #include <pbnjson/cxx/JDomParser.h>
 
@@ -36,15 +38,10 @@ class ModuleManager
         ModuleManager(const ModuleManager&) = delete;
         ModuleManager& operator=(const ModuleManager&) = delete;
         ModuleManager(const std::string &audioModuleConfigPath);
-        std::list<ModuleInterface*> listSinkStatusSubscribers;
-        std::list<ModuleInterface*> listMixerStatusSubscribers;
-        std::list<ModuleInterface*> listInputVolumeSubscribers;
-        std::list<ModuleInterface*> listMasterVolumeStatusSubscribers;
-        std::list<ModuleInterface*> listServerStatusInfoSubscribers[eServiceCount];
-        std::list<ModuleInterface*> listServerStatusSubscriptionSubscribers;
-        std::list<ModuleInterface*> listKeySubscriptionSubscribers;
-        std::list<ModuleInterface*> listKeyInfoSubscribers[eLunaEventCount];
 
+        std::multimap<utils::EVENT_TYPE_E, ModuleInterface*> mapEventsSubscribers;
+        using mapEventsSubscribersItr = std::multimap<utils::EVENT_TYPE_E, ModuleInterface*>::iterator;
+        using mapEventsSubscribersPair = std::pair<mapEventsSubscribersItr, mapEventsSubscribersItr>;
         std::vector<std::string> mSupportedModulesVector;
         ModuleFactory *mModuleFactory;
         using mModulesCreatorMap = std::map<std::string, pFuncModuleCreator>;
@@ -60,27 +57,9 @@ class ModuleManager
         static ModuleManager* getModuleManagerInstance();
         static ModuleManager* mObjModuleManager;
         ~ModuleManager();
-        //subscription events
+        //subscription for events
         void subscribeModuleEvent(ModuleInterface* module, bool first, utils::EVENT_TYPE_E eventType);
-        void subscribeKeyInfo(ModuleInterface* module, bool first, LUNA_KEY_TYPE_E event, \
-                SERVER_TYPE_E eService, const std::string& key, const std::string& payload);
-        //Notification events start
-        //To notify sink status
-        void notifySinkStatusInfo(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
-            utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
-        //To notify all subscribers
-        void notifyServerStatusInfo(SERVER_TYPE_E serviceName, bool connected);
-        //To notify modules about Callbacks for the Luna event subscriptions
-        void notifyKeyInfo(LUNA_KEY_TYPE_E type, LSMessage *message);
-        //To notify mixer status
-        void notifyMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
-        //To notify Input volume change
-        void notifyInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp);
-        void notifyMasterVolumeStatus();
-        void subscribeServerStatusInfo(ModuleInterface* module, bool first, SERVER_TYPE_E eStatus);
-        void notifyServerStatusSubscription(SERVER_TYPE_E eService);
-        //To notify new event subscription requests (To Luna Event Subscription module)
-        void notifyKeySubscription(LUNA_KEY_TYPE_E event, SERVER_TYPE_E eService, const std::string& key, \
-                const std::string& payload);
+        //handling events
+        void handleEvent(events::EVENTS_T* ev);
 };
 #endif //_MODULE_MANAGER_H_

@@ -118,6 +118,7 @@ if (AUDIOD_TEST_API)
 endif(AUDIOD_TEST_API)
 
 SET (modules_files
+        src/modules/lunaEventSubscriber/lunaEventSubscriber.cpp
         src/modules/audioPolicyManager/audioPolicyManager.cpp
         src/modules/audioPolicyManager/volumePolicyInfoParser.cpp
         src/modules/bluetoothManager/bluetoothManager.cpp
@@ -130,7 +131,6 @@ SET (modules_files
         src/modules/systemSoundsManager/systemSoundsManager.cpp
         src/modules/deviceManager/deviceManager.cpp
         src/modules/deviceManager/udevDeviceManager.cpp
-        src/modules/lunaEventSubscriber/lunaEventSubscriber.cpp
         src/modules/playbackManager/playbackManager.cpp
     )
 

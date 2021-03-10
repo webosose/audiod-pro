@@ -238,6 +238,10 @@ void MasterVolumeManager::initialize()
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module MasterVolumeManager");
 }
 
+void MasterVolumeManager::handleEvent(events::EVENTS_T* ev)
+{
+}
+
 MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudioMixer(AudioMixer::getAudioMixerInstance())
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeManager: constructor");

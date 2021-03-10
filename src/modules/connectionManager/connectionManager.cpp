@@ -36,12 +36,6 @@ ConnectionManager::ConnectionManager(ModuleConfig* const pConfObj)
         PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, \
             "AudioMixer instance is null");
     }
-    mObjModuleManager = ModuleManager::getModuleManagerInstance();
-    if (!mObjModuleManager)
-    {
-        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, \
-            "mObjModuleManager instance is null");
-    }
 }
 
 ConnectionManager::~ConnectionManager()
@@ -507,4 +501,8 @@ void ConnectionManager::initialize()
     }
     else
         PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "mConnectionManager is nullptr");
+}
+
+void ConnectionManager::handleEvent(events::EVENTS_T* ev)
+{
 }

@@ -75,6 +75,10 @@ void lunaEventSubscriber::initialize()
     }
 }
 
+void lunaEventSubscriber::handleEvent(events::EVENTS_T* ev)
+{
+}
+
 bool lunaEventSubscriber::subscriptionToKeyCallback(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     //We pass the subscription Key enum as ctx,
@@ -95,7 +99,7 @@ bool lunaEventSubscriber::subscriptionToKeyCallback(LSHandle *lshandle, LSMessag
     ModuleManager *pInstance = ModuleManager::getModuleManagerInstance();
     if ( nullptr != pInstance)
     {
-        pInstance->notifyKeyInfo(eEventToSubscribe,message);
+        //pInstance->notifyKeyInfo(eEventToSubscribe,message);
     }
     else
     {
@@ -117,7 +121,7 @@ bool lunaEventSubscriber::serviceStatusCallBack( LSHandle *sh,
     ModuleManager *pInstance = ModuleManager::getModuleManagerInstance();
     if (nullptr != pInstance)
     {
-        pInstance->notifyServerStatusInfo(eServerStatus,connected);
+        //pInstance->notifyServerStatusInfo(eServerStatus,connected);
     }
     else
     {
@@ -263,7 +267,7 @@ void lunaEventSubscriber::eventSubscribeServerStatus(SERVER_TYPE_E eService)
     if (mObjModuleManager != nullptr)
     {
         bool connected = mArrayServerConnected[eService];
-        mObjModuleManager->notifyServerStatusInfo(eService, connected);
+        //mObjModuleManager->notifyServerStatusInfo(eService, connected);
     }
     else
     {

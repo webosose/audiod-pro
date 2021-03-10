@@ -74,6 +74,7 @@ class BluetoothManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void handleEvent(events::EVENTS_T* ev);
 
         void eventServerStatusInfo (SERVER_TYPE_E serviceName, bool connected);
         void eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message);

@@ -173,3 +173,7 @@ void SystemSoundsManager::initialize()
             "mSystemSoundsManager is nullptr");
     }
 }
+
+void SystemSoundsManager::handleEvent(events::EVENTS_T* ev)
+{
+}

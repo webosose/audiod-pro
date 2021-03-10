@@ -677,7 +677,9 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
             status = true;
             audioPolicyManagerInstance->updateCurrentVolume(streamType, volume);
             if (audioPolicyManagerInstance->mObjModuleManager)
-                audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(sink, volume, ramp);
+            {
+                //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(sink, volume, ramp);
+            }
             else
                 PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "_setInputVolume: mObjModuleManager is null");
@@ -1010,7 +1012,9 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
             status = true;
             audioPolicyManagerInstance->updateCurrentVolume(streamType, volume);
             if (audioPolicyManagerInstance->mObjModuleManager)
-                audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(sink, volume, ramp);
+            {
+                //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(sink, volume, ramp);
+            }
             else
                 PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "_setMediaInputVolume: mObjModuleManager is null");
@@ -1038,8 +1042,8 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
 
                 if (audioPolicyManagerInstance->mObjModuleManager)
                 {
-                    audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(defaultappSink, volume, ramp);
-                    audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(mediaSink, volume, ramp);
+                    //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(defaultappSink, volume, ramp);
+                    //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(mediaSink, volume, ramp);
                 }
             }
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
@@ -1164,4 +1168,8 @@ void AudioPolicyManager::initialize()
     }
     else
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mAudioPolicyManager is nullptr");
+}
+
+void AudioPolicyManager::handleEvent(events::EVENTS_T* ev)
+{
 }

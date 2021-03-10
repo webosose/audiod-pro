@@ -214,3 +214,7 @@ void PlaybackManager::initialize()
             "mPlaybackManager is nullptr");
     }
 }
+
+void PlaybackManager::handleEvent(events::EVENTS_T* ev)
+{
+}

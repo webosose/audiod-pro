@@ -43,7 +43,7 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address,char *p
             mDefaultDeviceConnected = true;
             if (mObjModuleManager)
             {
-                mObjModuleManager->notifyMasterVolumeStatus();
+                //mObjModuleManager->notifyMasterVolumeStatus();
             }
             else
                 PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
@@ -103,8 +103,8 @@ void BluetoothManager::btAdapterQueryInfo(LSMessage *message)
                     std::string payload = string_printf("{\"adapterAddress\":\"%s\",\"subscribe\":true}", adapterAddress.c_str());
                     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                         "%s : payload = %s", __FUNCTION__, payload.c_str());
-                    mObjModuleManager->subscribeKeyInfo(this, true, eEventBTDeviceStatus, eBluetoothService2,
-                        BT_DEVICE_GET_STATUS, payload);
+                    //mObjModuleManager->subscribeKeyInfo(this, true, eEventBTDeviceStatus, eBluetoothService2,
+                    //    BT_DEVICE_GET_STATUS, payload);
                     break;
                 }
                 else
@@ -119,8 +119,8 @@ void BluetoothManager::btAdapterQueryInfo(LSMessage *message)
                     std::string payload = string_printf("{\"adapterAddress\":\"%s\",\"subscribe\":true}", adapterAddress.c_str());
                     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                         "%s : payload = %s", __FUNCTION__, payload.c_str());
-                    mObjModuleManager->subscribeKeyInfo(this, true, eEventA2DPDeviceStatus, eBluetoothService2,
-                        BT_DEVICE_GET_STATUS, payload);
+                    /*mObjModuleManager->subscribeKeyInfo(this, true, eEventA2DPDeviceStatus, eBluetoothService2,
+                        BT_DEVICE_GET_STATUS, payload);*/
                 }
                 else
                     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
@@ -211,8 +211,8 @@ void BluetoothManager::btDeviceGetStatusInfo (LSMessage *message)
                     PM_LOG_ERROR(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                         "payload = %s", payload.c_str());
 
-                    mObjModuleManager->subscribeKeyInfo(this, true, eLunaEventA2DPStatus,
-                        eBluetoothService2, BT_A2DP_GET_STATUS, payload);
+                    //mObjModuleManager->subscribeKeyInfo(this, true, eLunaEventA2DPStatus,
+                    //    eBluetoothService2, BT_A2DP_GET_STATUS, payload);
                     break;
                 }
             }
@@ -400,8 +400,8 @@ void BluetoothManager::a2dpDeviceGetStatus (LSMessage *message)
                     std::string payload = string_printf("{\"adapterAddress\":\"%s\",\"address\":\"%s\",\"subscribe\":true}",adapterAddress.c_str(), address.c_str());
                     PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                         "%s : payload = %s", __FUNCTION__, payload.c_str());
-                    mObjModuleManager->subscribeKeyInfo(this, true, eEventA2DPSourceStatus, eBluetoothService2,
-                        BT_A2DP_GET_STATUS, payload);
+                    //mObjModuleManager->subscribeKeyInfo(this, true, eEventA2DPSourceStatus, eBluetoothService2,
+                    //    BT_A2DP_GET_STATUS, payload);
                     break;
                 }
             }
@@ -485,10 +485,10 @@ void BluetoothManager::initialize()
 {
     if (mBluetoothManager)
     {
-        mBluetoothManager->mObjModuleManager->subscribeServerStatusInfo(mBluetoothManager, true, \
+        /*mBluetoothManager->mObjModuleManager->subscribeServerStatusInfo(mBluetoothManager, true, \
             eBluetoothService2);
         mBluetoothManager->mObjModuleManager->subscribeKeyInfo(mBluetoothManager, true, eEventBTAdapter, \
-            eBluetoothService2, BT_ADAPTER_GET_STATUS, BT_ADAPTER_SUBSCRIBE_PAYLOAD);
+            eBluetoothService2, BT_ADAPTER_GET_STATUS, BT_ADAPTER_SUBSCRIBE_PAYLOAD);*/
         PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
             "Successfully initialized BluetoothManager");
     }
@@ -497,4 +497,8 @@ void BluetoothManager::initialize()
         PM_LOG_ERROR(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
             "mBluetoothManager is nullptr");
     }
+}
+
+void BluetoothManager::handleEvent(events::EVENTS_T* ev)
+{
 }

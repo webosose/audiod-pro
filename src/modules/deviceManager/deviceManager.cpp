@@ -99,3 +99,7 @@ void DeviceManager::initialize()
             "mObjDeviceManager is nullptr");
     }
 }
+
+void DeviceManager::handleEvent(events::EVENTS_T* ev)
+{
+}

@@ -59,6 +59,7 @@ class SettingsServiceManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void handleEvent(events::EVENTS_T* ev);
 
         //Modulemanager events implementation
         void eventServerStatusInfo(SERVER_TYPE_E serviceName, bool connected);
