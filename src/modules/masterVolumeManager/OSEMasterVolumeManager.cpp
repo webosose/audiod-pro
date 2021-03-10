@@ -27,17 +27,17 @@ OSEMasterVolumeManager* OSEMasterVolumeManager::getInstance()
 OSEMasterVolumeManager::OSEMasterVolumeManager():mVolume(0), mMuteStatus(false), \
                                                  displayOneVolume(100), displayTwoVolume(100), displayOneMuteStatus(0), displayTwoMuteStatus(0)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager constructor");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager constructor");
 }
 
 OSEMasterVolumeManager::~OSEMasterVolumeManager()
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager destructor");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager destructor");
 }
 
 void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager: setVolume");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: setVolume");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(soundOutput, string), PROP(volume, integer), PROP(sessionId, integer)) REQUIRED_2(soundOutput, volume)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return;
@@ -63,7 +63,7 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
         displayId = DEFAULT_ONE_DISPLAY_ID;
     else
     {
-        PM_LOG_ERROR ("OSEMasterVolumeManager", INIT_KVCOUNT, \
+        PM_LOG_ERROR (MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
                     "sessionId Not in Range");
         reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
         CLSError lserror;
@@ -71,19 +71,19 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
             lserror.Print(__FUNCTION__, __LINE__);
     }
 
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "SetMasterVolume with soundout: %s volume: %d display: %d", \
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "SetMasterVolume with soundout: %s volume: %d display: %d", \
                 soundOutput.c_str(), volume, displayId);
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     if (DISPLAY_TWO == display)
     {
         if (soundOutput != "alsa")
         {
-            PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Not a valid soundOutput");
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
         }
         else if ((isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(displayId, volume)))
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
             displayTwoVolume = volume;
             std::string callerId = LSMessageGetSenderServiceName(message);
             notifyVolumeSubscriber(displayId, callerId);
@@ -95,7 +95,7 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
         }
         else
         {
-            PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
         }
 
@@ -107,7 +107,7 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
     {
         if ((isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(displayId, volume)))
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
             displayOneVolume = volume;
             std::string callerId = LSMessageGetSenderServiceName(message);
             notifyVolumeSubscriber(displayId, callerId);
@@ -115,7 +115,7 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
         }
         else
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
             CLSError lserror;
             if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
@@ -132,28 +132,28 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
             {
                 if(audioMixerObj->setMasterVolume(soundOutput, volume, _setVolumeCallBack, envelope))
                 {
-                    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: SetMasterVolume umimixer call successfull");
+                    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: SetMasterVolume umimixer call successfull");
                     LSMessageRef(message);
                     status = true;
                 }
                 else
                 {
                     status = false;
-                    PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: SetMasterVolume umimixer call failed");
+                    PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: SetMasterVolume umimixer call failed");
                     reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
                 }
             }
             else
             {
                 status = false;
-                PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
             }
         }
         else
         {
             status = false;
-            PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: SetMasterVolume envelope is NULL");
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: SetMasterVolume envelope is NULL");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
         }
         if (false == status)
@@ -175,7 +175,7 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
 
 bool OSEMasterVolumeManager::_setVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: setVolumeCallBack");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setVolumeCallBack");
     std::string payload = LSMessageGetPayload(reply);
     JsonMessageParser ret(payload.c_str(), NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean)) REQUIRED_1(returnValue)));
     bool returnValue = false;
@@ -193,7 +193,7 @@ bool OSEMasterVolumeManager::_setVolumeCallBack(LSHandle *sh, LSMessage *reply, 
         {
             data.get("soundOutput", soundOutput);
             data.get("volume", iVolume);
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume::Successfully Set the speaker volume for sound out %s with volume %d", \
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume::Successfully Set the speaker volume for sound out %s with volume %d", \
                         soundOutput.c_str(), iVolume);
         }
         else
@@ -203,7 +203,7 @@ bool OSEMasterVolumeManager::_setVolumeCallBack(LSHandle *sh, LSMessage *reply, 
     }
     else
     {
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: Could not SetMasterVolume");
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: Could not SetMasterVolume");
     }
     if (nullptr != ctx)
     {
@@ -228,7 +228,7 @@ bool OSEMasterVolumeManager::_setVolumeCallBack(LSHandle *sh, LSMessage *reply, 
         }
         else
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: internal mixer call");
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: internal mixer call");
         }
         if (nullptr != envelope)
         {
@@ -238,14 +238,14 @@ bool OSEMasterVolumeManager::_setVolumeCallBack(LSHandle *sh, LSMessage *reply, 
     }
     else
     {
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: context is null");
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: context is null");
     }
     return true;
 }
 
 void OSEMasterVolumeManager::getVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager: getVolume");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: getVolume");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(subscribe, boolean), PROP(sessionId, integer))));
     if (!msg.parse(__FUNCTION__,lshandle))
         return;
@@ -263,7 +263,7 @@ void OSEMasterVolumeManager::getVolume(LSHandle *lshandle, LSMessage *message, v
         if (!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
         {
             lserror.Print(__FUNCTION__, __LINE__);
-            PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "LSSubscriptionProcess failed");
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "LSSubscriptionProcess failed");
             return;
         }
     }
@@ -276,7 +276,7 @@ void OSEMasterVolumeManager::getVolume(LSHandle *lshandle, LSMessage *message, v
         displayId = DEFAULT_ONE_DISPLAY_ID;
     else
     {
-        PM_LOG_ERROR ("OSEMasterVolumeManager", INIT_KVCOUNT, \
+        PM_LOG_ERROR (MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
                     "sessionId Not in Range");
         reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
     }
@@ -284,7 +284,7 @@ void OSEMasterVolumeManager::getVolume(LSHandle *lshandle, LSMessage *message, v
     if ((DISPLAY_TWO == display) || (DISPLAY_ONE == display))
             reply = getVolumeInfo(displayId, callerId);
 
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "%s : Reply:%s", __FUNCTION__, reply.c_str());
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s : Reply:%s", __FUNCTION__, reply.c_str());
     if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
         lserror.Print(__FUNCTION__, __LINE__);
     return;
@@ -292,7 +292,7 @@ void OSEMasterVolumeManager::getVolume(LSHandle *lshandle, LSMessage *message, v
 
 void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager: muteVolume");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: muteVolume");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(soundOutput, string), PROP(mute, boolean), PROP(sessionId, integer)) REQUIRED_2(soundOutput, mute)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return;
@@ -318,7 +318,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
             displayId = 2;
         else
         {
-            PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, \
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
                     "sessionId Not in Range");
             reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
             CLSError lserror;
@@ -327,7 +327,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
         }
     }
 
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "muteVolume with soundout: %s mute status: %d", \
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "muteVolume with soundout: %s mute status: %d", \
                 soundOutput.c_str(),(int)mute);
     OSEMasterVolumeManager* OSEMasterVolumeManagerInstance = OSEMasterVolumeManager::getInstance();
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
@@ -346,7 +346,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
         }
         else
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "Did not able to mute volume %d for display: %d", \
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to mute volume %d for display: %d", \
                         mute, displayId);
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
         }
@@ -359,7 +359,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
     {
         if (audioMixerObj && audioMixerObj->setMute(displayId, mute))
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "Successfully set mute volume %d for display: %d", \
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Successfully set mute volume %d for display: %d", \
                         mute, displayId);
             if (DEFAULT_ONE_DISPLAY_ID == displayId)
                 OSEMasterVolumeManagerInstance->displayOneMuteStatus = mute;
@@ -372,7 +372,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
         }
         else
         {
-            PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Did not able to mute volume %d for display: %d", mute, displayId);
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to mute volume %d for display: %d", mute, displayId);
         }
         envelopeRef *envelope = new (std::nothrow)envelopeRef;
         if(nullptr != envelope)
@@ -384,25 +384,25 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
             {
                 if(audioMixerObj->masterVolumeMute(soundOutput, mute, _muteVolumeCallBack, envelope))
                 {
-                    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeMute umimixer call successfull");
+                    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeMute umimixer call successfull");
                     LSMessageRef(message);
                     status = true;
                 }
                 else
                 {
-                    PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeMute umimixer call failed");
+                    PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeMute umimixer call failed");
                     reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
                 }
             }
             else
             {
-                PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
             }
         }
         else
         {
-            PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: muteVolume envelope is NULL");
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: muteVolume envelope is NULL");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
         }
         if (false == status)
@@ -424,7 +424,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
 
 bool OSEMasterVolumeManager::_muteVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: muteVolumeCallBack");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: muteVolumeCallBack");
     std::string payload = LSMessageGetPayload(reply);
     JsonMessageParser ret(payload.c_str(), NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean)) REQUIRED_1(returnValue)));
     bool returnValue = false;
@@ -442,7 +442,7 @@ bool OSEMasterVolumeManager::_muteVolumeCallBack(LSHandle *sh, LSMessage *reply,
         {
            data.get("mute", bMute);
            data.get("soundOutput", soundOutput);
-           PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume:Successfully muted/unmuted the soundout %s and mute status %d ", \
+           PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume:Successfully muted/unmuted the soundout %s and mute status %d ", \
                        soundOutput.c_str(), bMute);
         }
         else
@@ -452,7 +452,7 @@ bool OSEMasterVolumeManager::_muteVolumeCallBack(LSHandle *sh, LSMessage *reply,
     }
     else
     {
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: Could not mute MasterVolume");
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: Could not mute MasterVolume");
     }
     if (nullptr != ctx)
     {
@@ -477,7 +477,7 @@ bool OSEMasterVolumeManager::_muteVolumeCallBack(LSHandle *sh, LSMessage *reply,
         }
         else
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: internal mixer call");
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: internal mixer call");
         }
         if (nullptr != envelope)
         {
@@ -487,14 +487,14 @@ bool OSEMasterVolumeManager::_muteVolumeCallBack(LSHandle *sh, LSMessage *reply,
     }
     else
     {
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: context is null");
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: context is null");
     }
     return true;
 }
 
 void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager: volumeUp");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: volumeUp");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(soundOutput, string), PROP(sessionId, integer)) REQUIRED_1(soundOutput)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return;
@@ -515,7 +515,7 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
         displayId = 1;
     else
     {
-        PM_LOG_ERROR ("OSEMasterVolumeManager", INIT_KVCOUNT, \
+        PM_LOG_ERROR (MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
                     "sessionId Not in Range");
         reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
         CLSError lserror;
@@ -523,7 +523,7 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
             lserror.Print(__FUNCTION__, __LINE__);
     }
 
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: volumeUp with soundout: %s", soundOutput.c_str());
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeUp with soundout: %s", soundOutput.c_str());
     std::string callerId = LSMessageGetSenderServiceName(message);
     AudioMixer *audioMixerInstance = AudioMixer::getAudioMixerInstance();
     if (audioMixerInstance)
@@ -536,10 +536,10 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
                 volume = displayTwoVolume+1;
             }
             else
-                PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Volume up value not in range");
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Volume up value not in range");
             if ((isValidVolume) && (audioMixerInstance->setVolume(displayId, volume)))
             {
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 ++(displayTwoVolume);
                 notifyVolumeSubscriber(displayId, callerId);
                 pbnjson::JValue setVolumeResponse = pbnjson::Object();
@@ -550,7 +550,7 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
             }
             else
             {
-                PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
             }
             CLSError lserror;
@@ -566,7 +566,7 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
             }
             else
             {
-                PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Volume up value not in range");
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Volume up value not in range");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
                 CLSError lserror;
                 if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
@@ -574,7 +574,7 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
             }
             if (isValidVolume && (audioMixerInstance->setVolume(displayId, volume)))
             {
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 ++(displayOneVolume);
                 notifyVolumeSubscriber(displayId, callerId);
             }
@@ -587,25 +587,25 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
                 {
                     if (audioMixerInstance->masterVolumeUp(soundOutput, _volumeUpCallBack, envelope))
                     {
-                        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeUp umimixer call successfull");
+                        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeUp umimixer call successfull");
                         LSMessageRef(message);
                         status = true;
                     }
                     else
                     {
-                        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeUp umimixer call failed");
+                        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeUp umimixer call failed");
                         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
                     }
                 }
                 else
                 {
-                    PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
+                    PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
                     reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_PARAMETER_BE_EMPTY, "Internal error");
                 }
             }
             else
             {
-                PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeUp envelope is NULL");
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeUp envelope is NULL");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
             }
             if (false == status)
@@ -625,7 +625,7 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
     }
     else
     {
-        PM_LOG_ERROR ("OSEMasterVolumeManager", INIT_KVCOUNT, \
+        PM_LOG_ERROR (MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
             "audiomixer instance is nulptr");
     }
     return;
@@ -633,7 +633,7 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
 
 bool OSEMasterVolumeManager::_volumeUpCallBack(LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: volumeUpCallBack");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeUpCallBack");
     std::string payload = LSMessageGetPayload(reply);
     JsonMessageParser ret(payload.c_str(), NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean)) REQUIRED_1(returnValue)));
     bool returnValue = false;
@@ -651,7 +651,7 @@ bool OSEMasterVolumeManager::_volumeUpCallBack(LSHandle *sh, LSMessage *reply, v
         {
             data.get("soundOutput", soundOutput);
             data.get("volume", iVolume);
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, \
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
                        "MasterVolume::Successfully increased the speaker volume for sound out %s with volume %d", \
                        soundOutput.c_str(), iVolume);
         }
@@ -662,7 +662,7 @@ bool OSEMasterVolumeManager::_volumeUpCallBack(LSHandle *sh, LSMessage *reply, v
     }
     else
     {
-        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: Could not volume up");
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: Could not volume up");
     }
     if (nullptr != ctx)
     {
@@ -687,7 +687,7 @@ bool OSEMasterVolumeManager::_volumeUpCallBack(LSHandle *sh, LSMessage *reply, v
         }
         else
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: internal mixer call");
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: internal mixer call");
         }
         if (nullptr != envelope)
         {
@@ -697,14 +697,14 @@ bool OSEMasterVolumeManager::_volumeUpCallBack(LSHandle *sh, LSMessage *reply, v
     }
     else
     {
-        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: context is null");
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: context is null");
     }
     return true;
 }
 
 void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager: volumeDown");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: volumeDown");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(soundOutput, string), PROP(sessionId, integer)) REQUIRED_1(soundOutput)));
     if (!msg.parse(__FUNCTION__,lshandle))
         return;
@@ -725,7 +725,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
         displayId = 1;
     else
     {
-        PM_LOG_ERROR ("OSEMasterVolumeManager", INIT_KVCOUNT, \
+        PM_LOG_ERROR (MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
                     "sessionId Not in Range");
         reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
         CLSError lserror;
@@ -733,7 +733,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
             lserror.Print(__FUNCTION__, __LINE__);
     }
 
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: volumeDown with soundout: %s", soundOutput.c_str());
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDown with soundout: %s", soundOutput.c_str());
     std::string callerId = LSMessageGetSenderServiceName(message);
     AudioMixer *audioMixerInstance = AudioMixer::getAudioMixerInstance();
     if (audioMixerInstance)
@@ -746,10 +746,10 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
                 volume = displayTwoVolume-1;
             }
             else
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "Volume down value not in range");
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Volume down value not in range");
             if ((isValidVolume) && (audioMixerInstance->setVolume(displayId, volume)))
             {
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 --(displayTwoVolume);
                 notifyVolumeSubscriber(displayId, callerId);
                 pbnjson::JValue setVolumeResponse = pbnjson::Object();
@@ -760,7 +760,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
             }
             else
             {
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
             }
             CLSError lserror;
@@ -776,7 +776,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
             }
             else
             {
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "Volume down value not in range");
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Volume down value not in range");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput volume is not in range");
                 CLSError lserror;
                 if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
@@ -784,7 +784,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
             }
             if ((isValidVolume) && (audioMixerInstance->setVolume(displayId, volume)))
             {
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 --(displayOneVolume);
                 notifyVolumeSubscriber(displayId, callerId);
             }
@@ -797,25 +797,25 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
                 {
                     if (audioMixerInstance->masterVolumeDown(soundOutput, _volumeDownCallBack, envelope))
                     {
-                        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeDown umimixer call successfull");
+                        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeDown umimixer call successfull");
                         LSMessageRef(message);
                         status = true;
                     }
                     else
                     {
-                        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeDown umimixer call failed");
+                        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeDown umimixer call failed");
                         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
                     }
                 }
                 else
                 {
-                    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
+                    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: gumiaudiomixer is NULL");
                     reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
                 }
             }
             else
             {
-                PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: masterVolumeDown envelope is NULL");
+                PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: masterVolumeDown envelope is NULL");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
             }
             if (false == status)
@@ -835,7 +835,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
     }
     else
     {
-        PM_LOG_ERROR ("OSEMasterVolumeManager", INIT_KVCOUNT, \
+        PM_LOG_ERROR (MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
             "audiomixer instance is nulptr");
     }
     return;
@@ -843,7 +843,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
 
 bool OSEMasterVolumeManager::_volumeDownCallBack(LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: volumeDownCallBack");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDownCallBack");
     std::string payload = LSMessageGetPayload(reply);
     JsonMessageParser ret(payload.c_str(), NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean)) REQUIRED_1(returnValue)));
     bool returnValue = false;
@@ -861,7 +861,7 @@ bool OSEMasterVolumeManager::_volumeDownCallBack(LSHandle *sh, LSMessage *reply,
         {
             data.get("soundOutput", soundOutput);
             data.get("volume", iVolume);
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, \
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
                         "MasterVolume::Successfully decreased the speaker volume for sound out %s with volume %d", \
                         soundOutput.c_str(), iVolume);
         }
@@ -872,7 +872,7 @@ bool OSEMasterVolumeManager::_volumeDownCallBack(LSHandle *sh, LSMessage *reply,
     }
     else
     {
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: Could not volume up");
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: Could not volume up");
     }
     if (nullptr != ctx)
     {
@@ -897,7 +897,7 @@ bool OSEMasterVolumeManager::_volumeDownCallBack(LSHandle *sh, LSMessage *reply,
         }
         else
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: internal mixer call");
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: internal mixer call");
         }
         if (nullptr != envelope)
         {
@@ -907,7 +907,7 @@ bool OSEMasterVolumeManager::_volumeDownCallBack(LSHandle *sh, LSMessage *reply,
     }
     else
     {
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume: context is null");
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: context is null");
     }
     return true;
 }
@@ -916,23 +916,23 @@ void OSEMasterVolumeManager::notifyVolumeSubscriber(const int &displayId, const 
 {
     CLSError lserror;
     std::string reply = getVolumeInfo(displayId, callerId);
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "[%s] reply message to subscriber: %s", __FUNCTION__, reply.c_str());
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "[%s] reply message to subscriber: %s", __FUNCTION__, reply.c_str());
     if (!LSSubscriptionReply(GetPalmService(), AUDIOD_API_GET_VOLUME, reply.c_str(), &lserror))
     {
         lserror.Print(__FUNCTION__, __LINE__);
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Notify error");
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Notify error");
     }
 }
 
 void OSEMasterVolumeManager::setCurrentVolume(int iVolume)
 {
     mVolume = iVolume;
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "MasterVolume::updated volume: %d ", mVolume);
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume::updated volume: %d ", mVolume);
 }
 
 std::string OSEMasterVolumeManager::getVolumeInfo(const int &displayId, const std::string &callerId)
 {
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "getVolumeInfo");
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "getVolumeInfo");
     pbnjson::JValue soundOutInfo = pbnjson::Object();
     pbnjson::JValue volumeStatus = pbnjson::Object();
     int volume = MIN_VOLUME;
@@ -965,7 +965,7 @@ std::string OSEMasterVolumeManager::getVolumeInfo(const int &displayId, const st
 void OSEMasterVolumeManager::setCurrentMuteStatus(bool bMuteStatus)
 {
     mMuteStatus = bMuteStatus;
-    PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT,  "MasterVolume::updated mute status: %d ", (int)mMuteStatus);
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,  "MasterVolume::updated mute status: %d ", (int)mMuteStatus);
 }
 
 void OSEMasterVolumeManager::setVolume(const int &displayId)
@@ -977,9 +977,9 @@ void OSEMasterVolumeManager::setVolume(const int &displayId)
     else if (DEFAULT_TWO_DISPLAY_ID == displayId)
         volume = displayTwoVolume;
     if (audioMixerObj && audioMixerObj->setVolume(displayId, volume))
-        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
     else
-        PM_LOG_ERROR("OSEMasterVolumeManager", INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
 }
 
 void OSEMasterVolumeManager::setMuteStatus(const int &displayId)
@@ -988,12 +988,12 @@ void OSEMasterVolumeManager::setMuteStatus(const int &displayId)
     if (DEFAULT_ONE_DISPLAY_ID == displayId && audioMixerObj)
     {
         audioMixerObj->setMute(displayId, displayOneMuteStatus);
-        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set mute status %d for display: %d", displayOneMuteStatus, displayId);
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set mute status %d for display: %d", displayOneMuteStatus, displayId);
     }
     else if (DEFAULT_TWO_DISPLAY_ID == displayId && audioMixerObj)
     {
         audioMixerObj->setMute(displayId, displayTwoMuteStatus);
-        PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set mute status %d for display: %d", displayTwoMuteStatus, displayId);
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set mute status %d for display: %d", displayTwoMuteStatus, displayId);
     }
     else
     {
@@ -1001,7 +1001,7 @@ void OSEMasterVolumeManager::setMuteStatus(const int &displayId)
         {
             audioMixerObj->setMute(displayId, displayOneMuteStatus);
             audioMixerObj->setMute(displayId, displayTwoMuteStatus);
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "set mute status is %d for display one and mute status is %d for display two", \
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set mute status is %d for display one and mute status is %d for display two", \
                         displayOneMuteStatus, displayTwoMuteStatus);
         }
     }

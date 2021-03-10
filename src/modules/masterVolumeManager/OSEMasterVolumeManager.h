@@ -19,7 +19,8 @@
 
 #include "masterVolumeInterface.h"
 #include "masterVolumeManager.h"
-#define AUDIOD_API_GET_VOLUME "/master/getVolume"
+#define AUDIOD_API_GET_VOLUME                          "/master/getVolume"
+#define MSGID_CLIENT_MASTER_VOLUME_MANAGER             "MASTER_VOLUME_MANAGER"         //Client Master Volume Manager
 #define DISPLAY_ONE 0
 #define DISPLAY_TWO 1
 #define MIN_VOLUME 0
@@ -35,7 +36,7 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         static bool mIsObjRegistered;
         static bool CreateInstance()
         {
-            PM_LOG_INFO("OSEMasterVolumeManager", INIT_KVCOUNT, "OSEMasterVolumeManager: CreateInstance");
+            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: CreateInstance");
             MasterVolumeManager::setInstance(getInstance());
             return true;
         }
