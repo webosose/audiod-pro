@@ -186,7 +186,11 @@ void AudioMixer::callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE
         resetStreamInfo(mixerType);
     if (mObjModuleManager)
     {
-        //mObjModuleManager->notifyMixerStatus(mixerStatus, mixerType);
+        events::EVENT_MIXER_STATUS_T eventMixerStatus;
+        eventMixerStatus.eventName = utils::eEventMixerStatus;
+        eventMixerStatus.mixerStatus = mixerStatus ;
+        eventMixerStatus.mixerType = mixerType;
+        mObjModuleManager->handleEvent((events::EVENTS_T*)&eventMixerStatus);
     }
 }
 
@@ -204,7 +208,14 @@ void AudioMixer::callBackSinkStatus(const std::string& source, const std::string
             removeAudioSink(audioSink, mixerType);
         if (mObjModuleManager)
         {
-            //mObjModuleManager->notifySinkStatusInfo(source, sink, audioSink, sinkStatus, mixerType);
+            events::EVENT_SINK_STATUS_T eventSinkStatus;
+            eventSinkStatus.eventName = utils::eEventSinkStatus;
+            eventSinkStatus.source = source;
+            eventSinkStatus.sink = sink;
+            eventSinkStatus.audioSink = audioSink;
+            eventSinkStatus.sinkStatus = sinkStatus;
+            eventSinkStatus.mixerType = mixerType;
+            mObjModuleManager->handleEvent((events::EVENTS_T*)&eventSinkStatus);
         }
     }
     else
@@ -217,7 +228,9 @@ void AudioMixer::callBackMasterVolumeStatus()
         "callBackMasterVolumeStatus");
     if (mObjModuleManager)
     {
-        //mObjModuleManager->notifyMasterVolumeStatus();
+        events::EVENT_MASTER_VOLUME_STATUS_T eventMasterVolumeStatus;
+        eventMasterVolumeStatus.eventName = utils::eEventMasterVolumeStatus;
+        mObjModuleManager->handleEvent((events::EVENTS_T*)&eventMasterVolumeStatus);
     }
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "callBackMasterVolumeStatus: mObjModuleManager is null");
