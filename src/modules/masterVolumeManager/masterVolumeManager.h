@@ -68,7 +68,7 @@ class MasterVolumeManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
-        void handleEvent(events::EVENTS_T* ev);
+        void handleEvent(events::EVENTS_T *event);
         void eventMasterVolumeStatus();
 
         //Internal API for Volume and Mute, will be implemented during dynamic audio policy handling redesign

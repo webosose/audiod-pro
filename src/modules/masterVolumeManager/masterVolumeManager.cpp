@@ -238,8 +238,25 @@ void MasterVolumeManager::initialize()
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module MasterVolumeManager");
 }
 
-void MasterVolumeManager::handleEvent(events::EVENTS_T* ev)
+void MasterVolumeManager::handleEvent(events::EVENTS_T *event)
 {
+    switch(event->eventName)
+    {
+        case utils::eEventMasterVolumeStatus:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventMasterVolumeStatus");
+            events::EVENT_MASTER_VOLUME_STATUS_T *masterVolumeStatusEvent = (events::EVENT_MASTER_VOLUME_STATUS_T*)event;
+            eventMasterVolumeStatus();
+        }
+        break;
+        default:
+        {
+            PM_LOG_WARNING(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                "handleEvent:Unknown event");
+        }
+        break;
+    }
 }
 
 MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudioMixer(AudioMixer::getAudioMixerInstance())

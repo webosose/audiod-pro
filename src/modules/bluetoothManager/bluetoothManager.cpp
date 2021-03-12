@@ -43,7 +43,9 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address,char *p
             mDefaultDeviceConnected = true;
             if (mObjModuleManager)
             {
-                //mObjModuleManager->notifyMasterVolumeStatus();
+                events::EVENT_MASTER_VOLUME_STATUS_T eventMasterVolumeStatus;
+                eventMasterVolumeStatus.eventName = utils::eEventMasterVolumeStatus;
+                mObjModuleManager->handleEvent((events::EVENTS_T*)&eventMasterVolumeStatus);
             }
             else
                 PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
