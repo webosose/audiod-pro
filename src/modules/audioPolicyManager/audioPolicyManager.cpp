@@ -1170,6 +1170,31 @@ void AudioPolicyManager::initialize()
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mAudioPolicyManager is nullptr");
 }
 
-void AudioPolicyManager::handleEvent(events::EVENTS_T* ev)
+void AudioPolicyManager::handleEvent(events::EVENTS_T *event)
 {
+    switch(event->eventName)
+    {
+        case utils::eEventSinkStatus:
+        {
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventSinkStatus");
+            events::EVENT_SINK_STATUS_T *sinkStatusEvent = (events::EVENT_SINK_STATUS_T*)event;
+            eventSinkStatus(sinkStatusEvent->source, sinkStatusEvent->sink, sinkStatusEvent->audioSink, sinkStatusEvent->sinkStatus, sinkStatusEvent->mixerType);
+        }
+        break;
+        case utils::eEventMixerStatus:
+        {
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                "handleEvent:: eEventMixerStatus");
+            events::EVENT_MIXER_STATUS_T *mixerStatusEvent = (events::EVENT_MIXER_STATUS_T*)event;
+            eventMixerStatus(mixerStatusEvent->mixerStatus, mixerStatusEvent->mixerType);
+        }
+        break;
+        default:
+        {
+            PM_LOG_WARNING(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                "subscribe:Unknown event");
+        }
+        break;
+    }
 }
