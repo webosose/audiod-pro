@@ -65,13 +65,13 @@ class lunaEventSubscriber: public ModuleInterface
             return nullptr;
         }
         void initialize();
-        void handleEvent(events::EVENTS_T* ev);
-        static void subscribeToKeys(LSHandle * handle, LUNA_KEY_TYPE_E event = eLunaEventCount);
+        void handleEvent(events::EVENTS_T* event);
+        static void subscribeToKeys(LSHandle * handle, EModuleEventType event = eLunaEventCount);
         static bool serviceStatusCallBack( LSHandle *sh, const char *serviceName,
             bool connected, void *ctx);
         static bool subscriptionToKeyCallback(LSHandle *lshandle, LSMessage *message, void *ctx);
         //Notification from module manager for a new key subscription request
-        void eventSubscribeKey(LUNA_KEY_TYPE_E event, SERVER_TYPE_E eServer,
+        void eventSubscribeKey(EModuleEventType event, SERVER_TYPE_E eServer,
             const std::string& api, const std::string& payload);
         //Notification from module manager for a server status request
         void eventSubscribeServerStatus(SERVER_TYPE_E eService);

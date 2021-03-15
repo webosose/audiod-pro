@@ -30,7 +30,6 @@ class ModuleInterface
         virtual ~ModuleInterface();
         //Every module must override this method
         virtual void initialize() = 0;
-        //Every module must override this method
         virtual void handleEvent(events::EVENTS_T* ev) = 0;
 };
 #endif//_MODULE_INTERFACE_H_

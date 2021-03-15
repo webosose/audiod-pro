@@ -264,7 +264,7 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeManager: constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     if (mObjModuleManager)
-        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventMasterVolumeStatus);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventMasterVolumeStatus);
     else
         PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mObjModuleManager is null");
 }

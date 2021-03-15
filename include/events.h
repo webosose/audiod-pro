@@ -24,7 +24,7 @@ namespace events
 {
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
+        EModuleEventType eventName;
         std::string source;
         std::string sink;
         EVirtualAudioSink audioSink;
@@ -34,15 +34,15 @@ namespace events
 
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
-        LUNA_KEY_TYPE_E type;
+        EModuleEventType eventName;
+        EModuleEventType type;
         LSMessage *message;
     }EVENT_KEY_INFO_T;
 
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
-        LUNA_KEY_TYPE_E type;
+        EModuleEventType eventName;
+        EModuleEventType type;
         SERVER_TYPE_E serviceName;
         std::string api;
         std::string payload;
@@ -50,21 +50,21 @@ namespace events
 
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
+        EModuleEventType eventName;
         SERVER_TYPE_E serviceName;
         bool connectionStatus;
     }EVENT_SERVER_STATUS_INFO_T;
 
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
+        EModuleEventType eventName;
         bool mixerStatus;
         utils::EMIXER_TYPE mixerType;
     }EVENT_MIXER_STATUS_T;
 
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
+        EModuleEventType eventName;
         EVirtualAudioSink audioSink;
         int volume;
         bool ramp;
@@ -72,20 +72,19 @@ namespace events
 
     typedef struct
     {
-        //nothing
-        utils::EVENT_TYPE_E eventName;
+        EModuleEventType eventName;
     }EVENT_MASTER_VOLUME_STATUS_T;
 
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
+        EModuleEventType eventName;
         SERVER_TYPE_E serviceName;
     }EVENT_SUBSCRIBE_SERVER_STATUS_T;
 
 
     typedef struct
     {
-        utils::EVENT_TYPE_E eventName;
+        EModuleEventType eventName;
     }EVENTS_T;
 }
 

@@ -125,12 +125,12 @@ void SettingsServiceManager::initialize()
     {
         if (mSettingsServiceManager->mObjModuleManager)
         {
-            /*PM_LOG_DEBUG("Subscribing to setting service");
-            mSettingsServiceManager->mObjModuleManager->subscribeServerStatusInfo(mSettingsServiceManager, false, eSettingsService);
-            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingMediaParam, eSettingsService,\
+            PM_LOG_DEBUG("Subscribing to setting service");
+            mSettingsServiceManager->mObjModuleManager->subscribeServerStatusInfo(mSettingsServiceManager, eSettingsService);
+            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, eLunaEventSettingMediaParam, eSettingsService,\
                                                                          GET_SYSTEM_SETTINGS, MEDIA_PARAMS);
-            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, false, eLunaEventSettingDNDParam, eSettingsService,\
-                                                                         GET_SYSTEM_SETTINGS, DND_PARAMS);*/
+            mSettingsServiceManager->mObjModuleManager->subscribeKeyInfo(mSettingsServiceManager, eLunaEventSettingDNDParam, eSettingsService,\
+                                                                         GET_SYSTEM_SETTINGS, DND_PARAMS);
         }
         else
         {
@@ -147,6 +147,32 @@ void SettingsServiceManager::initialize()
     }
 }
 
-void SettingsServiceManager::handleEvent(events::EVENTS_T* ev)
+void SettingsServiceManager::handleEvent(events::EVENTS_T* event)
 {
+    switch(event->eventName)
+    {
+        case utils::eEventServerStatusSubscription:
+        {
+            PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventServerStatusSubscription");
+            events::EVENT_SERVER_STATUS_INFO_T *serverStatusInfoEvent = (events::EVENT_SERVER_STATUS_INFO_T*)event;
+            eventServerStatusInfo(serverStatusInfoEvent->serviceName, serverStatusInfoEvent->connectionStatus);
+        }
+        break;
+        case eLunaEventSettingMediaParam:
+        case eLunaEventSettingDNDParam:
+        {
+            PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT,\
+                "handleEvent:: eEventKeySubscription");
+            events::EVENT_KEY_INFO_T *keySubscribeInfoEvent = (events::EVENT_KEY_INFO_T*)event;
+            eventKeyInfo(keySubscribeInfoEvent->type, keySubscribeInfoEvent->message);
+        }
+        break;
+        default:
+        {
+            PM_LOG_WARNING(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT,\
+                "subscribe:Unknown event");
+        }
+        break;
+    }
 }

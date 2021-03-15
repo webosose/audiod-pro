@@ -39,8 +39,8 @@ class ModuleManager
         ModuleManager& operator=(const ModuleManager&) = delete;
         ModuleManager(const std::string &audioModuleConfigPath);
 
-        std::multimap<utils::EVENT_TYPE_E, ModuleInterface*> mapEventsSubscribers;
-        using mapEventsSubscribersItr = std::multimap<utils::EVENT_TYPE_E, ModuleInterface*>::iterator;
+        std::multimap<EModuleEventType, ModuleInterface*> mapEventsSubscribers;
+        using mapEventsSubscribersItr = std::multimap<EModuleEventType, ModuleInterface*>::iterator;
         using mapEventsSubscribersPair = std::pair<mapEventsSubscribersItr, mapEventsSubscribersItr>;
         std::vector<std::string> mSupportedModulesVector;
         ModuleFactory *mModuleFactory;
@@ -58,7 +58,10 @@ class ModuleManager
         static ModuleManager* mObjModuleManager;
         ~ModuleManager();
         //subscription for events
-        void subscribeModuleEvent(ModuleInterface* module, bool first, utils::EVENT_TYPE_E eventType);
+        void subscribeModuleEvent(ModuleInterface* module, EModuleEventType eventType);
+        void subscribeKeyInfo(ModuleInterface* module, EModuleEventType event, \
+                SERVER_TYPE_E eService, const std::string& key, const std::string& payload);
+        void subscribeServerStatusInfo(ModuleInterface* module, SERVER_TYPE_E eStatus);
         //handling events
         void handleEvent(events::EVENTS_T* ev);
 };

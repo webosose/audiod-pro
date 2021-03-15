@@ -45,8 +45,8 @@ lunaEventSubscriber::lunaEventSubscriber(ModuleConfig* const pConfObj) : mServer
     PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT, "lunaEventSubscriber::Constructor");
     if (mObjModuleManager)
     {
-        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventKeySubscription);
-        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventServerStatusSubscription);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventLunaKeySubscription);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventLunaServerStatusSubscription);
         PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
             "Subscribed to eEventKeySubscription & eEventServerStatusSubscription");
     }
@@ -75,8 +75,33 @@ void lunaEventSubscriber::initialize()
     }
 }
 
-void lunaEventSubscriber::handleEvent(events::EVENTS_T* ev)
+void lunaEventSubscriber::handleEvent(events::EVENTS_T* event)
 {
+    switch(event->eventName)
+    {
+        case utils::eEventLunaServerStatusSubscription:
+        {
+            PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventLunaServerStatusSubscription");
+            events::EVENT_SUBSCRIBE_SERVER_STATUS_T *serverStatusInfoEvent = (events::EVENT_SUBSCRIBE_SERVER_STATUS_T*)event;
+            eventSubscribeServerStatus(serverStatusInfoEvent->serviceName);
+        }
+        break;
+        case utils::eEventLunaKeySubscription:
+        {
+            PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT,\
+                "handleEvent:: eEventLunaKeySubscription");
+            events::EVENT_SUBSCRIBE_KEY_T *keySubscribeInfoEvent = (events::EVENT_SUBSCRIBE_KEY_T*)event;
+            eventSubscribeKey(keySubscribeInfoEvent->type, keySubscribeInfoEvent->serviceName, keySubscribeInfoEvent->api, keySubscribeInfoEvent->payload);
+        }
+        break;
+        default:
+        {
+            PM_LOG_WARNING(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT,\
+                "subscribe:Unknown event");
+        }
+        break;
+    }
 }
 
 bool lunaEventSubscriber::subscriptionToKeyCallback(LSHandle *lshandle, LSMessage *message, void *ctx)
@@ -87,7 +112,7 @@ bool lunaEventSubscriber::subscriptionToKeyCallback(LSHandle *lshandle, LSMessag
     std::stringstream cbFrom = std::stringstream(cb);
     int ctxVar = -1;
     cbFrom >> ctxVar;
-    LUNA_KEY_TYPE_E eEventToSubscribe = (LUNA_KEY_TYPE_E)ctxVar;
+    EModuleEventType eEventToSubscribe = (EModuleEventType)ctxVar;
     if (eEventToSubscribe < eLunaEventKeyFirst || eEventToSubscribe >= eLunaEventCount)
     {
         PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
@@ -99,7 +124,11 @@ bool lunaEventSubscriber::subscriptionToKeyCallback(LSHandle *lshandle, LSMessag
     ModuleManager *pInstance = ModuleManager::getModuleManagerInstance();
     if ( nullptr != pInstance)
     {
-        //pInstance->notifyKeyInfo(eEventToSubscribe,message);
+        events::EVENT_KEY_INFO_T eventKeyInfo;
+        eventKeyInfo.eventName = eEventToSubscribe;
+        eventKeyInfo.type = eEventToSubscribe;
+        eventKeyInfo.message = message;
+        pInstance->handleEvent((events::EVENTS_T*)&eventKeyInfo);
     }
     else
     {
@@ -121,7 +150,11 @@ bool lunaEventSubscriber::serviceStatusCallBack( LSHandle *sh,
     ModuleManager *pInstance = ModuleManager::getModuleManagerInstance();
     if (nullptr != pInstance)
     {
-        //pInstance->notifyServerStatusInfo(eServerStatus,connected);
+        events::EVENT_SERVER_STATUS_INFO_T eventServerStatus;
+        eventServerStatus.eventName = utils::eEventServerStatusSubscription;
+        eventServerStatus.serviceName = eServerStatus;
+        eventServerStatus.connectionStatus = connected;
+        pInstance->handleEvent((events::EVENTS_T*)&eventServerStatus);
     }
     else
     {
@@ -148,7 +181,7 @@ bool lunaEventSubscriber::serviceStatusCallBack( LSHandle *sh,
     return true;
 }
 
-void lunaEventSubscriber::subscribeToKeys(LSHandle *handle,LUNA_KEY_TYPE_E eEventToSubscribe)
+void lunaEventSubscriber::subscribeToKeys(LSHandle *handle, EModuleEventType eEventToSubscribe)
 {
     PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
         "%s called, eEventToSubscribe = %d", __FUNCTION__, (int)eEventToSubscribe);
@@ -267,7 +300,11 @@ void lunaEventSubscriber::eventSubscribeServerStatus(SERVER_TYPE_E eService)
     if (mObjModuleManager != nullptr)
     {
         bool connected = mArrayServerConnected[eService];
-        //mObjModuleManager->notifyServerStatusInfo(eService, connected);
+        events::EVENT_SERVER_STATUS_INFO_T eventServerStatus;
+        eventServerStatus.eventName = utils::eEventServerStatusSubscription;
+        eventServerStatus.serviceName = eService;
+        eventServerStatus.connectionStatus = connected;
+        mObjModuleManager->handleEvent((events::EVENTS_T*)&eventServerStatus);
     }
     else
     {
@@ -276,13 +313,13 @@ void lunaEventSubscriber::eventSubscribeServerStatus(SERVER_TYPE_E eService)
     }
 }
 
-void lunaEventSubscriber::eventSubscribeKey(LUNA_KEY_TYPE_E event,
+void lunaEventSubscriber::eventSubscribeKey(EModuleEventType event,
         SERVER_TYPE_E eServer,
         const std::string& api,
         const std::string& payload)
 {
     PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
-        "call to subscribe to keys LUNA_KEY_TYPE_E = %d, SERVER_TYPE_E =%d",\
+        "call to subscribe to keys EModuleEventType = %d, SERVER_TYPE_E =%d",\
         event, eServer);
     //Based on the Service connected, We subscribe to the keys.
     mArrayServerOfKey[event] = eServer;

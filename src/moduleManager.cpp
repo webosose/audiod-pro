@@ -120,11 +120,58 @@ ModuleManager::~ModuleManager()
         "ModuleManager destructor");
 }
 
-void ModuleManager::subscribeModuleEvent(ModuleInterface* module, bool first, utils::EVENT_TYPE_E eventType)
+void ModuleManager::subscribeModuleEvent(ModuleInterface* module, EModuleEventType eventType)
 {
     PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
         "subscribeModuleEvent for eventype:%d", (int)eventType);
-    mapEventsSubscribers.insert(std::pair<utils::EVENT_TYPE_E, ModuleInterface*>(eventType, module));
+    mapEventsSubscribers.insert(std::pair<EModuleEventType, ModuleInterface*>(eventType, module));
+}
+
+void ModuleManager::subscribeKeyInfo(ModuleInterface* module, EModuleEventType event, SERVER_TYPE_E eService, const std::string& key, const std::string& payload)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, \
+        "subscribeKeyInfo called %d:%d", event, eService );
+    bool success = true;
+    if (!(eService >= eServiceFirst && eService < eServiceCount))
+    {
+        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "not Valid service");
+        success = false;
+    }
+    if (!(event >= eLunaEventKeyFirst && event < eLunaEventCount))
+    {
+        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "not Valid Subscription");
+        success = false;
+    }
+    if (success)
+    {
+        mapEventsSubscribers.insert(std::pair<EModuleEventType, ModuleInterface*>(event, module));
+        //if payload is required from Module during runtime
+        events::EVENT_SUBSCRIBE_KEY_T eventSubscribeKey;
+        eventSubscribeKey.eventName = utils::eEventLunaKeySubscription;
+        eventSubscribeKey.type = event ;
+        eventSubscribeKey.serviceName = eService;
+        eventSubscribeKey.api = key;
+        eventSubscribeKey.payload = payload;
+        handleEvent((events::EVENTS_T*)&eventSubscribeKey);
+    }
+}
+
+void ModuleManager::subscribeServerStatusInfo(ModuleInterface* module, SERVER_TYPE_E eStatus)
+{
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, \
+        "subscribeServerStatusInfo called");
+    if (!(eStatus >= eBluetoothService && eStatus < eServiceCount))
+    {
+        PM_LOG_WARNING(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "not Valid service");
+    }
+    else
+    {
+        mapEventsSubscribers.insert(std::pair<EModuleEventType, ModuleInterface*>(utils::eEventServerStatusSubscription, module));
+    }
+    events::EVENT_SUBSCRIBE_SERVER_STATUS_T eventSubscribeServerStatus;
+    eventSubscribeServerStatus.eventName = utils::eEventLunaServerStatusSubscription;
+    eventSubscribeServerStatus.serviceName = eStatus;
+    handleEvent((events::EVENTS_T*)&eventSubscribeServerStatus);
 }
 
 void ModuleManager::handleEvent(events::EVENTS_T *ev)

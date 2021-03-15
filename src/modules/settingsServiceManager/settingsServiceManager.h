@@ -24,6 +24,7 @@
 #include "log.h"
 #include "moduleFactory.h"
 #include "moduleManager.h"
+#include "events.h"
 
 #define GET_SYSTEM_SETTINGS  "luna://com.webos.settingsservice/getSystemSettings"
 #define DND_PARAMS           "{\"category\":\"DND\",\"subscribe\":true}"
@@ -59,7 +60,7 @@ class SettingsServiceManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
-        void handleEvent(events::EVENTS_T* ev);
+        void handleEvent(events::EVENTS_T *event);
 
         //Modulemanager events implementation
         void eventServerStatusInfo(SERVER_TYPE_E serviceName, bool connected);

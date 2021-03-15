@@ -1090,9 +1090,9 @@ AudioPolicyManager::AudioPolicyManager(ModuleConfig* const pConfObj):mObjModuleM
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     if (mObjModuleManager)
     {
-        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventSinkStatus);
-        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventMixerStatus);
-        mObjModuleManager->subscribeModuleEvent(this, true, utils::eEventCurrentInputVolume);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventSinkStatus);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventMixerStatus);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventCurrentInputVolume);
     }
     else
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mObjModuleManager is null");

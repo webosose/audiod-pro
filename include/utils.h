@@ -71,19 +71,6 @@ typedef enum serverType{
     eServiceFirst = eBluetoothService,
 }SERVER_TYPE_E;
 
-typedef enum LunaKeyType {
-    eLunaEventBTDeviceStatus,
-    eLunaEventA2DPStatus,
-    eLunaEventSettingMediaParam,
-    eLunaEventSettingDNDParam,
-    eEventBTAdapter,
-    eEventBTDeviceStatus,
-    eEventA2DPDeviceStatus,
-    eEventA2DPSourceStatus,
-    eLunaEventCount,     //Last element should be eLunaEventCount
-    eLunaEventKeyFirst = eLunaEventBTDeviceStatus,
-}LUNA_KEY_TYPE_E;
-
 typedef struct SubscriptionDetails
 {
     std::string sKey;
@@ -125,14 +112,19 @@ namespace utils
 
     typedef enum eventType
     {
-        eEventNone,
-        eEventSinkStatus,
+        eEventNone = -1,
+        eEventSinkStatus = 0,
         eEventServerStatusSubscription,
         eEventKeySubscription,
         eEventMixerStatus,
         eEventMasterVolumeStatus,
         eEventCurrentInputVolume,
         eEventInputVolume,
+        eEventLunaServerStatusSubscription,
+        eEventLunaKeySubscription,
+        eEventType_Count,
+        eEventType_First = 0,
+        eEventType_Last = eEventLunaKeySubscription
     }EVENT_TYPE_E;
 
     typedef enum EConnStatus
@@ -221,6 +213,35 @@ namespace utils
     void LSMessageResponse(LSHandle* handle, LSMessage * message,\
         const char* reply, utils::EReplyType eType, bool isReferenced);
 }
+
+typedef enum LunaKeyType {
+    eLunaEventBTDeviceStatus = utils::eEventType_Count+1,
+    eLunaEventA2DPStatus,
+    eLunaEventSettingMediaParam,
+    eLunaEventSettingDNDParam,
+    eEventBTAdapter,
+    eEventBTDeviceStatus,
+    eEventA2DPDeviceStatus,
+    eEventA2DPSourceStatus,
+    eLunaEventCount,     //Last element should be eLunaEventCount
+    eLunaEventKeyFirst = eLunaEventBTDeviceStatus,
+    eLunaEventKeyLast = eEventA2DPSourceStatus
+}LUNA_KEY_TYPE_E;
+
+template <typename EnumT, typename BaseEnumT>
+class ExtendEventEnum
+{
+    public:
+        ExtendEventEnum() {}
+        ExtendEventEnum(EnumT e):enum_(e) {}
+        ExtendEventEnum(BaseEnumT e):enum_(static_cast<EnumT>(e)) {}
+        explicit ExtendEventEnum( int val):enum_(static_cast<EnumT>(val)) {}
+        operator EnumT() const { return enum_; }
+    private:
+        EnumT enum_ = eLunaEventKeyFirst;
+};
+
+typedef ExtendEventEnum<LUNA_KEY_TYPE_E, utils::EVENT_TYPE_E> EModuleEventType;
 
 //Simple set class to hold a set of sinks & test it
 class VirtualSinkSet
