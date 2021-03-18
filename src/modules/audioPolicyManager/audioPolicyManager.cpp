@@ -117,6 +117,7 @@ void AudioPolicyManager::readPolicyInfo()
                 PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "initializePolicyInfo success");
             else
                 PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "initializePolicyInfo failed");
+            createSinkStreamMap(policyInfo);
         }
         else
             PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Unable to load VolumePolicyJsonConfig");
@@ -282,52 +283,30 @@ EVirtualAudioSink AudioPolicyManager::getSinkType(const std::string& streamType)
          return eVirtualSink_None;
 }
 
-void AudioPolicyManager::createMapSinkToStream()
+void AudioPolicyManager::createSinkStreamMap(const pbnjson::JValue& policyInfo)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager: createMapSinkToStream");
-    mSinkToStream[ealerts] = "palerts";
-    mSinkToStream[efeedback] = "pfeedback";
-    mSinkToStream[eringtones] = "pringtones";
-    mSinkToStream[emedia] = "pmedia";
-    mSinkToStream[edefaultapp] = "pdefaultapp";
-    mSinkToStream[eeffects] = "peffects";
-    mSinkToStream[evoicerecognition] = "pvoicerecognition";
-    mSinkToStream[etts] = "ptts";
-    mSinkToStream[ebtcall] = "btcall";
-    mSinkToStream[ebtstream] = "btstream";
-    mSinkToStream[edefault1] = "default1";
-    mSinkToStream[etts1] = "tts1";
-    mSinkToStream[edefault2] = "default2";
-    mSinkToStream[etts2] = "tts2";
-    mSinkToStream[efm] = "fm";
-    mSinkToStream[eam] = "am";
-    mSinkToStream[ehdradio] = "hdradio";
-    mSinkToStream[eradio] = "radio";
-}
+        "AudioPolicyManager: createSinkStreamMap");
 
-void AudioPolicyManager::createMapStreamToSink()
-{
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager: createMapStreamToSink");
-    mStreamToSink["palerts"] = ealerts;
-    mStreamToSink["pfeedback"] = efeedback;
-    mStreamToSink["pringtones"] = eringtones;
-    mStreamToSink["pmedia"] = emedia;
-    mStreamToSink["pdefaultapp"] = edefaultapp;
-    mStreamToSink["peffects"] = eeffects;
-    mStreamToSink["pvoicerecognition"] = evoicerecognition;
-    mStreamToSink["ptts"] = etts;
-    mStreamToSink["btcall"] = ebtcall;
-    mStreamToSink["btstream"] = ebtstream;
-    mStreamToSink["default1"] = edefault1;
-    mStreamToSink["tts1"] = etts1;
-    mStreamToSink["default2"] = edefault2;
-    mStreamToSink["tts2"] = etts2;
-    mStreamToSink["fm"] = efm;
-    mStreamToSink["am"] = eam;
-    mStreamToSink["hdradio"] = ehdradio;
-    mStreamToSink["radio"] = eradio;
+    if (!policyInfo.isArray())
+    {
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "policyInfo is not an array");
+        return;
+    }
+    else
+    {
+        std::string streamType;
+        for (const pbnjson::JValue& elements : policyInfo.items())
+        {
+            if (elements["streamType"].asString(streamType) == CONV_OK)
+            {
+                PM_LOG_DEBUG("AudioPolicyManager: createSinkStreamMap Inserting the elements into map for stream %s", streamType.c_str());
+                mSinkToStream[getSinkByName(streamType.c_str())] = streamType;
+                mStreamToSink[streamType] = getSinkByName(streamType.c_str());
+            }
+        }
+    }
+
 }
 
 void AudioPolicyManager::applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority)
@@ -957,7 +936,6 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         bool isValidVolume = false;
         bool isValidStream = false;
         bool isStreamActive = false;
-        bool isValidSessionId = false;
         int volume = 0;
         bool ramp = false;
         std::string streamType = " ";
@@ -991,16 +969,13 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         {
             isValidVolume = true;
         }
+
         if (audioPolicyManagerInstance->getStreamActiveStatus(streamType))
         {
             isStreamActive = true;
         }
-        if ((DISPLAY_ONE == sessionId) || (DISPLAY_TWO == sessionId))
-        {
-            isValidSessionId = true;
-        }
 
-        if (isValidStream && isValidVolume && isValidSessionId)
+        if (isValidStream && isValidVolume)
         {
             if (isStreamActive)
             {
@@ -1068,12 +1043,6 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
                     "Volume Not in Range");
                 reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
             }
-            else if (!isValidSessionId)
-            {
-                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                    "sessionId Not in Range");
-                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
-            }
             else
             {
                 PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
@@ -1129,8 +1098,6 @@ AudioPolicyManager::AudioPolicyManager(ModuleConfig* const pConfObj):mObjModuleM
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mObjModuleManager is null");
     mObjAudioMixer = AudioMixer::getAudioMixerInstance();
     readPolicyInfo();
-    createMapSinkToStream();
-    createMapStreamToSink();
 }
 
 AudioPolicyManager::~AudioPolicyManager()

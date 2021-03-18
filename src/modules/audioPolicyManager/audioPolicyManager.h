@@ -50,8 +50,7 @@ class AudioPolicyManager : public ModuleInterface
         void readPolicyInfo();
         void printPolicyInfo();
         void printActivePolicyInfo();
-        void createMapSinkToStream();
-        void createMapStreamToSink();
+        void createSinkStreamMap(const pbnjson::JValue& policyInfo);
         void updateCurrentVolume(const std::string& streamType, const int &volume);
         void applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
         void removeVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
