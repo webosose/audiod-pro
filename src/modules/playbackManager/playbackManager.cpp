@@ -215,6 +215,18 @@ void PlaybackManager::initialize()
     }
 }
 
+void PlaybackManager::deInitialize()
+{
+    PM_LOG_DEBUG("PlaybackManager deInitialize()");
+    if (mPlaybackManager)
+    {
+        delete mPlaybackManager;
+        mPlaybackManager = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, "mPlaybackManager is nullptr");
+}
+
 void PlaybackManager::handleEvent(events::EVENTS_T* ev)
 {
 }

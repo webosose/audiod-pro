@@ -68,6 +68,7 @@ class ConnectionManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void deInitialize();
         void handleEvent(events::EVENTS_T* ev);
         void notifyGetStatusSubscribers();
 };

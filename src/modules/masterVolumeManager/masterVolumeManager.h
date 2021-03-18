@@ -68,6 +68,7 @@ class MasterVolumeManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void deInitialize();
         void handleEvent(events::EVENTS_T *event);
         void eventMasterVolumeStatus();
 

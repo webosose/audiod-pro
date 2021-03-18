@@ -86,6 +86,7 @@ class AudioPolicyManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void deInitialize();
         void handleEvent(events::EVENTS_T *event);
 
         //luna api's

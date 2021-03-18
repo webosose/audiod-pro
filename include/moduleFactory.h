@@ -33,17 +33,15 @@ private:
     ModuleFactory& operator=(const ModuleFactory&) = delete;
     ModuleFactory();
     std::map<std::string, pFuncModuleCreator> mModuleCreatorMap;
-    std::map<std::string, ModuleInterface*> mModuleHandlersMap;
 
 public:
 
     static ModuleFactory* getInstance();
     ~ModuleFactory();
     bool Register(const std::string &moduleName, pFuncModuleCreator modulefuncpointer);
-    bool UnRegister(const std::string &moduleName);
+    bool UnRegister(const std::string &moduleName, ModuleInterface *moduleHandle);
     //ModuleConfig pointer can be passed as parameter. Reserved for future use
     ModuleInterface* CreateObject(const std::string &moduleName, ModuleConfig* const pConfObj);
-    std::map<std::string, ModuleInterface*> getRegisteredHandlersMap();
     std::map<std::string, pFuncModuleCreator> getModulesCreatorMap();
 };
 

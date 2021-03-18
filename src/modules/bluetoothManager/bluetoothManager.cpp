@@ -501,6 +501,18 @@ void BluetoothManager::initialize()
     }
 }
 
+void BluetoothManager::deInitialize()
+{
+    PM_LOG_DEBUG("BluetoothManager deInitialize()");
+    if (mBluetoothManager)
+    {
+        delete mBluetoothManager;
+        mBluetoothManager = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, "mBluetoothManager is nullptr");
+}
+
 void BluetoothManager::handleEvent(events::EVENTS_T* ev)
 {
 }

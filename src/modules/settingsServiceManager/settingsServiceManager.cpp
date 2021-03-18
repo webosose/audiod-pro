@@ -147,6 +147,18 @@ void SettingsServiceManager::initialize()
     }
 }
 
+void SettingsServiceManager::deInitialize()
+{
+    PM_LOG_DEBUG("SettingsServiceManager deInitialize()");
+    if (mSettingsServiceManager)
+    {
+        delete mSettingsServiceManager;
+        mSettingsServiceManager = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, "mSettingsServiceManager is nullptr");
+}
+
 void SettingsServiceManager::handleEvent(events::EVENTS_T* event)
 {
     switch(event->eventName)

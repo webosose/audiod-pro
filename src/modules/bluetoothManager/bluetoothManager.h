@@ -74,6 +74,7 @@ class BluetoothManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void deInitialize();
         void handleEvent(events::EVENTS_T* ev);
 
         void eventServerStatusInfo (SERVER_TYPE_E serviceName, bool connected);

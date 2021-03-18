@@ -503,6 +503,18 @@ void ConnectionManager::initialize()
         PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "mConnectionManager is nullptr");
 }
 
+void ConnectionManager::deInitialize()
+{
+    PM_LOG_DEBUG("ConnectionManager deInitialize()");
+    if (mConnectionManager)
+    {
+        delete mConnectionManager;
+        mConnectionManager = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "mConnectionManager is nullptr");
+}
+
 void ConnectionManager::handleEvent(events::EVENTS_T* ev)
 {
 }

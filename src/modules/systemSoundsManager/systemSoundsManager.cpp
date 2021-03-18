@@ -174,6 +174,18 @@ void SystemSoundsManager::initialize()
     }
 }
 
+void SystemSoundsManager::deInitialize()
+{
+    PM_LOG_DEBUG("SystemSoundsManager deInitialize()");
+    if (mSystemSoundsManager)
+    {
+        delete mSystemSoundsManager;
+        mSystemSoundsManager = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, "mSystemSoundsManager is nullptr");
+}
+
 void SystemSoundsManager::handleEvent(events::EVENTS_T* ev)
 {
 }

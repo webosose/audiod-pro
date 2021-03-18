@@ -64,6 +64,7 @@ public:
         return nullptr;
     }
     void initialize();
+    void deInitialize();
     void handleEvent(events::EVENTS_T* ev);
     static bool _playSound(LSHandle *lshandle, LSMessage *message, void *ctx);
 };

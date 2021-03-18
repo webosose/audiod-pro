@@ -17,72 +17,75 @@
 #include "moduleManager.h"
 
 ModuleManager* ModuleManager::mObjModuleManager = nullptr;
-ModuleManager::ModuleManager(const std::string &audioModuleConfigPath)
+ModuleManager::ModuleManager()
 {
     PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
         "ModuleManager constructor");
-    readConfig(audioModuleConfigPath);
     mModuleFactory = ModuleFactory::getInstance();
     if (!mModuleFactory)
         PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
             "ModuleManager: Failed to get ModuleFactory instance");
 }
 
-ModuleManager* ModuleManager::initialize(const std::string &audioModuleConfigPath)
+ModuleManager* ModuleManager::initialize()
 {
-   if (!ModuleManager::mObjModuleManager)
-       ModuleManager::mObjModuleManager = new ModuleManager(audioModuleConfigPath);
-   if (ModuleManager::mObjModuleManager)
-       PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+   if (!mObjModuleManager)
+       mObjModuleManager = new ModuleManager();
+   if (mObjModuleManager)
+       PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
             "ModuleManager initialized successfully");
 
-   return ModuleManager::mObjModuleManager;
+   return mObjModuleManager;
 }
 
 ModuleManager* ModuleManager::getModuleManagerInstance()
 {
-   return ModuleManager::mObjModuleManager;
+   return mObjModuleManager;
 }
 
-bool ModuleManager::readConfig(const std::string &audioModuleConfigPath)
+bool ModuleManager::loadConfig(const std::string &audioModuleConfigPath)
 {
-    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "readConfig");
+    bool retVal = true;
+    PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "loadConfig");
     JValue configJson = JDomParser::fromFile(audioModuleConfigPath.c_str(), JSchema::AllSchema());
-    if (!configJson.isValid() || !configJson.isObject())
+    if (configJson.isValid() && configJson.isObject())
     {
-        PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "failed to parse file using defaults. File: %s. Error: %s",\
-            audioModuleConfigPath.c_str(), configJson.errorString().c_str());
-        return false;
-    }
-    if (configJson.hasKey("load_module"))
-    {
-        PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "found load_module key");
-        JValue moduleInfo = configJson["load_module"];
-        if (!moduleInfo.isArray())
+        if (configJson.hasKey("load_module"))
         {
-            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "moduleInfo is not an array");
-            return false;
+            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "found load_module key");
+            JValue moduleInfo = configJson["load_module"];
+            if (!moduleInfo.isArray())
+            {
+                PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "moduleInfo is not an array");
+                retVal = false;
+            }
+            else
+            {
+                std::string strModule;
+                for (auto &elements:moduleInfo.items())
+                {
+                    strModule = elements.asString();
+                    std::vector<std::string>::iterator it = std::find(mSupportedModulesVector.begin(), mSupportedModulesVector.end(), strModule);
+                    if (it == mSupportedModulesVector.end())
+                    {
+                        mSupportedModulesVector.push_back(strModule);
+                    }
+                }
+            }
         }
         else
         {
-            std::string strModule;
-            for (auto &elements:moduleInfo.items())
-            {
-                strModule = elements.asString();
-                std::vector<std::string>::iterator it = std::find(mSupportedModulesVector.begin(), mSupportedModulesVector.end(), strModule);
-                if (it == mSupportedModulesVector.end())
-                {
-                    mSupportedModulesVector.push_back(strModule);
-                }
-            }
-            return true;
+            PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "load_module key not found");
+            retVal = false;
         }
     }
     else
     {
-        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "load_module key not found");
-        return false;
+        PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "failed to parse file using defaults. File: %s. Error: %s",\
+            audioModuleConfigPath.c_str(), configJson.errorString().c_str());
+        retVal = false;
     }
+    return retVal;
 }
 
 bool ModuleManager::createModules()
@@ -91,11 +94,23 @@ bool ModuleManager::createModules()
         "ModuleManager: createModules");
     if (mModuleFactory)
     {
+        ModuleInterface* handle = nullptr;
         mModulesCreatorMap modulesCreatorMap = mModuleFactory->getModulesCreatorMap();
         for (mModulesCreatorMapItr it = modulesCreatorMap.begin(); it != modulesCreatorMap.end(); ++it)
         {
             if (std::find (mSupportedModulesVector.begin(), mSupportedModulesVector.end(), it->first) != mSupportedModulesVector.end())
-                mModuleFactory->CreateObject(it->first, nullptr);
+            {
+                handle = mModuleFactory->CreateObject(it->first, nullptr);
+                if (handle)
+                    mModuleHandlersMap.insert(std::pair<const std::string, ModuleInterface*>(it->first, handle));
+                else
+                {
+                    PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
+                        "ModuleManager: handle is nullptr for module: %s", it->first.c_str());
+                    return false;
+                    break;
+                }
+            }
         }
     }
     return true;
@@ -107,11 +122,20 @@ bool ModuleManager::removeModules()
         "ModuleManager: removeModules");
     if (mModuleFactory)
     {
-        mRegisteredHandlersMap registeredHandlersMap = mModuleFactory->getRegisteredHandlersMap();
-        for (mRegisteredHandlersMapItr it = registeredHandlersMap.begin(); it != registeredHandlersMap.end(); ++it)
-            mModuleFactory->UnRegister(it->first);
+        std::map<std::string, ModuleInterface*>::iterator it = mModuleHandlersMap.begin();
+        for ( ; it != mModuleHandlersMap.end(); ++it)
+        {
+            mModuleFactory->UnRegister(it->first, it->second);
+            mModuleHandlersMap.erase(it->first);
+        }
     }
     return true;
+}
+
+std::map<std::string, ModuleInterface*> ModuleManager::getRegisteredHandlersMap()
+{
+    PM_LOG_DEBUG("ModuleManager::getRegisteredHandlersMap");
+    return mModuleHandlersMap;
 }
 
 ModuleManager::~ModuleManager()

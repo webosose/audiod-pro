@@ -1137,6 +1137,18 @@ void AudioPolicyManager::initialize()
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mAudioPolicyManager is nullptr");
 }
 
+void AudioPolicyManager::deInitialize()
+{
+    PM_LOG_DEBUG("AudioPolicyManager deInitialize()");
+    if (mAudioPolicyManager)
+    {
+        delete mAudioPolicyManager;
+        mAudioPolicyManager = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mAudioPolicyManager is nullptr");
+}
+
 void AudioPolicyManager::handleEvent(events::EVENTS_T *event)
 {
     switch(event->eventName)

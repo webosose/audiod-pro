@@ -238,6 +238,20 @@ void MasterVolumeManager::initialize()
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module MasterVolumeManager");
 }
 
+void MasterVolumeManager::deInitialize()
+{
+    PM_LOG_DEBUG("MasterVolumeManager deInitialize()");
+    if (mClientMasterInstance)
+    {
+        delete mClientMasterInstance;
+        mClientMasterInstance = nullptr;
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
+    }
+}
+
 void MasterVolumeManager::handleEvent(events::EVENTS_T *event)
 {
     switch(event->eventName)

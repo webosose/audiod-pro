@@ -37,10 +37,12 @@ class ModuleManager
 
         ModuleManager(const ModuleManager&) = delete;
         ModuleManager& operator=(const ModuleManager&) = delete;
-        ModuleManager(const std::string &audioModuleConfigPath);
+        ModuleManager();
 
         std::multimap<EModuleEventType, ModuleInterface*> mapEventsSubscribers;
         using mapEventsSubscribersItr = std::multimap<EModuleEventType, ModuleInterface*>::iterator;
+        std::map<std::string, ModuleInterface*> mModuleHandlersMap;
+        std::map<std::string, ModuleInterface*> getRegisteredHandlersMap();
         using mapEventsSubscribersPair = std::pair<mapEventsSubscribersItr, mapEventsSubscribersItr>;
         std::vector<std::string> mSupportedModulesVector;
         ModuleFactory *mModuleFactory;
@@ -52,8 +54,8 @@ class ModuleManager
     public:
         bool createModules();
         bool removeModules();
-        bool readConfig(const std::string &audioModuleConfigPath);
-        static ModuleManager* initialize(const std::string &audioModuleConfigPath);
+        bool loadConfig(const std::string &audioModuleConfigPath);
+        static ModuleManager* initialize();
         static ModuleManager* getModuleManagerInstance();
         static ModuleManager* mObjModuleManager;
         ~ModuleManager();

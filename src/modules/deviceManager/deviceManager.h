@@ -57,6 +57,7 @@ class DeviceManager : public ModuleInterface
             return nullptr;
         }
         void initialize();
+        void deInitialize();
         void handleEvent(events::EVENTS_T* ev);
         static bool _event(LSHandle *lshandle, LSMessage *message, void *ctx);
 };

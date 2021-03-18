@@ -75,6 +75,18 @@ void lunaEventSubscriber::initialize()
     }
 }
 
+void lunaEventSubscriber::deInitialize()
+{
+    PM_LOG_DEBUG("lunaEventSubscriber deInitialize()");
+    if (mLunaEventSubscriber)
+    {
+        delete mLunaEventSubscriber;
+        mLunaEventSubscriber = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT, "mLunaEventSubscriber is nullptr");
+}
+
 void lunaEventSubscriber::handleEvent(events::EVENTS_T* event)
 {
     switch(event->eventName)

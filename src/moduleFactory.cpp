@@ -43,31 +43,18 @@ bool ModuleFactory::Register(const std::string &moduleName, pFuncModuleCreator m
     return true;
 }
 
-bool ModuleFactory::UnRegister(const std::string &moduleName)
+bool ModuleFactory::UnRegister(const std::string &moduleName, ModuleInterface *moduleHandle)
 {
-    PM_LOG_DEBUG("ModuleFactory::UnRegister: UnRegistering module: %s", moduleName.c_str());
-    ModuleInterface* handle = nullptr;
-    std::map<std::string, ModuleInterface*>::iterator it = mModuleHandlersMap.begin();
-
-    for ( ; it != mModuleHandlersMap.end(); ++it)
+    bool retVal = false;
+    PM_LOG_DEBUG("ModuleFactory::UnRegister Unregistering module: %s", moduleName.c_str());
+    if (moduleHandle)
     {
-        if (moduleName == it->first)
-        {
-            handle = it->second;
-            if (handle)
-                delete handle;
-            mModuleHandlersMap.erase(moduleName);
-            return true;
-        }
+        moduleHandle->deInitialize();
+        mModuleCreatorMap.erase(moduleName);
+        retVal = true;
     }
 
-    return false;
-}
-
-std::map<std::string, ModuleInterface*> ModuleFactory::getRegisteredHandlersMap()
-{
-    PM_LOG_DEBUG("ModuleFactory::getRegisteredHandlersMap");
-    return mModuleHandlersMap;
+    return retVal;
 }
 
 std::map<std::string, pFuncModuleCreator> ModuleFactory::getModulesCreatorMap()
@@ -90,10 +77,7 @@ ModuleInterface* ModuleFactory::CreateObject(const std::string &moduleName, Modu
          {
              handle = it->second(pConfObj);
              if (handle)
-             {
-                 mModuleHandlersMap.insert(std::pair<const std::string, ModuleInterface*>(moduleName,handle));
                  handle->initialize();
-             }
          }
      }
      return handle;

@@ -175,15 +175,23 @@ main(int argc, char **argv)
 
     std::string moduleConfigPath = "/etc/palm/audiod/audiod_module_config.json";
     ModuleManager *objModuleManager = nullptr;
-    objModuleManager = ModuleManager::initialize(moduleConfigPath);
+    objModuleManager = ModuleManager::initialize();
     if (objModuleManager)
     {
+        if (!objModuleManager->loadConfig(moduleConfigPath))
+        {
+            PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT,"could not load config file. Exiting");
+            exit(0);
+        }
         if (objModuleManager->createModules())
             PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "audio modules registered successfully");
         else
         {
-            PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT,"could not register audio modules");
+            //Remove the created modules
+            objModuleManager->removeModules();
+            PM_LOG_ERROR(MSGID_STARTUP, INIT_KVCOUNT,"could not register audio modules. Exiting");
             delete objModuleManager;
+            objModuleManager = nullptr;
             exit(0);
         }
     }

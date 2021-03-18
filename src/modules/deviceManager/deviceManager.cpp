@@ -100,6 +100,18 @@ void DeviceManager::initialize()
     }
 }
 
+void DeviceManager::deInitialize()
+{
+    PM_LOG_DEBUG("DeviceManager deInitialize()");
+    if (mObjDeviceManager)
+    {
+        delete mObjDeviceManager;
+        mObjDeviceManager = nullptr;
+    }
+    else
+        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "mObjDeviceManager is nullptr");
+}
+
 void DeviceManager::handleEvent(events::EVENTS_T* ev)
 {
 }
