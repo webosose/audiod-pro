@@ -53,9 +53,7 @@ class MasterVolumeManager : public ModuleInterface
         static MasterVolumeManager* getMasterVolumeManagerInstance();
         static MasterVolumeManager *mMasterVolumeManager;
         static void initSoundOutputManager();
-        static MasterVolumeInterface* mClientMasterInstance;
-        static void setInstance(MasterVolumeInterface* clientMasterVolumeInstance);
-        MasterVolumeInterface* getClientMasterInstance();
+        static MasterVolumeInterface *mMasterVolumeClientInstance;
         static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
         {
             if (mIsObjRegistered)

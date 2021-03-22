@@ -16,14 +16,7 @@
 
 #include "OSEMasterVolumeManager.h"
 
-bool OSEMasterVolumeManager::mIsObjRegistered = OSEMasterVolumeManager::CreateInstance();
-
-OSEMasterVolumeManager* OSEMasterVolumeManager::getInstance()
-{
-    static OSEMasterVolumeManager objOSEMasterVolumeManager;
-    return &objOSEMasterVolumeManager;
-}
-
+bool OSEMasterVolumeManager::mIsObjRegistered = OSEMasterVolumeManager::RegisterObject();
 OSEMasterVolumeManager::OSEMasterVolumeManager():mVolume(0), mMuteStatus(false), \
                                                  displayOneVolume(100), displayTwoVolume(100), displayOneMuteStatus(0), displayTwoMuteStatus(0)
 {

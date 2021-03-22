@@ -19,38 +19,25 @@
 #define DEFAULT_TWO_DISPLAY_ID 2
 
 bool MasterVolumeManager::mIsObjRegistered = MasterVolumeManager::RegisterObject();
-MasterVolumeInterface* MasterVolumeManager::mClientMasterInstance = nullptr;
 MasterVolumeManager* MasterVolumeManager::mMasterVolumeManager = nullptr;
 SoundOutputManager* MasterVolumeManager::mObjSoundOutputManager = nullptr;
+MasterVolumeInterface* MasterVolumeManager::mMasterVolumeClientInstance = nullptr;
+MasterVolumeInterface* MasterVolumeInterface::mClientInstance = nullptr;
+pFuncCreateClient MasterVolumeInterface::mClientFuncPointer = nullptr;
 
 MasterVolumeManager* MasterVolumeManager::getMasterVolumeManagerInstance()
 {
     return mMasterVolumeManager;
 }
 
-void MasterVolumeManager::setInstance(MasterVolumeInterface* clientMasterVolumeInstance)
-{
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setInstance");
-    MasterVolumeManager::mClientMasterInstance = clientMasterVolumeInstance;
-}
-
-MasterVolumeInterface* MasterVolumeManager::getClientMasterInstance()
-{
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getClientMasterInstance");
-    return mClientMasterInstance;
-}
-
 bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setVolume");
     std::string reply = STANDARD_JSON_SUCCESS;
-    MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
-    MasterVolumeInterface* clientMasterInstance = nullptr;
-    clientMasterInstance = masterVolumeInstance->getClientMasterInstance();
-    if (clientMasterInstance)
+    if (mMasterVolumeClientInstance)
     {
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setVolume call to master client object is success");
-        clientMasterInstance->setVolume(lshandle, message, ctx);
+        mMasterVolumeClientInstance->setVolume(lshandle, message, ctx);
     }
     else
     {
@@ -68,13 +55,10 @@ bool MasterVolumeManager::_getVolume(LSHandle *lshandle, LSMessage *message, voi
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getVolume");
     std::string reply = STANDARD_JSON_SUCCESS;
-    MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
-    MasterVolumeInterface* clientMasterInstance = nullptr;
-    clientMasterInstance = masterVolumeInstance->getClientMasterInstance();
-    if (clientMasterInstance)
+    if (mMasterVolumeClientInstance)
     {
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getVolume call to master client object is success");
-        clientMasterInstance->getVolume(lshandle, message, ctx);
+        mMasterVolumeClientInstance->getVolume(lshandle, message, ctx);
     }
     else
     {
@@ -92,13 +76,10 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: muteVolume");
     std::string reply = STANDARD_JSON_SUCCESS;
-    MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
-    MasterVolumeInterface* clientMasterInstance = nullptr;
-    clientMasterInstance = masterVolumeInstance->getClientMasterInstance();
-    if (clientMasterInstance)
+    if (mMasterVolumeClientInstance)
     {
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: muteVolume call to master client object is success");
-        clientMasterInstance->muteVolume(lshandle, message, ctx);
+        mMasterVolumeClientInstance->muteVolume(lshandle, message, ctx);
     }
     else
     {
@@ -116,13 +97,10 @@ bool MasterVolumeManager::_volumeUp(LSHandle *lshandle, LSMessage *message, void
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeUp");
     std::string reply = STANDARD_JSON_SUCCESS;
-    MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
-    MasterVolumeInterface* clientMasterInstance = nullptr;
-    clientMasterInstance = masterVolumeInstance->getClientMasterInstance();
-    if (clientMasterInstance)
+    if (mMasterVolumeClientInstance)
     {
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeUp call to master client object is success");
-        clientMasterInstance->volumeUp(lshandle, message, ctx);
+        mMasterVolumeClientInstance->volumeUp(lshandle, message, ctx);
     }
     else
     {
@@ -140,13 +118,10 @@ bool MasterVolumeManager::_volumeDown(LSHandle *lshandle, LSMessage *message, vo
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDown");
     std::string reply = STANDARD_JSON_SUCCESS;
-    MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
-    MasterVolumeInterface* clientMasterInstance = nullptr;
-    clientMasterInstance = masterVolumeInstance->getClientMasterInstance();
-    if (clientMasterInstance)
+    if (mMasterVolumeClientInstance)
     {
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDown call to master client object is success");
-        clientMasterInstance->volumeDown(lshandle, message, ctx);
+        mMasterVolumeClientInstance->volumeDown(lshandle, message, ctx);
     }
     else
     {
@@ -163,16 +138,15 @@ bool MasterVolumeManager::_volumeDown(LSHandle *lshandle, LSMessage *message, vo
 void MasterVolumeManager::eventMasterVolumeStatus()
 {
     PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "eventMasterVolumeStatus: setMuteStatus and setVolume");
-    MasterVolumeManager* masterVolumeInstance = MasterVolumeManager::getMasterVolumeManagerInstance();
-    MasterVolumeInterface* clientMasterInstance = nullptr;
-    clientMasterInstance = masterVolumeInstance->getClientMasterInstance();
-    if (clientMasterInstance)
+    if (mMasterVolumeClientInstance)
     {
-        clientMasterInstance->setMuteStatus(DEFAULT_ONE_DISPLAY_ID);
-        clientMasterInstance->setVolume(DEFAULT_ONE_DISPLAY_ID);
-        clientMasterInstance->setMuteStatus(DEFAULT_TWO_DISPLAY_ID);
-        clientMasterInstance->setVolume(DEFAULT_TWO_DISPLAY_ID);
+        mMasterVolumeClientInstance->setMuteStatus(DEFAULT_ONE_DISPLAY_ID);
+        mMasterVolumeClientInstance->setVolume(DEFAULT_ONE_DISPLAY_ID);
+        mMasterVolumeClientInstance->setMuteStatus(DEFAULT_TWO_DISPLAY_ID);
+        mMasterVolumeClientInstance->setVolume(DEFAULT_TWO_DISPLAY_ID);
     }
+    else
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
 }
 
 /* TODO
@@ -241,10 +215,10 @@ void MasterVolumeManager::initialize()
 void MasterVolumeManager::deInitialize()
 {
     PM_LOG_DEBUG("MasterVolumeManager deInitialize()");
-    if (mClientMasterInstance)
+    if (mMasterVolumeManager)
     {
-        delete mClientMasterInstance;
-        mClientMasterInstance = nullptr;
+        delete mMasterVolumeManager;
+        mMasterVolumeManager = nullptr;
     }
     else
     {
@@ -280,7 +254,10 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
     if (mObjModuleManager)
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventMasterVolumeStatus);
     else
-        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mObjModuleManager is null");
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mObjModuleManager is nullptr");
+    mMasterVolumeClientInstance = MasterVolumeInterface::getClientInstance();
+    if (!mMasterVolumeClientInstance)
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mMasterVolumeClientInstance is nullptr");
 }
 
 MasterVolumeManager::~MasterVolumeManager()
@@ -290,5 +267,10 @@ MasterVolumeManager::~MasterVolumeManager()
     {
         delete mObjSoundOutputManager;
         mObjSoundOutputManager = nullptr;
+    }
+    if (mMasterVolumeClientInstance)
+    {
+        delete mMasterVolumeClientInstance;
+        mMasterVolumeClientInstance = nullptr;
     }
 }

@@ -18,9 +18,9 @@
 #define _OSE_MASTER_VOLUME_MGR_H_
 
 #include "masterVolumeInterface.h"
-#include "masterVolumeManager.h"
+#include "audioMixer.h"
 #define AUDIOD_API_GET_VOLUME                          "/master/getVolume"
-#define MSGID_CLIENT_MASTER_VOLUME_MANAGER             "MASTER_VOLUME_MANAGER"         //Client Master Volume Manager
+#define MSGID_CLIENT_MASTER_VOLUME_MANAGER             "OSE_MASTER_VOLUME_MANAGER"         //Client Master Volume Manager
 #define DISPLAY_ONE 0
 #define DISPLAY_TWO 1
 #define MIN_VOLUME 0
@@ -33,24 +33,31 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
     private:
         OSEMasterVolumeManager(const OSEMasterVolumeManager&) = delete;
         OSEMasterVolumeManager& operator=(const OSEMasterVolumeManager&) = delete;
-        static bool mIsObjRegistered;
-        static bool CreateInstance()
-        {
-            PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: CreateInstance");
-            MasterVolumeManager::setInstance(getInstance());
-            return true;
-        }
         int mVolume;
         int displayOneVolume;
         int displayTwoVolume;
         int displayOneMuteStatus;
         int displayTwoMuteStatus;
         bool mMuteStatus;
+        static bool mIsObjRegistered;
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
+        {
+            return (MasterVolumeInterface::Register(&OSEMasterVolumeManager::CreateObject));
+        }
 
     public :
         ~OSEMasterVolumeManager();
         OSEMasterVolumeManager();
-        static OSEMasterVolumeManager* getInstance();
+        static MasterVolumeInterface* CreateObject()
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the OSEMasterVolumeManager handler");
+                return new(std::nothrow) OSEMasterVolumeManager();
+            }
+            return nullptr;
+        }
         void setCurrentVolume(int iVolume);
         void setCurrentMuteStatus(bool bMuteStatus);
         void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);

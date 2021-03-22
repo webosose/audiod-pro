@@ -20,13 +20,36 @@
 #include "utils.h"
 #include "messageUtils.h"
 
+class MasterVolumeInterface;
+
+typedef MasterVolumeInterface* (*pFuncCreateClient)();
+
 class MasterVolumeInterface
 {
 public:
+
+    static MasterVolumeInterface *mClientInstance;
+    static pFuncCreateClient mClientFuncPointer;
     //constructor
     MasterVolumeInterface(){};
     //destructor
     virtual ~MasterVolumeInterface(){};
+
+    static bool Register(pFuncCreateClient clientFunc)
+    {
+        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeInterface: Register");
+        mClientFuncPointer = clientFunc;
+        if (mClientFuncPointer)
+            return true;
+        return false;
+    }
+
+    static MasterVolumeInterface* getClientInstance()
+    {
+        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeInterface: getClientInstance");
+        mClientInstance = mClientFuncPointer();
+        return mClientInstance;
+    }
 
     virtual void setVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void getVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;

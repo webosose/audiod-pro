@@ -119,12 +119,12 @@ endif(AUDIOD_TEST_API)
 
 SET (modules_files
         src/modules/lunaEventSubscriber/lunaEventSubscriber.cpp
+        src/modules/masterVolumeManager/OSEMasterVolumeManager.cpp
         src/modules/audioPolicyManager/audioPolicyManager.cpp
         src/modules/audioPolicyManager/volumePolicyInfoParser.cpp
         src/modules/bluetoothManager/bluetoothManager.cpp
         src/modules/connectionManager/connectionManager.cpp
         src/modules/masterVolumeManager/masterVolumeManager.cpp
-        src/modules/masterVolumeManager/OSEMasterVolumeManager.cpp
         src/modules/masterVolumeManager/soundOutputManager.cpp
         src/modules/masterVolumeManager/soundOutputListParser.cpp
         src/modules/settingsServiceManager/settingsServiceManager.cpp
