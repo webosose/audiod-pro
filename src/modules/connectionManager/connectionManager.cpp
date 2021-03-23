@@ -28,8 +28,7 @@ ConnectionManager* ConnectionManager::getConnectionManager()
 
 ConnectionManager::ConnectionManager(ModuleConfig* const pConfObj)
 {
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, \
-               "ConnectionManager constructor");
+    PM_LOG_DEBUG("ConnectionManager constructor");
     mAudioMixer = AudioMixer::getAudioMixerInstance();
     if (!mAudioMixer)
     {
@@ -40,8 +39,7 @@ ConnectionManager::ConnectionManager(ModuleConfig* const pConfObj)
 
 ConnectionManager::~ConnectionManager()
 {
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, \
-                "ConnectionManager destructor");
+    PM_LOG_DEBUG("ConnectionManager destructor");
 }
 
 void ConnectionManager::notifyGetStatusSubscribers()
@@ -160,7 +158,7 @@ bool ConnectionManager::_connectAudioOut(LSHandle *lshandle, LSMessage *message,
 
 bool ConnectionManager::_connectStatusCallback(LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "_connectStatusCallback Received");
+    PM_LOG_DEBUG("_connectStatusCallback Received");
 
     LSMessageJsonParser msg(reply, NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean))
                                                  REQUIRED_1(returnValue)));
@@ -198,7 +196,6 @@ bool ConnectionManager::_connectStatusCallback(LSHandle *sh, LSMessage *reply, v
             if (!LSMessageRespond(messageptr, payload.c_str(), &lserror))
             {
                 lserror.Print(__FUNCTION__, __LINE__);
-                PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Inside LSMessageReply if");
             }
             LSMessageUnref(messageptr);
         }
@@ -226,7 +223,7 @@ bool ConnectionManager::_disconnectAudioOut(LSHandle *lshandle, LSMessage *messa
 
     std::string audioType;
     msg.get("audioType",audioType);
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "ConnectionManager::_disconnectAudioOut Audio disconnect request");
+    PM_LOG_DEBUG("ConnectionManager::_disconnectAudioOut Audio disconnect request");
     if (mConnectionManager)
         mConnectionManager->disconnect(lshandle, message, ctx);
     return true;
@@ -301,7 +298,7 @@ bool ConnectionManager::disconnect(LSHandle *lshandle, LSMessage *message, void 
 
 bool ConnectionManager::_disConnectStatusCallback (LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "_disConnectStatusCallback Received");
+    PM_LOG_DEBUG("_disConnectStatusCallback Received");
 
     LSMessageJsonParser msg(reply, NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean))
                                                  REQUIRED_1(returnValue)));
@@ -338,7 +335,6 @@ bool ConnectionManager::_disConnectStatusCallback (LSHandle *sh, LSMessage *repl
             if (!LSMessageRespond(messageptr, payload.c_str(), &lserror))
             {
                 lserror.Print(__FUNCTION__, __LINE__);
-                PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Inside LSMessageReply if");
             }
             LSMessageUnref(messageptr);
         }
@@ -378,13 +374,13 @@ bool ConnectionManager::getAudioOutputStatus(LSHandle *lshandle, LSMessage *mess
         }
         else
         {
-            PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "get connect status umimixer call failed");
+            PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "get connect status umimixer call failed");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
         }
     }
     else
     {
-        PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Audio get connect status: audioMixerObj is NULL");
+        PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "Audio get connect status: audioMixerObj is NULL");
         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
     }
     if (false == returnvalue)
@@ -404,7 +400,7 @@ bool ConnectionManager::getAudioOutputStatus(LSHandle *lshandle, LSMessage *mess
 
 bool ConnectionManager::_getStatus(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "ConnectionManager::_getStatus Audio get status request");
+    PM_LOG_DEBUG("ConnectionManager::_getStatus Audio get status request");
     LSMessageJsonParser msg (message, NORMAL_SCHEMA(PROPS_1(PROP(subscribe, boolean))));
 
     if(!msg.parse(__FUNCTION__,lshandle))
@@ -425,7 +421,7 @@ bool ConnectionManager::_getStatus(LSHandle *lshandle, LSMessage *message, void 
 
 bool ConnectionManager::_getAudioOutputStatusCallback(LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "_getAudioOutputStatusCallback Received");
+    PM_LOG_DEBUG("_getAudioOutputStatusCallback Received");
 
     LSMessageJsonParser msg(reply, NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean))
                             REQUIRED_1(returnValue)));
@@ -464,7 +460,6 @@ bool ConnectionManager::_getAudioOutputStatusCallback(LSHandle *sh, LSMessage *r
     }
     else
     {
-        PM_LOG_INFO(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT, "context is null");
         LSHandle *lsHandle = GetPalmService();
         CLSError lserror;
         if (! LSSubscriptionReply(lsHandle, GET_STATUS_CATEGORY_AND_KEY, payload.c_str(), &lserror))

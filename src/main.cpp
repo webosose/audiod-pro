@@ -157,9 +157,6 @@ main(int argc, char **argv)
         std::cerr << logPrefix << "Failed to setup up pmlog context " << logContextName << std::endl;
         exit(EXIT_FAILURE);
     }
-    //Will be removed or updated once DAP design is updated
-    //PM_LOG_INFO(MSGID_STARTUP, INIT_KVCOUNT, "Starting audiod-" xstr(AUDIOD_SUBMISSION) "-%c%s.",
-                                          //*gAudioDevice.getName(), BUILD_INFO);
 
     setpriority(PRIO_PROCESS,getpid(),niceme);
 

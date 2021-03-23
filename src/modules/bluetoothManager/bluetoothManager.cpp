@@ -38,8 +38,7 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address,char *p
             {
                 mObjAudioMixer->programLoadBluetooth(address, profile);
             }
-            PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
-                "%s : loaded bluetooth device",  __FUNCTION__);
+            PM_LOG_DEBUG("%s : loaded bluetooth device",  __FUNCTION__);
             mDefaultDeviceConnected = true;
             if (mObjModuleManager)
             {
@@ -48,7 +47,7 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address,char *p
                 mObjModuleManager->handleEvent((events::EVENTS_T*)&eventMasterVolumeStatus);
             }
             else
-                PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+                PM_LOG_ERROR(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                            "mObjModuleManager is NULL");
         }
         else
@@ -59,16 +58,14 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address,char *p
     {
         if (mObjAudioMixer)
             mObjAudioMixer->programUnloadBluetooth(profile);
-        PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
-            "%s : unloaded bluetooth device",  __FUNCTION__);
+        PM_LOG_DEBUG("%s : unloaded bluetooth device",  __FUNCTION__);
         mDefaultDeviceConnected = false;
     }
 }
 
 void BluetoothManager::btAdapterQueryInfo(LSMessage *message)
 {
-    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
-        "%s", __FUNCTION__);
+    PM_LOG_DEBUG("%s", __FUNCTION__);
 
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_5(PROP(subscribed, boolean),
     PROP(adapters, array), PROP(returnValue, boolean),
@@ -110,8 +107,7 @@ void BluetoothManager::btAdapterQueryInfo(LSMessage *message)
                     break;
                 }
                 else
-                    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
-                    "%s: Already subscribe for default adapter: %s", __FUNCTION__, adapterAddress.c_str());
+                    PM_LOG_DEBUG("%s: Already subscribe for default adapter: %s", __FUNCTION__, adapterAddress.c_str());
             }
             else if ("hci1" == adapterName)
             {
@@ -125,8 +121,7 @@ void BluetoothManager::btAdapterQueryInfo(LSMessage *message)
                         BT_DEVICE_GET_STATUS, payload);*/
                 }
                 else
-                    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
-                    "%s: Already subscribe for adapter: %s", __FUNCTION__, adapterAddress.c_str());
+                    PM_LOG_DEBUG("%s: Already subscribe for adapter: %s", __FUNCTION__, adapterAddress.c_str());
             }
         }
     }
@@ -134,8 +129,7 @@ void BluetoothManager::btAdapterQueryInfo(LSMessage *message)
 
 void BluetoothManager::btDeviceGetStatusInfo (LSMessage *message)
 {
-    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
-        "%s", __FUNCTION__);
+    PM_LOG_DEBUG("%s", __FUNCTION__);
 
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_6(PROP(subscribed, boolean),
     PROP(adapterAddress, string), PROP(returnValue, boolean), PROP(devices,array),
@@ -144,7 +138,7 @@ void BluetoothManager::btDeviceGetStatusInfo (LSMessage *message)
 
     if (!msg.parse(__FUNCTION__))
     {
-        PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
+        PM_LOG_ERROR(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
             "%s parse error", __FUNCTION__);
         return;
     }
@@ -237,8 +231,7 @@ void BluetoothManager::btDeviceGetStatusInfo (LSMessage *message)
 
 void BluetoothManager:: btA2DPGetStatusInfo (LSMessage *message)
 {
-    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
-        "%s", __FUNCTION__);
+    PM_LOG_DEBUG("%s", __FUNCTION__);
 
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_9(PROP(subscribed, boolean),
     PROP(adapterAddress, string), PROP(returnValue, boolean), PROP(connecting, boolean),
@@ -302,8 +295,7 @@ void BluetoothManager::setBluetoothA2DPSource(bool state)
         "%s : state = %d", __FUNCTION__, state);
     if (mObjAudioMixer && mObjAudioMixer->programA2dpSource(state))
     {
-        PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
-        "Sending programA2dpSource to PA is success");
+        PM_LOG_DEBUG("Sending programA2dpSource to PA is success");
     }
 }
 
@@ -461,8 +453,7 @@ BluetoothManager::BluetoothManager(ModuleConfig* const pConfObj):
     mA2dpConnected(false), mA2dpSource(false),
     mDefaultDeviceConnected(false)
 {
-    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
-        "BT manager constructor");
+    PM_LOG_DEBUG("BT manager constructor");
     mObjAudioMixer = AudioMixer::getAudioMixerInstance();
     if (!mObjAudioMixer)
     {
@@ -479,8 +470,7 @@ BluetoothManager::BluetoothManager(ModuleConfig* const pConfObj):
 
 BluetoothManager::~BluetoothManager()
 {
-    PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT, \
-        "BT manager destructor");
+    PM_LOG_DEBUG("BT manager destructor");
 }
 
 void BluetoothManager::initialize()

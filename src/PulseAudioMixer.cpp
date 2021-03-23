@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 LG Electronics, Inc.
+// Copyright (c) 2012-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
                                      mObjMixerCallBack(mixerCallBack)
 {
     // initialize table for the pulse state lookup table
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer constructor");
+    PM_LOG_DEBUG("PulseAudioMixer constructor");
     for (int i = eVirtualSink_First; i <= eVirtualSink_Last; i++)
     {
         mPulseStateVolume[i] = -1;
@@ -67,7 +67,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
 
 PulseAudioMixer::~PulseAudioMixer()
 {
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer destructor");
+    PM_LOG_DEBUG("PulseAudioMixer destructor");
 }
 
 /*
@@ -300,7 +300,7 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
         return ret;
     }
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "programLoadBluetooth sending message");
+    PM_LOG_DEBUG("programLoadBluetooth sending message");
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s %s", cmd, 0, address, profile);
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
@@ -342,7 +342,7 @@ bool PulseAudioMixer::programUnloadBluetooth (const char *profile)
         return ret;
     }
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: sending message '%s'", __FUNCTION__, buffer);
+    PM_LOG_DEBUG("%s: sending message '%s'", __FUNCTION__, buffer);
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
 
@@ -380,8 +380,7 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     memset(buffer, 0, SIZE_MESG_TO_PULSE);
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, a2dpSource);
 
-    PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "%s: sending message '%s'", __FUNCTION__, buffer);
+    PM_LOG_DEBUG("%s: sending message '%s'", __FUNCTION__, buffer);
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
 
@@ -392,7 +391,7 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     }
     else
     {
-       PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+       PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
             "msg send for A2DP Source(%d)", bytes);
        ret = true;
     }
@@ -404,13 +403,12 @@ bool PulseAudioMixer::programHeadsetRoute(int route) {
     char buffer[SIZE_MESG_TO_PULSE]="";
     bool ret  = false;
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "check for pulseaudio connection");
     if (!mChannel) {
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "There is no socket connection to pulseaudio");
         return ret;
     }
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "programHeadsetState sending message");
+    PM_LOG_DEBUG("programHeadsetState sending message");
     if (0 == route)
         snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, eHeadsetState_None);
     else if (1 == route)
@@ -429,7 +427,7 @@ bool PulseAudioMixer::programHeadsetRoute(int route) {
     }
     else
     {
-        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "msg sent for headset routing from audiod");
+        PM_LOG_DEBUG("msg sent for headset routing from audiod");
         ret = true;
     }
     return ret;
@@ -457,7 +455,6 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
     std::string device_no = std::to_string(deviceno);
     std::string filename;
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "check for pulseaudio connection");
     if (!mChannel) {
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "There is no socket connection to pulseaudio");
         return ret;
@@ -482,7 +479,7 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
     if (false == ret)
         return ret;
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "loadUSBSinkSource sending message");
+    PM_LOG_DEBUG("loadUSBSinkSource sending message");
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d", cmd, cardno, deviceno, status);
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
@@ -510,7 +507,6 @@ bool PulseAudioMixer::setRouting(const ConstString & scenario){
     bool ret  = false;
     ConstString tail;
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "check for pulseaudio ");
     if (!mPulseLink.checkConnection()) {
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Pulseaudio is not running");
         return ret;
@@ -521,16 +517,16 @@ bool PulseAudioMixer::setRouting(const ConstString & scenario){
         return ret;
     }
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::setRouting: sceanrio = %s", scenario.c_str());
+    PM_LOG_DEBUG("PulseAudioMixer::setRouting: sceanrio = %s", scenario.c_str());
     if (scenario.hasPrefix(PHONE_, tail)) {
-     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::setRouting: phone device = %s", tail.c_str());
+     PM_LOG_DEBUG("PulseAudioMixer::setRouting: phone device = %s", tail.c_str());
         cmd = 'P';
     } else if (scenario.hasPrefix(MEDIA_, tail)) {
-        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::setRouting: media device = %s", tail.c_str());
+        PM_LOG_DEBUG("PulseAudioMixer::setRouting: media device = %s", tail.c_str());
         cmd = 'Q';
     }
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s %d", cmd, voLTE, tail.c_str(), BTDeviceType);
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::setRouting sending message : %s ", buffer);
+    PM_LOG_DEBUG("PulseAudioMixer::setRouting sending message : %s ", buffer);
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
     if (bytes != SIZE_MESG_TO_PULSE)
@@ -551,7 +547,6 @@ int PulseAudioMixer::loopback_set_parameters(const char * value)
     char buffer[SIZE_MESG_TO_PULSE] ;
     bool ret  = false;
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "check for pulseaudio ");
     if (!mPulseLink.checkConnection()) {
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Pulseaudio is not running");
         return ret;
@@ -562,10 +557,9 @@ int PulseAudioMixer::loopback_set_parameters(const char * value)
         return ret;
     }
 
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::loopback_set_parameters: value = %s", value);
-
+    PM_LOG_DEBUG("PulseAudioMixer::loopback_set_parameters: value = %s", value);
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s %d", cmd, 0, value, 0);
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::loopback_set_parameters sending message : %s ", buffer);
+    PM_LOG_DEBUG("PulseAudioMixer::loopback_set_parameters sending message : %s ", buffer);
     int sockfd = g_io_channel_unix_get_fd (mChannel);
     ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
     if (bytes != SIZE_MESG_TO_PULSE)
@@ -614,7 +608,7 @@ _pulseStatus(GIOChannel *ch, GIOCondition condition, gpointer user_data)
 }
 
 bool
-PulseAudioMixer::_connectSocket ()
+PulseAudioMixer::_connectSocket()
 {
     GIOCondition condition = GIOCondition(G_IO_ERR | G_IO_HUP | G_IO_IN);
 
@@ -650,8 +644,6 @@ PulseAudioMixer::_connectSocket ()
                                _NAME_STRUCT_OFFSET (struct sockaddr_un, sun_path)
                                 + length))
     {
-        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: connect error '%s' on fd (%i) ", \
-                                       __FUNCTION__, strerror(errno), sockfd);
         if (close(sockfd))
         {
             PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: close error '%s' on fd (%i)",__FUNCTION__,
@@ -779,7 +771,7 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose)
             mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer);
         }
         else
-             PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
                  "mObjMixerCallBack is null");
     }
 }
@@ -816,12 +808,12 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
             {
 
               case 'a':
-                   PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Got A2DP sink running message from PA");
+                   PM_LOG_DEBUG("Got A2DP sink running message from PA");
                    //Will be updated once DAP design is updated
                    break;
 
                case 'b':
-                   PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Got A2DP sink Suspend message from PA");
+                   PM_LOG_DEBUG("Got A2DP sink Suspend message from PA");
                    //Will be  updated once DAP design is updated
                    break;
 
@@ -922,8 +914,6 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
         g_source_remove (mSourceID);
         g_io_channel_unref(mChannel);
         mChannel = NULL;
-        //Will be updated once DAP design is updated
-        //gState.setRTPLoaded(false);
         g_timeout_add (0, ::_timer, this);
     }
 }
@@ -951,7 +941,7 @@ void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink)
 
     if (mOutputStreamsCurrentlyOpenedCount < 0)
     {
-        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: stream opened count was less than 0", __FUNCTION__);
+        PM_LOG_DEBUG("%s: stream opened count was less than 0", __FUNCTION__);
         mOutputStreamsCurrentlyOpenedCount = 0;
     }
     if (IsValidVirtualSink(sink))
@@ -1027,7 +1017,7 @@ void PulseAudioMixer::playDtmf(const char *snd, EVirtualAudioSink sink)
 
 void PulseAudioMixer::playDtmf(const char *snd, const char* sink)
 {
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::playDtmf");
+    PM_LOG_DEBUG("PulseAudioMixer::playDtmf");
     int tone;
     if ((tone=IdToDtmf(snd))<0) return;
     if (mCurrentDtmf && tone==mCurrentDtmf->getTone()) return;
@@ -1039,7 +1029,7 @@ void PulseAudioMixer::playDtmf(const char *snd, const char* sink)
 
 void PulseAudioMixer::stopDtmf() {
     if (mCurrentDtmf) {
-        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::stopDtmf");
+        PM_LOG_DEBUG("PulseAudioMixer::stopDtmf");
         mCurrentDtmf->stopping();
         mCurrentDtmf->unref();
         mCurrentDtmf = NULL;
@@ -1048,7 +1038,7 @@ void PulseAudioMixer::stopDtmf() {
 
 void PulseAudioMixer::createPulseSocketCommunication()
 {
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::createPulseSocketCommunication");
+    PM_LOG_DEBUG("PulseAudioMixer::createPulseSocketCommunication");
     g_timeout_add (0, ::_timer, this);
 }
 

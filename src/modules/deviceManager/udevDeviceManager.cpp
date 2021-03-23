@@ -109,12 +109,10 @@ bool UdevDeviceManager::event(LSHandle *lshandle, LSMessage *message, void *ctx)
 
 UdevDeviceManager::UdevDeviceManager() : mObjAudioMixer(nullptr)
 {
-    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-        "UdevDeviceManager constructor");
+    PM_LOG_DEBUG("UdevDeviceManager constructor");
 }
 
 UdevDeviceManager::~UdevDeviceManager()
 {
-    PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-        "UdevDeviceManager destructor");
+    PM_LOG_DEBUG("UdevDeviceManager destructor");
 }

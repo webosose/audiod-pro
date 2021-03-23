@@ -34,14 +34,12 @@ SystemSoundsManager::SystemSoundsManager(ModuleConfig* const pConfObj)
         PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
             "AudioMixer instance is null");
     }
-    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-        "systemsounds constructor done");
+    PM_LOG_DEBUG("systemsounds constructor");
 }
 
 SystemSoundsManager::~SystemSoundsManager()
 {
-    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-        "systemsounds destructor");
+    PM_LOG_DEBUG("systemsounds destructor");
 }
 
 LSMethod SystemSoundsManager::systemsoundsMethods[] = {
@@ -176,7 +174,7 @@ void SystemSoundsManager::initialize()
 
 void SystemSoundsManager::deInitialize()
 {
-    PM_LOG_DEBUG("SystemSoundsManager deInitialize()");
+    PM_LOG_DEBUG("SystemSoundsManager deInitialize");
     if (mSystemSoundsManager)
     {
         delete mSystemSoundsManager;

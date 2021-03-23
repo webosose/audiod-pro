@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 LG Electronics, Inc.
+// Copyright (c) 2018-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -249,7 +249,7 @@ bool umiaudiomixer::getConnectionStatus(LSFilterFunc cb, envelopeRef *message)
 umiaudiomixer::umiaudiomixer(MixerInterface* mixerCallBack):\
               mIsUmiMixerReadyToProgram(false), mObjMixerCallBack(mixerCallBack)
 {
-    PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer constructor");
+    PM_LOG_DEBUG("umiaudiomixer constructor");
     CLSError lserror;
     bool result = LSRegisterServerStatusEx(GetPalmService(), AUDIOOUTPUT_SERVICE, audioOutputdServiceStatusCallback, this, NULL, &lserror);
     if (!result)
@@ -260,7 +260,7 @@ umiaudiomixer::umiaudiomixer(MixerInterface* mixerCallBack):\
 
 umiaudiomixer::~umiaudiomixer()
 {
-    PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT, "umiaudiomixer distructor");
+    PM_LOG_DEBUG("umiaudiomixer destructor");
 }
 
 bool umiaudiomixer::audioOutputdServiceStatusCallback(LSHandle *sh, const char *serviceName, bool connected, void *ctx)
@@ -273,8 +273,7 @@ bool umiaudiomixer::audioOutputdServiceStatusCallback(LSHandle *sh, const char *
         umiaudiomixer* umiMixerObj = (umiaudiomixer*) ctx;
         if (umiMixerObj)
         {
-            PM_LOG_INFO(MSGID_UMIAUDIO_MIXER, INIT_KVCOUNT,\
-                        "umiaudiomixer audioOutputdServiceStatusCallback, calling callBackMixerStatus");
+            PM_LOG_DEBUG("umiaudiomixer audioOutputdServiceStatusCallback, calling callBackMixerStatus");
             umiMixerObj->mObjMixerCallBack->callBackMixerStatus(connected, utils::eUmiMixer);
             umiMixerObj->mIsUmiMixerReadyToProgram = connected;
         }

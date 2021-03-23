@@ -24,14 +24,12 @@ ModuleFactory* ModuleFactory::getInstance()
 
 ModuleFactory::ModuleFactory()
 {
-    PM_LOG_INFO(MSGID_MODULE_FACTORY, INIT_KVCOUNT,\
-        "ModuleFactory constructor");
+    PM_LOG_DEBUG("ModuleFactory constructor");
 }
 
 ModuleFactory::~ModuleFactory()
 {
-    PM_LOG_INFO(MSGID_MODULE_FACTORY, INIT_KVCOUNT,\
-        "ModuleFactory destructor");
+    PM_LOG_DEBUG("ModuleFactory destructor");
 }
 
 bool ModuleFactory::Register(const std::string &moduleName, pFuncModuleCreator modulefuncpointer)

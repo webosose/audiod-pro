@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 LG Electronics, Inc.
+// Copyright (c) 2012-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink)
     PMTRACE_FUNCTION;
     if (!IsValidVirtualSink(sink))
     {
-        PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
             "'%d' is not a valid sink id", (int)sink);
         return false;
     }
@@ -124,8 +124,7 @@ static void PlaySampleDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userd
     const char * name = data->samplename;
     if (strncmp(name, "dtmf_", 5) == 0)
         name = "dtmf_X";
-    PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
-        "PulseAudioLink::play: '%s' in '%s'", name, data->sink);
+    PM_LOG_DEBUG("PulseAudioLink::play: '%s' in '%s'", name, data->sink);
 
     // prepare HW for playing audio. will unmute speaker in=f in music+headset case
     if(strstr (name, "alert_"))
@@ -228,7 +227,7 @@ void PulseAudioLink::stream_drain_complete(pa_stream*stream,
     PulseAudioDataProvider* data = (PulseAudioDataProvider*)userdata;
 
     if (!success) {
-        PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
             "drain failed");
         // close connection??
     }
@@ -397,7 +396,7 @@ static void preload_stream_state_cb(pa_stream * s, void *userdata)
 
         case PA_STREAM_FAILED:
         default:
-            PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+            PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
                 "stream_state_cb: Failed to upload sample '%s': %s (%d)", \
                 snd->samplename,
                 pa_strerror(pa_context_errno(pa_stream_get_context(s))),
@@ -450,8 +449,7 @@ static void preloadDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userdata
     struct PreloadDeferCBData* cbdata = (struct PreloadDeferCBData*)userdata;
     bool unref= false;
     cbdata->lock();
-    PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
-        "PulseAudioLink::preload: Pre-loading '%s', %u bytes.",\
+    PM_LOG_DEBUG("PulseAudioLink::preload: Pre-loading '%s', %u bytes.",\
         cbdata->snd.samplename,\
         cbdata->snd.length);
     cbdata->s = pa_stream_new(cbdata->context,
@@ -532,7 +530,7 @@ void PulseAudioLink::preload(const char * samplename, const char * format, int r
         data->lock();
         if (data->snd.loading)
         {
-            PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+            PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
                     "PulseAudioLink::preload: failed to load sample");
         }
         else
@@ -560,11 +558,10 @@ void* PulseAudioLink::pathread_func(void* p) {
     PulseAudioLink* link = (PulseAudioLink*)p;
     int ret;
     if (pa_mainloop_run(link->mMainLoop, &ret) < 0) {
-        PM_LOG_WARNING(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
             "pa_mainloop_run() failed");
     }
-    PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
-        "pathread_func() exit %d", ret);
+    PM_LOG_DEBUG("pathread_func() exit %d", ret);
     return (void*)ret;
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,11 @@
 
 ModuleInterface::ModuleInterface()
 {
-    PM_LOG_INFO(MSGID_MODULE_INTERFACE, INIT_KVCOUNT,\
-        "ModuleInterface constructor");
+    PM_LOG_DEBUG("ModuleInterface constructor");
 }
 
 ModuleInterface::~ModuleInterface()
 {
-    PM_LOG_INFO(MSGID_MODULE_INTERFACE, INIT_KVCOUNT,\
-        "ModuleInterface destructor");
+    PM_LOG_DEBUG("ModuleInterface destructor");
 }
 

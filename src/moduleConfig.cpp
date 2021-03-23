@@ -23,12 +23,10 @@ ModuleConfig* ModuleConfig::getInstance()
 
 ModuleConfig::ModuleConfig()
 {
-    PM_LOG_INFO(MSGID_MODULE_CONFIG, INIT_KVCOUNT,\
-        "ModuleConfig constructor");
+    PM_LOG_DEBUG("ModuleConfig constructor");
 }
 
 ModuleConfig::~ModuleConfig()
 {
-    PM_LOG_INFO(MSGID_MODULE_CONFIG, INIT_KVCOUNT,\
-        "ModuleConfig destructor");
+    PM_LOG_DEBUG("ModuleConfig destructor");
 }

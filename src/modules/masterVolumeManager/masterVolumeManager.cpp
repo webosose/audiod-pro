@@ -32,7 +32,7 @@ MasterVolumeManager* MasterVolumeManager::getMasterVolumeManagerInstance()
 
 bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setVolume");
+    PM_LOG_DEBUG("MasterVolume: setVolume");
     std::string reply = STANDARD_JSON_SUCCESS;
     if (mMasterVolumeClientInstance)
     {
@@ -53,7 +53,7 @@ bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, voi
 
 bool MasterVolumeManager::_getVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: getVolume");
+    PM_LOG_DEBUG("MasterVolume: getVolume");
     std::string reply = STANDARD_JSON_SUCCESS;
     if (mMasterVolumeClientInstance)
     {
@@ -74,7 +74,7 @@ bool MasterVolumeManager::_getVolume(LSHandle *lshandle, LSMessage *message, voi
 
 bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: muteVolume");
+    PM_LOG_DEBUG("MasterVolume: muteVolume");
     std::string reply = STANDARD_JSON_SUCCESS;
     if (mMasterVolumeClientInstance)
     {
@@ -95,7 +95,7 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
 
 bool MasterVolumeManager::_volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeUp");
+    PM_LOG_DEBUG("MasterVolume: volumeUp");
     std::string reply = STANDARD_JSON_SUCCESS;
     if (mMasterVolumeClientInstance)
     {
@@ -116,7 +116,7 @@ bool MasterVolumeManager::_volumeUp(LSHandle *lshandle, LSMessage *message, void
 
 bool MasterVolumeManager::_volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDown");
+    PM_LOG_DEBUG("MasterVolume: volumeDown");
     std::string reply = STANDARD_JSON_SUCCESS;
     if (mMasterVolumeClientInstance)
     {
@@ -171,7 +171,7 @@ static LSMethod SoundOutputManagerMethods[] = {
 
 void MasterVolumeManager::initSoundOutputManager()
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "initSoundOutputManager::initialising sound output manager module");
+    PM_LOG_DEBUG("initSoundOutputManager::initialising sound output manager module");
     CLSError lserror;
     if (!mObjSoundOutputManager)
     {
@@ -188,7 +188,7 @@ void MasterVolumeManager::initSoundOutputManager()
             }
         }
         else
-            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module soundOutputManager");
+            PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module soundOutputManager");
     }
 }
 
@@ -200,7 +200,7 @@ void MasterVolumeManager::initialize()
         bool bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/master", MasterVolumeMethods, nullptr, &lserror);
         if (!bRetVal || !LSCategorySetData(GetPalmService(), "/master", mMasterVolumeManager, &lserror))
         {
-           PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s: Registering Service for '%s' category failed", \
+           PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s: Registering Service for '%s' category failed", \
                         __FUNCTION__, "/master");
            lserror.Print(__FUNCTION__, __LINE__);
         }
@@ -209,7 +209,7 @@ void MasterVolumeManager::initialize()
             "Successfully initialized MasterVolumeManager");
     }
     else
-        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module MasterVolumeManager");
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module MasterVolumeManager");
 }
 
 void MasterVolumeManager::deInitialize()
@@ -249,7 +249,7 @@ void MasterVolumeManager::handleEvent(events::EVENTS_T *event)
 
 MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudioMixer(AudioMixer::getAudioMixerInstance())
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeManager: constructor");
+    PM_LOG_DEBUG("MasterVolumeManager: constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     if (mObjModuleManager)
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventMasterVolumeStatus);
@@ -262,7 +262,7 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
 
 MasterVolumeManager::~MasterVolumeManager()
 {
-    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolumeManager: destructor");
+    PM_LOG_DEBUG("MasterVolumeManager: destructor");
     if (mObjSoundOutputManager)
     {
         delete mObjSoundOutputManager;

@@ -42,7 +42,7 @@ lunaEventSubscriber::lunaEventSubscriber(ModuleConfig* const pConfObj) : mServer
     mArrayKeyReceived.fill(false);
     mArrayServerOfKey.fill(eServiceFirst);
     mLoop = nullptr;
-    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT, "lunaEventSubscriber::Constructor");
+    PM_LOG_DEBUG("lunaEventSubscriber::Constructor");
     if (mObjModuleManager)
     {
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventLunaKeySubscription);
@@ -52,14 +52,14 @@ lunaEventSubscriber::lunaEventSubscriber(ModuleConfig* const pConfObj) : mServer
     }
     else
     {
-        PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
+        PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,\
             "lunaEventSubscriber :: Module manager instance null");
     }
 }
 
 lunaEventSubscriber::~lunaEventSubscriber()
 {
-    PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,"lunaEventSubscriber::Destructor");
+    PM_LOG_DEBUG("lunaEventSubscriber::Destructor");
 }
 
 void lunaEventSubscriber::initialize()
@@ -259,7 +259,7 @@ void lunaEventSubscriber::subscribeToKeys(LSHandle *handle, EModuleEventType eEv
         if (mLunaEventSubscriber->mArrayServerConnected[server] == false)
         {
             PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
-                "Service not connected");
+                "Service not connected %d", server);
         }
         else if (mLunaEventSubscriber->mArrayKeySubscribed[eEventToSubscribe] == false)
         {
@@ -320,7 +320,7 @@ void lunaEventSubscriber::eventSubscribeServerStatus(SERVER_TYPE_E eService)
     }
     else
     {
-        PM_LOG_INFO(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
+        PM_LOG_ERROR(MSGID_LUNA_EVENT_SUBSCRIBER,INIT_KVCOUNT,   \
             "Module manager instance null");
     }
 }

@@ -164,7 +164,7 @@ error:
     {
         lserror.Print(__FUNCTION__, __LINE__);
         PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-            "returning FALSE becuase of invald parameters");
+            "returning FALSE becuase of invalid parameters");
     }
     return true;
 }
@@ -182,14 +182,12 @@ PlaybackManager::PlaybackManager(ModuleConfig* const pConfObj)
         PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
             "AudioMixer instance is null");
     }
-    PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-        "playback manager constructor");
+    PM_LOG_DEBUG("playback manager constructor");
 }
 
 PlaybackManager::~PlaybackManager()
 {
-    PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-        "Playback manager destructor");
+    PM_LOG_DEBUG("Playback manager destructor");
 }
 
 void PlaybackManager::initialize()
@@ -201,7 +199,7 @@ void PlaybackManager::initialize()
         result = LSRegisterCategoryAppend(GetPalmService(), "/", PlaybackManager::playbackMethods, nullptr, &lserror);
         if (!result || !LSCategorySetData(GetPalmService(), "/", mPlaybackManager, &lserror))
         {
-            PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
+            PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
                 "%s registering for %s category faled",  __FUNCTION__, "/");
             lserror.Print(__FUNCTION__, __LINE__);
         }
@@ -217,7 +215,7 @@ void PlaybackManager::initialize()
 
 void PlaybackManager::deInitialize()
 {
-    PM_LOG_DEBUG("PlaybackManager deInitialize()");
+    PM_LOG_DEBUG("PlaybackManager deInitialize");
     if (mPlaybackManager)
     {
         delete mPlaybackManager;

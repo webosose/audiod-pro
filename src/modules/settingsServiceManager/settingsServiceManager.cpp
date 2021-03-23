@@ -56,7 +56,7 @@ void SettingsServiceManager::eventKeyInfo(LUNA_KEY_TYPE_E type, LSMessage *messa
         break;
         default:
         {
-            PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
+            PM_LOG_ERROR(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
                 "SettingsServiceManager::eventKeyInfo unknown event");
         }
         break;
@@ -103,8 +103,7 @@ bool SettingsServiceManager::settingsMediaDNDEvent(LSMessage *message)
 
 SettingsServiceManager::SettingsServiceManager(ModuleConfig* const pConfObj)
 {
-    PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-        "SettingsServiceManager Constructor");
+    PM_LOG_DEBUG("SettingsServiceManager Constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     if (!mObjModuleManager)
     {
@@ -115,8 +114,7 @@ SettingsServiceManager::SettingsServiceManager(ModuleConfig* const pConfObj)
 
 SettingsServiceManager::~SettingsServiceManager()
 {
-    PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
-        "SettingsServiceManager destructor");
+    PM_LOG_DEBUG("SettingsServiceManager destructor");
 }
 
 void SettingsServiceManager::initialize()
@@ -134,7 +132,7 @@ void SettingsServiceManager::initialize()
         }
         else
         {
-            PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
+            PM_LOG_ERROR(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
                 "Modulemanager instance is null");
         }
         PM_LOG_INFO(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT, \
@@ -149,7 +147,7 @@ void SettingsServiceManager::initialize()
 
 void SettingsServiceManager::deInitialize()
 {
-    PM_LOG_DEBUG("SettingsServiceManager deInitialize()");
+    PM_LOG_DEBUG("SettingsServiceManager deInitialize");
     if (mSettingsServiceManager)
     {
         delete mSettingsServiceManager;

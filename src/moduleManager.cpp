@@ -32,9 +32,7 @@ ModuleManager* ModuleManager::initialize()
    if (!mObjModuleManager)
        mObjModuleManager = new ModuleManager();
    if (mObjModuleManager)
-       PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
-            "ModuleManager initialized successfully");
-
+       PM_LOG_DEBUG("ModuleManager initialized successfully");
    return mObjModuleManager;
 }
 
@@ -52,7 +50,7 @@ bool ModuleManager::loadConfig(const std::string &audioModuleConfigPath)
     {
         if (configJson.hasKey("load_module"))
         {
-            PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT, "found load_module key");
+            PM_LOG_DEBUG("found load_module key");
             JValue moduleInfo = configJson["load_module"];
             if (!moduleInfo.isArray())
             {

@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ bool VolumePolicyInfoParser::loadVolumePolicyJsonConfig()
 
 pbnjson::JValue VolumePolicyInfoParser::getVolumePolicyInfo()
 {
-    PM_LOG_INFO(MSGID_POLICY_CONFIGURATOR, INIT_KVCOUNT, "getVolumePolicyInfo");
+    PM_LOG_DEBUG("getVolumePolicyInfo");
     pbnjson::JValue policyVolumeInfo = pbnjson::Object();
     policyVolumeInfo = fileJsonVolumePolicyConfig["streamDetails"];
     PM_LOG_INFO(MSGID_POLICY_CONFIGURATOR, INIT_KVCOUNT, "Policy info json value is %s",\

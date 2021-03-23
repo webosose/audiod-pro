@@ -111,7 +111,7 @@ void AudioPolicyManager::readPolicyInfo()
     {
         if (mObjPolicyInfoParser->loadVolumePolicyJsonConfig())
         {
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "loadVolumePolicyJsonConfig success");
+            PM_LOG_DEBUG("loadVolumePolicyJsonConfig success");
             pbnjson::JValue policyInfo = mObjPolicyInfoParser->getVolumePolicyInfo();
             if (initializePolicyInfo(policyInfo))
                 PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "initializePolicyInfo success");
@@ -123,13 +123,12 @@ void AudioPolicyManager::readPolicyInfo()
             PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Unable to load VolumePolicyJsonConfig");
     }
     else
-        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mObjPolicyInfoParser is null");
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mObjPolicyInfoParser is null");
 }
 
 bool AudioPolicyManager::initializePolicyInfo(const pbnjson::JValue& policyInfo)
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager::initializePolicyInfo");
+    PM_LOG_DEBUG("AudioPolicyManager::initializePolicyInfo");
     if (!policyInfo.isArray())
     {
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "policyVolumeInfo is not an array");
@@ -193,54 +192,40 @@ void AudioPolicyManager::initStreamVolume()
 
 void AudioPolicyManager::printPolicyInfo()
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager::printPolicyInfo:\n");
+    PM_LOG_DEBUG("AudioPolicyManager::printPolicyInfo");
     for (const auto& elements : mVolumePolicyInfo)
     {
-        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "*************%s*************", elements.streamType.c_str());
-        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "policyVolume:%d", elements.policyVolume);
-        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "priority:%d groupId:%d defaultVolume:%d",\
+        PM_LOG_DEBUG("*************%s*************", elements.streamType.c_str());
+        PM_LOG_DEBUG("policyVolume:%d", elements.policyVolume);
+        PM_LOG_DEBUG("priority:%d groupId:%d defaultVolume:%d",\
             elements.priority, elements.groupId, elements.defaultVolume);
-        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "maxVolume:%d minVolume:%d volumeAdjustable:%d",\
+        PM_LOG_DEBUG("maxVolume:%d minVolume:%d volumeAdjustable:%d",\
              elements.maxVolume, elements.minVolume, (int)elements.volumeAdjustable);
-        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "currentVolume:%d muteStatus:%d source:%s sinkId:%s mixerType:%d ramp:%d",\
+        PM_LOG_DEBUG("currentVolume:%d muteStatus:%d source:%s sinkId:%s mixerType:%d ramp:%d",\
             elements.currentVolume, (int)elements.muteStatus, elements.source.c_str(),\
             elements.sink.c_str(), (int)elements.mixerType, (int)elements.ramp);
-        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "isPolicyInProgress:%d activeStatus:%d category:%s",\
+        PM_LOG_DEBUG("isPolicyInProgress:%d activeStatus:%d category:%s",\
             (int)elements.isPolicyInProgress, (int)elements.isStreamActive, elements.category.c_str());
     }
 }
 
 void AudioPolicyManager::printActivePolicyInfo()
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager::printActivePolicyInfo:\n");
+    PM_LOG_DEBUG("AudioPolicyManager::printActivePolicyInfo:");
     for (const auto& elements : mVolumePolicyInfo)
     {
         if (elements.isPolicyInProgress)
         {
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "*************%s*************", elements.streamType.c_str());
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "policyVolume:%d", elements.policyVolume);
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "priority:%d groupId:%d defaultVolume:%d",\
+            PM_LOG_DEBUG("*************%s*************", elements.streamType.c_str());
+            PM_LOG_DEBUG("policyVolume:%d", elements.policyVolume);
+            PM_LOG_DEBUG("priority:%d groupId:%d defaultVolume:%d",\
                 elements.priority, elements.groupId, elements.defaultVolume);
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "maxVolume:%d minVolume:%d volumeAdjustable:%d",\
+            PM_LOG_DEBUG("maxVolume:%d minVolume:%d volumeAdjustable:%d",\
                  elements.maxVolume, elements.minVolume, (int)elements.volumeAdjustable);
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "currentVolume:%d muteStatus:%d source:%s sinkId:%s mixerType:%d ramp:%d",\
+            PM_LOG_DEBUG("currentVolume:%d muteStatus:%d source:%s sinkId:%s mixerType:%d ramp:%d",\
                 elements.currentVolume, (int)elements.muteStatus, elements.source.c_str(),\
                 elements.sink.c_str(), (int)elements.mixerType, (int)elements.ramp);
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "isPolicyInProgress:%d activeStatus:%d category:%s",\
+            PM_LOG_DEBUG("isPolicyInProgress:%d activeStatus:%d category:%s",\
                 (int)elements.isPolicyInProgress, (int)elements.isStreamActive, elements.category.c_str());
         }
     }
@@ -413,7 +398,7 @@ void AudioPolicyManager::removeVolumePolicy(EVirtualAudioSink audioSink, const s
                             updatePolicyStatus(policyStreamType, false);
                     }
                     else
-                        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        PM_LOG_WARNING(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                         "AudioPolicyManager:removeVolumePolicy policy is not in progress or still other high priority streams are active");
                 }
                 else
@@ -459,7 +444,7 @@ bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volum
                     "AudioPolicyManager:setInputVolume failed");*/
         }
         else
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                 "AudioPolicyManager:Invalid mixer type");
     }
     else
@@ -650,7 +635,7 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
             {
                 if (!audioPolicyManagerInstance->setVolume(sink, volume, \
                     audioPolicyManagerInstance->getMixerType(streamType), ramp))
-                    PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                         "_setInputVolume: failed mixer call");
             }
             status = true;
@@ -660,7 +645,7 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
                 //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(sink, volume, ramp);
             }
             else
-                PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "_setInputVolume: mObjModuleManager is null");
             PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                 "Volume updated successfully");
@@ -679,19 +664,19 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
         {
             if (!isValidStream)
             {
-                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "Audiod Unknown Stream");
                 reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
             }
             else if (!isValidVolume)
             {
-                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "Volume Not in Range");
                 reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
             }
             else
             {
-                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "Audiod internal error");
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
@@ -699,7 +684,7 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
     }
     else
     {
-        PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "AudioPolicyManager instance Null");
         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
     }
@@ -786,8 +771,7 @@ void AudioPolicyManager::notifyGetVolumeSubscribers(const std::string& streamTyp
 
 std::string AudioPolicyManager::getStreamStatus(const std::string& streamType, bool subscribed)
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "getStreamStatus streamType %s subscribed %d", streamType.c_str(), (int)subscribed);
+    PM_LOG_DEBUG("getStreamStatus streamType %s subscribed %d", streamType.c_str(), (int)subscribed);
     pbnjson::JValue streamObjectArray = pbnjson::Array();
     pbnjson::JObject streamObject = pbnjson::JObject();
     pbnjson::JObject finalString = pbnjson::JObject();
@@ -816,8 +800,7 @@ std::string AudioPolicyManager::getStreamStatus(const std::string& streamType, b
 
 std::string AudioPolicyManager::getStreamStatus(bool subscribed)
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "getStreamStatus subscribed %d", (int)subscribed);
+    PM_LOG_DEBUG("getStreamStatus subscribed %d", (int)subscribed);
     pbnjson::JValue streamObjectArray = pbnjson::Array();
     pbnjson::JObject streamObject = pbnjson::JObject();
     pbnjson::JObject finalString = pbnjson::JObject();
@@ -981,7 +964,7 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
             {
                 if (!audioPolicyManagerInstance->setVolume(sink, volume, \
                     audioPolicyManagerInstance->getMixerType(streamType), ramp))
-                    PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                         "_setMediaInputVolume: failed mixer call");
             }
             status = true;
@@ -1086,7 +1069,7 @@ AudioPolicyManager::AudioPolicyManager(ModuleConfig* const pConfObj):mObjModuleM
                                                                      mObjPolicyInfoParser(nullptr),\
                                                                      mObjAudioMixer(nullptr)
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: constructor");
+    PM_LOG_DEBUG("AudioPolicyManager: constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     if (mObjModuleManager)
     {
@@ -1102,7 +1085,7 @@ AudioPolicyManager::AudioPolicyManager(ModuleConfig* const pConfObj):mObjModuleM
 
 AudioPolicyManager::~AudioPolicyManager()
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: destructor");
+    PM_LOG_DEBUG("AudioPolicyManager: destructor");
     if (mObjPolicyInfoParser)
     {
         delete mObjPolicyInfoParser;
@@ -1120,7 +1103,7 @@ void AudioPolicyManager::initialize()
         bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/", InputVolumeMethods, nullptr, &lserror);
         if (!bRetVal || !LSCategorySetData(GetPalmService(), "/", mAudioPolicyManager, &lserror))
         {
-           PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+           PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
             "%s: Registering Service for '%s' category failed", __FUNCTION__, "/");
            lserror.Print(__FUNCTION__, __LINE__);
         }
@@ -1128,7 +1111,7 @@ void AudioPolicyManager::initialize()
         bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/media", MediaInputVolumeMethods, nullptr, &lserror);
         if (!bRetVal || !LSCategorySetData(GetPalmService(), "/media", mAudioPolicyManager, &lserror))
         {
-           PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+           PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
             "%s: Registering Service for '%s' category failed", __FUNCTION__, "/media");
            lserror.Print(__FUNCTION__, __LINE__);
         }

@@ -87,8 +87,7 @@ guint64 getCurrentTimeInMs ()
 
 void registerAudioModule(ModuleInitFunction function)
 {
-    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
-        "%s", __FUNCTION__);
+    PM_LOG_DEBUG("%s", __FUNCTION__);
     if (NULL == sServiceStartList)
     {
        sServiceStartList = (GHookList*) malloc (sizeof (GHookList));
@@ -265,21 +264,17 @@ void oneInitForAll(GMainLoop *loop, LSHandle *handle)
     if (NULL != sInitList)
         g_hook_list_invoke (sInitList, FALSE);
 
-    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
-        "%s: calling all start module functions", __FUNCTION__);
+    PM_LOG_DEBUG("%s: calling all start module functions", __FUNCTION__);
     if (NULL != sModuleStartList)
         g_hook_list_invoke (sModuleStartList, FALSE);
 
-    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
-        "%s: calling all start control functions", __FUNCTION__);
+    PM_LOG_DEBUG("%s: calling all start control functions", __FUNCTION__);
     if (NULL != sControlStartList)
         g_hook_list_invoke (sControlStartList, FALSE);
 
-    PM_LOG_INFO(MSGID_GINIT_FUNTION, INIT_KVCOUNT,\
-        "%s: calling all start service functions", __FUNCTION__);
+    PM_LOG_DEBUG("%s: calling all start service functions", __FUNCTION__);
     if (NULL != sServiceStartList)
         g_hook_list_invoke (sServiceStartList, FALSE);
-
 
     registerCancelSubscription(GetPalmService());
     sCurrentLoop   = NULL;

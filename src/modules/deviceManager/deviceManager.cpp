@@ -36,7 +36,7 @@ DeviceManagerInterface* DeviceManager::getClientDeviceManagerInstance()
 
 bool DeviceManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: event");
+    PM_LOG_DEBUG("DeviceManager: event");
     std::string reply = STANDARD_JSON_SUCCESS;
 
     DeviceManager* deviceManagerObj = DeviceManager::getDeviceManagerInstance();
@@ -62,14 +62,12 @@ DeviceManager* DeviceManager::getDeviceManagerInstance()
 
 DeviceManager::DeviceManager(ModuleConfig* const pConfObj)
 {
-    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, \
-        "DeviceManager constructor");
+    PM_LOG_DEBUG("DeviceManager constructor");
 }
 
 DeviceManager::~DeviceManager()
 {
-    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, \
-        "DeviceManager destructor");
+    PM_LOG_DEBUG("DeviceManager destructor");
 }
 
 LSMethod DeviceManager::deviceManagerMethods[] = {

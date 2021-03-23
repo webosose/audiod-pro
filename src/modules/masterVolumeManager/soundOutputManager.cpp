@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ void SoundOutputManager::readSoundOutputListInfo()
     {
         if (mObjSoundOutputListParser->loadSoundOutputListJsonConfig())
         {
-            PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "loadSoundOutputListJsonConfig success");
+            PM_LOG_DEBUG("loadSoundOutputListJsonConfig success");
             pbnjson::JValue soundOutputListInfo = mObjSoundOutputListParser->getSoundOutputListInfo();
             if (initializeSoundOutputList(soundOutputListInfo))
                 PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "initialize soundOutputListInfo success");
@@ -35,7 +35,7 @@ void SoundOutputManager::readSoundOutputListInfo()
             PM_LOG_ERROR(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "Unable to load SoundOutputListJsonConfig");
     }
     else
-        PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "mObjSoundOutputListParser is null");
+        PM_LOG_ERROR(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "mObjSoundOutputListParser is null");
 }
 
 bool SoundOutputManager::initializeSoundOutputList(const pbnjson::JValue& soundOutputListInfo)
@@ -84,7 +84,7 @@ bool SoundOutputManager::initializeSoundOutputList(const pbnjson::JValue& soundO
 void SoundOutputManager::printSoundOutputListInfo()
 {
     PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT,\
-        "SoundOutputManager::printSoundOutputListInfo: ");
+        "SoundOutputManager::printSoundOutputListInfo:");
     for (const auto &elements: mSoundOutputInfoMap)
     {
          PM_LOG_DEBUG("soundOut:%s volume:%d mute:%d active:%d",\
@@ -150,13 +150,12 @@ bool SoundOutputManager::_SetSoundOut(LSHandle *lshandle, LSMessage *message, vo
             envelopeObj = nullptr;
         }
     }
-
     return true;
 }
 
 bool SoundOutputManager::_updateSoundOutStatus(LSHandle *sh, LSMessage *reply, void *ctx)
 {
-    PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "_updateSoundOutStatus Received");
+    PM_LOG_DEBUG("_updateSoundOutStatus Received");
 
     LSMessageJsonParser msg(reply, NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean))
                                                  REQUIRED_1(returnValue)));
@@ -197,15 +196,14 @@ bool SoundOutputManager::_updateSoundOutStatus(LSHandle *sh, LSMessage *reply, v
             envelopeObj = nullptr;
         }
     }
-    PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "_updateSoundOutStatus Done");
+    PM_LOG_DEBUG("_updateSoundOutStatus Done");
     return returnValue;
 }
 
 SoundOutputManager::SoundOutputManager(): mObjAudioMixer(nullptr), soundMode(""),
                                           mObjSoundOutputListParser(nullptr)
 {
-    PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT,\
-                "SoundOutputManager: constructor");
+    PM_LOG_DEBUG("SoundOutputManager: constructor");
     mObjAudioMixer = AudioMixer::getAudioMixerInstance();
     mObjSoundOutputListParser = new (std::nothrow)SoundOutputListParser();
     if (mObjSoundOutputListParser)
@@ -218,8 +216,7 @@ SoundOutputManager::SoundOutputManager(): mObjAudioMixer(nullptr), soundMode("")
 
 SoundOutputManager::~SoundOutputManager()
 {
-    PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT,\
-               "SoundOutputManager: destructor");
+    PM_LOG_DEBUG("SoundOutputManager: destructor");
     if (mObjSoundOutputListParser)
     {
         delete mObjSoundOutputListParser;

@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,14 +20,12 @@
 
 SoundOutputListParser::SoundOutputListParser()
 {
-    PM_LOG_INFO(MSGID_SOUNDOUTPUT_LIST_PARSER, INIT_KVCOUNT,\
-        "SoundOutputListParser Constructor called");
+    PM_LOG_DEBUG("SoundOutputListParser Constructor");
 }
 
 SoundOutputListParser::~SoundOutputListParser()
 {
-    PM_LOG_INFO(MSGID_SOUNDOUTPUT_LIST_PARSER, INIT_KVCOUNT,\
-        "SoundOutputListParser destructor called");
+    PM_LOG_DEBUG("SoundOutputListParser destructor");
 }
 
 bool SoundOutputListParser::loadSoundOutputListJsonConfig()
@@ -52,7 +50,7 @@ bool SoundOutputListParser::loadSoundOutputListJsonConfig()
 
 pbnjson::JValue SoundOutputListParser::getSoundOutputListInfo()
 {
-    PM_LOG_INFO(MSGID_SOUNDOUTPUT_LIST_PARSER, INIT_KVCOUNT, "getSoundOutputListInfo");
+    PM_LOG_DEBUG("getSoundOutputListInfo");
     pbnjson::JValue soundOutputListInfo = pbnjson::Object();
     soundOutputListInfo = fileJsonSoundOutputListConfig["soundOutputList"];
     PM_LOG_INFO(MSGID_SOUNDOUTPUT_LIST_PARSER, INIT_KVCOUNT, "Soundoutput list info json value is %s",\
