@@ -329,15 +329,14 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
 
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "muteVolume with soundout: %s mute status: %d", \
                 soundOutput.c_str(),(int)mute);
-    OSEMasterVolumeManager* OSEMasterVolumeManagerInstance = OSEMasterVolumeManager::getInstance();
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     std::string callerId = LSMessageGetSenderServiceName(message);
     if (DISPLAY_TWO == display)
     {
         if (audioMixerObj && audioMixerObj->setMute(displayId, mute))
         {
-            OSEMasterVolumeManagerInstance->displayTwoMuteStatus = mute;
-            OSEMasterVolumeManagerInstance->notifyVolumeSubscriber(displayId, callerId);
+            displayTwoMuteStatus = mute;
+            notifyVolumeSubscriber(displayId, callerId);
             pbnjson::JValue muteVolumeResponse = pbnjson::Object();
             muteVolumeResponse.put("returnValue", true);
             muteVolumeResponse.put("mute", mute);
@@ -362,13 +361,17 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
             PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Successfully set mute volume %d for display: %d", \
                         mute, displayId);
             if (DEFAULT_ONE_DISPLAY_ID == displayId)
-                OSEMasterVolumeManagerInstance->displayOneMuteStatus = mute;
+            {
+                displayOneMuteStatus = mute;
+                notifyVolumeSubscriber(displayId, callerId);
+            }
             else
             {
-                OSEMasterVolumeManagerInstance->displayOneMuteStatus = mute;
-                OSEMasterVolumeManagerInstance->displayTwoMuteStatus = mute;
+                displayOneMuteStatus = mute;
+                displayTwoMuteStatus = mute;
+                notifyVolumeSubscriber(DEFAULT_ONE_DISPLAY_ID, callerId);
+                notifyVolumeSubscriber(DEFAULT_TWO_DISPLAY_ID, callerId);
             }
-            OSEMasterVolumeManagerInstance->notifyVolumeSubscriber(displayId, callerId);
         }
         else
         {
