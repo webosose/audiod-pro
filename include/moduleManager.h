@@ -40,16 +40,11 @@ class ModuleManager
         ModuleManager();
 
         std::multimap<EModuleEventType, ModuleInterface*> mapEventsSubscribers;
-        using mapEventsSubscribersItr = std::multimap<EModuleEventType, ModuleInterface*>::iterator;
         std::map<std::string, ModuleInterface*> mModuleHandlersMap;
-        std::map<std::string, ModuleInterface*> getRegisteredHandlersMap();
-        using mapEventsSubscribersPair = std::pair<mapEventsSubscribersItr, mapEventsSubscribersItr>;
         std::vector<std::string> mSupportedModulesVector;
         ModuleFactory *mModuleFactory;
         using mModulesCreatorMap = std::map<std::string, pFuncModuleCreator>;
         using mModulesCreatorMapItr = std::map<std::string, pFuncModuleCreator>::iterator;
-        using mRegisteredHandlersMap = std::map<std::string, ModuleInterface*>;
-        using mRegisteredHandlersMapItr = std::map<std::string, ModuleInterface*>::iterator;
 
     public:
         bool createModules();

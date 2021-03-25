@@ -139,12 +139,6 @@ bool ModuleManager::removeModules()
     return true;
 }
 
-std::map<std::string, ModuleInterface*> ModuleManager::getRegisteredHandlersMap()
-{
-    PM_LOG_DEBUG("ModuleManager::getRegisteredHandlersMap");
-    return mModuleHandlersMap;
-}
-
 ModuleManager::~ModuleManager()
 {
     PM_LOG_INFO(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
@@ -208,9 +202,11 @@ void ModuleManager::subscribeServerStatusInfo(ModuleInterface* module, SERVER_TY
 void ModuleManager::handleEvent(events::EVENTS_T *ev)
 {
     PM_LOG_DEBUG("handleEvent for eventType:%d", (int)ev->eventName);
-    mapEventsSubscribersPair eventPairs = mapEventsSubscribers.equal_range(ev->eventName);
-    for (mapEventsSubscribersItr eventsItr = eventPairs.first; eventsItr != eventPairs.second; eventsItr++)
+    for (auto eventsItr = mapEventsSubscribers.begin(); eventsItr != mapEventsSubscribers.end(); ++eventsItr)
     {
-        (eventsItr->second)->handleEvent(ev);
+        if (ev->eventName == eventsItr->first)
+        {
+            (eventsItr->second)->handleEvent(ev);
+        }
     }
 }
