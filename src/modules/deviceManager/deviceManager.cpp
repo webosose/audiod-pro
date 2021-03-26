@@ -21,26 +21,15 @@ bool DeviceManager::mIsObjRegistered = DeviceManager::RegisterObject();
 
 DeviceManager* DeviceManager::mObjDeviceManager = nullptr;
 DeviceManagerInterface* DeviceManager::mClientDeviceManagerInstance = nullptr;
-
-void DeviceManager::setInstance(DeviceManagerInterface* clientDeviceManagerInstance)
-{
-    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: setInstance");
-    DeviceManager::mClientDeviceManagerInstance = clientDeviceManagerInstance;
-}
-
-DeviceManagerInterface* DeviceManager::getClientDeviceManagerInstance()
-{
-    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: getClientDeviceManagerInstance");
-    return mClientDeviceManagerInstance;
-}
+DeviceManagerInterface* DeviceManagerInterface::mClientInstance = nullptr;
+pFuncCreateClient DeviceManagerInterface::mClientFuncPointer = nullptr;
 
 bool DeviceManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_DEBUG("DeviceManager: event");
     std::string reply = STANDARD_JSON_SUCCESS;
 
-    DeviceManager* deviceManagerObj = DeviceManager::getDeviceManagerInstance();
-    if (deviceManagerObj && deviceManagerObj->getClientDeviceManagerInstance()->event(lshandle, message, ctx))
+    if (mClientDeviceManagerInstance && mClientDeviceManagerInstance->event(lshandle, message, ctx))
     {
         PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: event call to device manager client object is success");
     }
@@ -63,11 +52,19 @@ DeviceManager* DeviceManager::getDeviceManagerInstance()
 DeviceManager::DeviceManager(ModuleConfig* const pConfObj)
 {
     PM_LOG_DEBUG("DeviceManager constructor");
+    mClientDeviceManagerInstance = DeviceManagerInterface::getClientInstance();
+    if (!mClientDeviceManagerInstance)
+        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "mClientDeviceManagerInstance is nullptr");
 }
 
 DeviceManager::~DeviceManager()
 {
     PM_LOG_DEBUG("DeviceManager destructor");
+    if (mClientDeviceManagerInstance)
+    {
+        delete mClientDeviceManagerInstance;
+        mClientDeviceManagerInstance = nullptr;
+    }
 }
 
 LSMethod DeviceManager::deviceManagerMethods[] = {

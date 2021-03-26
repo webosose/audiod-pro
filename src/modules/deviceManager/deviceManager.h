@@ -43,8 +43,6 @@ class DeviceManager : public ModuleInterface
         static DeviceManager* getDeviceManagerInstance();
         static DeviceManager* mObjDeviceManager;
         static DeviceManagerInterface* mClientDeviceManagerInstance;
-        static void setInstance(DeviceManagerInterface* clientDeviceManagerInstance);
-        DeviceManagerInterface* getClientDeviceManagerInstance();
         static ModuleInterface* CreateObject(ModuleConfig* const pConfObj)
         {
             if (mIsObjRegistered)

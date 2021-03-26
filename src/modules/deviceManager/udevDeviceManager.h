@@ -22,7 +22,6 @@
 #include "log.h"
 #include "audioMixer.h"
 #include "deviceManagerInterface.h"
-#include "deviceManager.h"
 
 #define MSGID_UDEV_MANAGER                           "UDEV_EVENT_MANAGER"              //For UDEV Device event manager
 
@@ -31,19 +30,25 @@ class UdevDeviceManager : public DeviceManagerInterface
     private:
         UdevDeviceManager(const UdevDeviceManager&) = delete;
         UdevDeviceManager& operator=(const UdevDeviceManager&) = delete;
-        AudioMixer *mObjAudioMixer;
         static bool mIsObjRegistered;
-        static bool CreateInstance()
+        //Register Object to object factory. This is called automatically
+        static bool RegisterObject()
         {
-            PM_LOG_INFO(MSGID_UDEV_MANAGER, INIT_KVCOUNT, "UdevDeviceManager: CreateInstance");
-            DeviceManager::setInstance(getInstance());
-            return true;
+            return (DeviceManagerInterface::Register(&UdevDeviceManager::CreateObject));
         }
 
     public:
          UdevDeviceManager();
         ~UdevDeviceManager();
-        static UdevDeviceManager* getInstance();
+        static DeviceManagerInterface* CreateObject()
+        {
+            if (mIsObjRegistered)
+            {
+                PM_LOG_DEBUG("CreateObject - Creating the UdevDeviceManager handler");
+                return new(std::nothrow) UdevDeviceManager();
+            }
+            return nullptr;
+        }
         bool event(LSHandle *lshandle, LSMessage *message, void *ctx);
 };
 #endif //_UDEV_DEVICE_MANAGER_H_

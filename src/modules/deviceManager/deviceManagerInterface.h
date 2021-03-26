@@ -17,14 +17,34 @@
 #ifndef DEVICEMANAGER_INTERFACE_H
 #define DEVICEMANAGER_INTERFACE_H
 
-#include "utils.h"
-#include "messageUtils.h"
+class DeviceManagerInterface;
+
+typedef DeviceManagerInterface* (*pFuncCreateClient)();
 
 class DeviceManagerInterface {
 
 public:
+
+    static DeviceManagerInterface *mClientInstance;
+    static pFuncCreateClient mClientFuncPointer;
     DeviceManagerInterface(){};
     virtual ~DeviceManagerInterface() = default;
+
+    static bool Register(pFuncCreateClient clientFunc)
+    {
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManagerInterface: Register");
+        mClientFuncPointer = clientFunc;
+        if (mClientFuncPointer)
+            return true;
+        return false;
+    }
+
+    static DeviceManagerInterface* getClientInstance()
+    {
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManagerInterface: getClientInstance");
+        mClientInstance = mClientFuncPointer();
+        return mClientInstance;
+    }
 
     virtual bool event(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
 };

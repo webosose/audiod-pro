@@ -19,13 +19,7 @@
 
 #define SYSFS_HEADSET_MIC "/sys/devices/virtual/switch/h2w/state"
 
-bool UdevDeviceManager::mIsObjRegistered = UdevDeviceManager::CreateInstance();
-
-UdevDeviceManager* UdevDeviceManager::getInstance()
-{
-    static UdevDeviceManager objUdevDeviceManager;
-    return &objUdevDeviceManager;
-}
+bool UdevDeviceManager::mIsObjRegistered = UdevDeviceManager::RegisterObject();
 
 bool UdevDeviceManager::event(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
@@ -43,63 +37,54 @@ bool UdevDeviceManager::event(LSHandle *lshandle, LSMessage *message, void *ctx)
     if (!msg.get("device_no", device_no))
         device_no = 0;
     std::string event;
-    UdevDeviceManager* objUdevDeviceManager = UdevDeviceManager::getInstance();
-    if (objUdevDeviceManager)
+    if (!msg.get("event", event))
     {
-        if (!msg.get("event", event)) {
-            reply = MISSING_PARAMETER_ERROR(event, string);
-        }
-        else
-        {
-            mObjAudioMixer = AudioMixer::getAudioMixerInstance();
-            if (mObjAudioMixer)
-            {
-                if (event == "headset-removed") {
-                    returnValue = mObjAudioMixer->programHeadsetRoute(0);
-                    if (false == returnValue)
-                        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
-                }
-                else if (event == "headset-inserted") {
-                    returnValue = mObjAudioMixer->programHeadsetRoute(1);
-                    if (false == returnValue)
-                        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
-                }
-                else if (event == "usb-mic-inserted") {
-                    returnValue = mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 1);
-                    if (false == returnValue)
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                }
-                else if (event == "usb-mic-removed") {
-                    returnValue = mObjAudioMixer->loadUSBSinkSource('j', soundcard_no, device_no, 0);
-                    if (false == returnValue)
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                }
-                else if (event == "usb-headset-inserted") {
-                    returnValue = mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 1);
-                    if (false == returnValue)
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                }
-                else if (event == "usb-headset-removed") {
-                    returnValue = mObjAudioMixer->loadUSBSinkSource('z', soundcard_no, device_no, 0);
-                    if (false == returnValue)
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                }
-                else
-                    reply = INVALID_PARAMETER_ERROR(event, string);
-            }
-            else
-            {
-                PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                    "loadUdevDeviceManager: mObjAudioMixer is null");
-                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
-            }
-        }
+        reply = MISSING_PARAMETER_ERROR(event, string);
     }
     else
     {
-        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-            "loadUdevDeviceManager: mObjUdevDeviceManager is null");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+        AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
+        if (audioMixerObj)
+        {
+            if (event == "headset-removed") {
+                returnValue = audioMixerObj->programHeadsetRoute(0);
+                if (false == returnValue)
+                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+            }
+            else if (event == "headset-inserted") {
+                returnValue = audioMixerObj->programHeadsetRoute(1);
+                if (false == returnValue)
+                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+            }
+            else if (event == "usb-mic-inserted") {
+                returnValue = audioMixerObj->loadUSBSinkSource('j', soundcard_no, device_no, 1);
+                if (false == returnValue)
+                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+            }
+            else if (event == "usb-mic-removed") {
+                returnValue = audioMixerObj->loadUSBSinkSource('j', soundcard_no, device_no, 0);
+                if (false == returnValue)
+                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+            }
+            else if (event == "usb-headset-inserted") {
+                returnValue = audioMixerObj->loadUSBSinkSource('z', soundcard_no, device_no, 1);
+                if (false == returnValue)
+                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+            }
+            else if (event == "usb-headset-removed") {
+                returnValue = audioMixerObj->loadUSBSinkSource('z', soundcard_no, device_no, 0);
+                if (false == returnValue)
+                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
+            }
+            else
+                reply = INVALID_PARAMETER_ERROR(event, string);
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+                "loadUdevDeviceManager: audioMixerObj is null");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+        }
     }
     CLSError lserror;
     if (!LSMessageReply(lshandle, message, reply, &lserror))
@@ -107,7 +92,7 @@ bool UdevDeviceManager::event(LSHandle *lshandle, LSMessage *message, void *ctx)
     return true;
 }
 
-UdevDeviceManager::UdevDeviceManager() : mObjAudioMixer(nullptr)
+UdevDeviceManager::UdevDeviceManager()
 {
     PM_LOG_DEBUG("UdevDeviceManager constructor");
 }
