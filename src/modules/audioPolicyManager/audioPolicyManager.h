@@ -102,6 +102,7 @@ class AudioPolicyManager : public ModuleInterface
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
         void eventCurrentInputVolume(EVirtualAudioSink audioSink, const int& volume);
+        void notifyInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp);
         std::string getStreamStatus(const std::string& streamType, bool subscribed);
         std::string getStreamStatus(bool subscribed);
 };

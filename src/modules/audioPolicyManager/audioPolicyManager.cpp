@@ -640,13 +640,7 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
             }
             status = true;
             audioPolicyManagerInstance->updateCurrentVolume(streamType, volume);
-            if (audioPolicyManagerInstance->mObjModuleManager)
-            {
-                //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(sink, volume, ramp);
-            }
-            else
-                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                    "_setInputVolume: mObjModuleManager is null");
+            audioPolicyManagerInstance->notifyInputVolume(sink, volume, ramp);
             PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                 "Volume updated successfully");
         }
@@ -904,6 +898,19 @@ void AudioPolicyManager::notifyGetStreamStatusSubscribers(const std::string& pay
     }
 }
 
+void AudioPolicyManager::notifyInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+               "AudioPolicyManager notifyInputVolume audioSink = %d volume = %d", (int)audioSink, volume);
+    events::EVENT_INPUT_VOLUME_T eventInputVolume;
+    eventInputVolume.eventName = utils::eEventInputVolume;
+    eventInputVolume.audioSink = audioSink ;
+    eventInputVolume.volume = volume;
+    eventInputVolume.ramp = ramp;
+    if (mObjModuleManager)
+        mObjModuleManager->handleEvent((events::EVENTS_T*)&eventInputVolume);
+}
+
 bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setMediaInputVolume");
@@ -919,6 +926,7 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         bool isValidVolume = false;
         bool isValidStream = false;
         bool isStreamActive = false;
+        bool isValidSessionId = false;
         int volume = 0;
         bool ramp = false;
         std::string streamType = " ";
@@ -957,8 +965,12 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         {
             isStreamActive = true;
         }
+        if ((DISPLAY_ONE == sessionId) || (DISPLAY_TWO == sessionId))
+        {
+            isValidSessionId = true;
+        }
 
-        if (isValidStream && isValidVolume)
+        if (isValidStream && isValidVolume && isValidSessionId)
         {
             if (isStreamActive)
             {
@@ -969,13 +981,7 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
             }
             status = true;
             audioPolicyManagerInstance->updateCurrentVolume(streamType, volume);
-            if (audioPolicyManagerInstance->mObjModuleManager)
-            {
-                //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(sink, volume, ramp);
-            }
-            else
-                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                    "_setMediaInputVolume: mObjModuleManager is null");
+            audioPolicyManagerInstance->notifyInputVolume(sink, volume, ramp);
 
             if (DISPLAY_ONE == sessionId)
             {
@@ -997,12 +1003,8 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
 
                 audioPolicyManagerInstance->updateCurrentVolume("pmedia", volume);
                 audioPolicyManagerInstance->updateCurrentVolume("pdefaultapp", volume);
-
-                if (audioPolicyManagerInstance->mObjModuleManager)
-                {
-                    //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(defaultappSink, volume, ramp);
-                    //audioPolicyManagerInstance->mObjModuleManager->notifyInputVolume(mediaSink, volume, ramp);
-                }
+                audioPolicyManagerInstance->notifyInputVolume(defaultappSink, volume, ramp);
+                audioPolicyManagerInstance->notifyInputVolume(mediaSink, volume, ramp);
             }
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
         }
@@ -1025,6 +1027,12 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
                 PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                     "Volume Not in Range");
                 reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
+            }
+            else if (!isValidSessionId)
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "sessionId Not in Range");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "sessionId Not in Range");
             }
             else
             {
