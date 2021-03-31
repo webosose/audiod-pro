@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020 LG Electronics Company.
+*      Copyright (c) 2020-2021 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -94,8 +94,8 @@ class AudioMixer : public MixerInterface
         bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
         bool _connectSocket();
         bool suspendSink(int sink);
-        bool programLoadBluetooth(const char * address , const char *profile);
-        bool programUnloadBluetooth(const char *profile);
+        bool programLoadBluetooth(const char * address , const char *profile, const int displayID);
+        bool programUnloadBluetooth(const char *profile, const int displayID);
         bool programA2dpSource (const bool& a2dpSource);
         bool setRouting(const ConstString & scenario);
         bool programSource(char cmd, int sink, int value);

@@ -283,7 +283,7 @@ bool PulseAudioMixer::suspendSink(int sink)
     return programSource ('s', sink, sink);
 }
 
-bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *profile)
+bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *profile, const int displayID)
 {
     char cmd = 'l';
     char buffer[SIZE_MESG_TO_PULSE] ;
@@ -314,16 +314,10 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
        ret = true;
     }
 
-    if (mObjMixerCallBack)
-        mObjMixerCallBack->callBackMasterVolumeStatus();
-    else
-        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                     "programLoadBluetooth: mObjMixerCallBack is null");
-
     return ret;
 }
 
-bool PulseAudioMixer::programUnloadBluetooth (const char *profile)
+bool PulseAudioMixer::programUnloadBluetooth (const char *profile, const int displayID)
 {
     char cmd = 'u';
     char buffer[SIZE_MESG_TO_PULSE];

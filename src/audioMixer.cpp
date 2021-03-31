@@ -610,11 +610,11 @@ bool AudioMixer::suspendSink(int sink)
     }
 }
 
-bool AudioMixer::programLoadBluetooth(const char * address , const char *profile)
+bool AudioMixer::programLoadBluetooth(const char * address , const char *profile, const int displayID)
 {
     PM_LOG_DEBUG("AudioMixer: programLoadBluetooth");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programLoadBluetooth(address, profile);
+        return mObjPulseAudioMixer->programLoadBluetooth(address, profile, displayID);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programLoadBluetooth: mObjPulseAudioMixer is null");
@@ -622,11 +622,11 @@ bool AudioMixer::programLoadBluetooth(const char * address , const char *profile
     }
 }
 
-bool AudioMixer::programUnloadBluetooth(const char *profile)
+bool AudioMixer::programUnloadBluetooth(const char *profile, const int displayID)
 {
     PM_LOG_DEBUG("AudioMixer: programUnloadBluetooth");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programUnloadBluetooth(profile);
+        return mObjPulseAudioMixer->programUnloadBluetooth(profile, displayID);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programUnloadBluetooth: mObjPulseAudioMixer is null");

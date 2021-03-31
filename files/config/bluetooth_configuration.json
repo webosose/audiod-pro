@@ -1,0 +1,14 @@
+{
+    "configuration": [
+    {
+        "displays":2,
+        "adapters":2,
+        "adapterNameKey":"interfaceName",
+        "adapterNames":[
+            "hci0",
+            "hci1"
+        ],
+        "a2dpAdapterName":"hci1"
+    }
+   ]
+}

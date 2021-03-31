@@ -141,6 +141,7 @@ SET (modules_files
     install(FILES files/config/audiod_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_module_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_sound_output_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
+    install(FILES files/config/bluetooth_configuration.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}

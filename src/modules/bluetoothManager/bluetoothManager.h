@@ -35,16 +35,32 @@
 #define BT_A2DP_GET_STATUS      "luna://com.webos.service.bluetooth2/a2dp/getStatus"
 #define BT_ADAPTER_GET_STATUS   "luna://com.webos.service.bluetooth2/adapter/getStatus"
 
+typedef std::map<std::string, bool> adapterInfo;
+typedef std::map<int, std::string> adapterDisplayIDMap;
+typedef std::map<std::string, int> adapterAddressDisplayIDMap;
+typedef std::vector<std::string> connectedAddressVector;
+
+#define CONFIG_DIR_PATH "/etc/palm/audiod"
+
+#define BLUETOOTH_CONFIG "bluetooth_configuration.json"
+
 class BluetoothManager : public ModuleInterface
 {
     private:
 
         bool mA2dpConnected;
         bool mA2dpSource;
-        bool mDefaultDeviceConnected;
+        int mDisplayID;
         std::string mConnectedDevice;
-        std::string mDefaultAdapterAddress;
-        std::string mSecondAdapterAddress;
+        std::string mAdapterNameKey;
+        std::string mA2dpAdapterName;
+
+        pbnjson::JValue fileJsonBluetoothConfig;
+        adapterInfo mAdapterNamesMap;
+        adapterInfo mAdapterSubscriptionStatusMap;
+        adapterDisplayIDMap mAdapterDisplayIDMap;
+        adapterAddressDisplayIDMap mAdapterAddressDisplayIDMap;
+        connectedAddressVector mConnectedAddressVector;
 
         BluetoothManager (const BluetoothManager&) = delete;
         BluetoothManager& operator=(const BluetoothManager&) = delete;
@@ -75,7 +91,7 @@ class BluetoothManager : public ModuleInterface
         }
         void initialize();
         void deInitialize();
-        void handleEvent(events::EVENTS_T* ev);
+        void handleEvent(events::EVENTS_T* event);
 
         void eventServerStatusInfo (SERVER_TYPE_E serviceName, bool connected);
         void eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message);
@@ -87,5 +103,8 @@ class BluetoothManager : public ModuleInterface
         void a2dpDeviceGetStatus(LSMessage *message);
         void btA2DPSourceGetStatus(LSMessage *message);
         void setBluetoothA2DPSource (bool state);
+
+        bool readBluetoothConfigurationInfo();
+        bool initializeBluetoothConfigurationInfo();
 };
 #endif //_BLUETOOTH_MANAGER_

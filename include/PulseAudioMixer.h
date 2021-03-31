@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 LG Electronics, Inc.
+// Copyright (c) 2012-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -94,8 +94,8 @@ public:
     bool programSource(char cmd, int sink, int value);
     void openCloseSink(EVirtualAudioSink sink, bool openNotClose);
     void setNREC(bool value);
-    bool programLoadBluetooth (const char * address , const char *profile);
-    bool programUnloadBluetooth (const char *profile);
+    bool programLoadBluetooth (const char * address , const char *profile, const int displayID);
+    bool programUnloadBluetooth (const char *profile, const int displayID);
     bool programA2dpSource (const bool& a2dpSource);
     bool setRouting(const ConstString & scenario);
     int loopback_set_parameters(const char * value);
