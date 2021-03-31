@@ -17,6 +17,13 @@
 #ifndef DEVICEMANAGER_INTERFACE_H
 #define DEVICEMANAGER_INTERFACE_H
 
+typedef struct
+{
+    std::string event;
+    int soundCardNumber;
+    int deviceNumber;
+}Device;
+
 class DeviceManagerInterface;
 
 typedef DeviceManagerInterface* (*pFuncCreateClient)();
@@ -46,7 +53,8 @@ public:
         return mClientInstance;
     }
 
-    virtual bool event(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
+    virtual std::string onDeviceAdded(Device *device) = 0;
+    virtual std::string onDeviceRemoved(Device *device) = 0;
 };
 
 #endif //DEVICEMANAGER_INTERFACE_H

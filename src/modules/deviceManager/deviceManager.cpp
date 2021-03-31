@@ -28,19 +28,55 @@ bool DeviceManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_DEBUG("DeviceManager: event");
     std::string reply = STANDARD_JSON_SUCCESS;
-
-    if (mClientDeviceManagerInstance && mClientDeviceManagerInstance->event(lshandle, message, ctx))
+    LSMessageJsonParser    msg(message, SCHEMA_3(REQUIRED(event, string),\
+        OPTIONAL(soundcard_no, integer),OPTIONAL(device_no, integer)));
+    if (!msg.parse(__FUNCTION__, lshandle))
+        return true;
+    //read optional parameters with appropriate default values
+    int soundcard_no = -1;
+    int device_no = -1;
+    if (!msg.get("soundcard_no", soundcard_no))
+        soundcard_no = 0;
+    if (!msg.get("device_no", device_no))
+        device_no = 0;
+    std::string event;
+    if (!msg.get("event", event))
     {
-        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: event call to device manager client object is success");
+        reply = MISSING_PARAMETER_ERROR(event, string);
     }
     else
     {
-        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Client DeviceManagerInstance is nullptr");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "DeviceManager Instance is nullptr");
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-            lserror.Print(__FUNCTION__, __LINE__);
+        if (mClientDeviceManagerInstance)
+        {
+            Device device;
+            device.event = event;
+            device.soundCardNumber = soundcard_no;
+            device.deviceNumber = device_no;
+            if ("headset-inserted" == event || "usb-mic-inserted" == event || "usb-headset-inserted" == event)
+            {
+                reply = mClientDeviceManagerInstance->onDeviceAdded(&device);
+                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: device added event call to device manager client object is success");
+            }
+            else if ("headset-removed" == event || "usb-mic-removed" == event || "usb-headset-removed" == event)
+            {
+                reply = mClientDeviceManagerInstance->onDeviceRemoved(&device);
+                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: device removed event call to device manager client object is success");
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Invalid device event received");
+                reply = INVALID_PARAMETER_ERROR(event, string);
+            }
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Client DeviceManagerInstance is nullptr");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "DeviceManager Instance is nullptr");
+        }
     }
+    CLSError lserror;
+    if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        lserror.Print(__FUNCTION__, __LINE__);
     return true;
 }
 

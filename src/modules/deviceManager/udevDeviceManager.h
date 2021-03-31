@@ -49,6 +49,7 @@ class UdevDeviceManager : public DeviceManagerInterface
             }
             return nullptr;
         }
-        bool event(LSHandle *lshandle, LSMessage *message, void *ctx);
+        std::string onDeviceAdded(Device *device);
+        std::string onDeviceRemoved(Device *device);
 };
 #endif //_UDEV_DEVICE_MANAGER_H_

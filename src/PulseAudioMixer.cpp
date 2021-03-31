@@ -392,7 +392,7 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     return ret;
 }
 
-bool PulseAudioMixer::programHeadsetRoute(int route) {
+bool PulseAudioMixer::programHeadsetRoute(EHeadsetState route) {
     char cmd = 'w';
     char buffer[SIZE_MESG_TO_PULSE]="";
     bool ret  = false;
@@ -403,9 +403,9 @@ bool PulseAudioMixer::programHeadsetRoute(int route) {
     }
 
     PM_LOG_DEBUG("programHeadsetState sending message");
-    if (0 == route)
+    if (eHeadsetState_None == route)
         snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, eHeadsetState_None);
-    else if (1 == route)
+    else if (eHeadsetState_Headset == route)
         snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", cmd, eHeadsetState_Headset);
     else
     {

@@ -21,75 +21,66 @@
 
 bool UdevDeviceManager::mIsObjRegistered = UdevDeviceManager::RegisterObject();
 
-bool UdevDeviceManager::event(LSHandle *lshandle, LSMessage *message, void *ctx)
+std::string UdevDeviceManager::onDeviceAdded(Device *device)
 {
-    bool returnValue = false;
-    LSMessageJsonParser    msg(message, SCHEMA_3(REQUIRED(event, string),\
-        OPTIONAL(soundcard_no, integer),OPTIONAL(device_no, integer)));
-    if (!msg.parse(__FUNCTION__, lshandle))
-        return true;
-    const gchar * reply = STANDARD_JSON_SUCCESS;
-    //read optional parameters with appropriate default values
-    int soundcard_no = 0;
-    int device_no = 0;
-    if (!msg.get("soundcard_no", soundcard_no))
-        soundcard_no = 0;
-    if (!msg.get("device_no", device_no))
-        device_no = 0;
-    std::string event;
-    if (!msg.get("event", event))
+    std::string reply = STANDARD_JSON_SUCCESS;
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
+    bool connected = true;
+    if (audioMixerObj)
     {
-        reply = MISSING_PARAMETER_ERROR(event, string);
+        if (device->event == "headset-inserted") {
+            if (!audioMixerObj->programHeadsetRoute(eHeadsetState_Headset))
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+        }
+        else if (device->event == "usb-mic-inserted") {
+            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected))
+                reply = INVALID_PARAMETER_ERROR(device->soundCardNumber, integer);
+        }
+        else if (device->event == "usb-headset-inserted") {
+            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected))
+                reply = INVALID_PARAMETER_ERROR(device->soundCardNumber, integer);
+        }
+        else
+            reply = INVALID_PARAMETER_ERROR(device->event, string);
     }
     else
     {
-        AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
-        if (audioMixerObj)
-        {
-            if (event == "headset-removed") {
-                returnValue = audioMixerObj->programHeadsetRoute(0);
-                if (false == returnValue)
-                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
-            }
-            else if (event == "headset-inserted") {
-                returnValue = audioMixerObj->programHeadsetRoute(1);
-                if (false == returnValue)
-                    reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
-            }
-            else if (event == "usb-mic-inserted") {
-                returnValue = audioMixerObj->loadUSBSinkSource('j', soundcard_no, device_no, 1);
-                if (false == returnValue)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-            }
-            else if (event == "usb-mic-removed") {
-                returnValue = audioMixerObj->loadUSBSinkSource('j', soundcard_no, device_no, 0);
-                if (false == returnValue)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-            }
-            else if (event == "usb-headset-inserted") {
-                returnValue = audioMixerObj->loadUSBSinkSource('z', soundcard_no, device_no, 1);
-                if (false == returnValue)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-            }
-            else if (event == "usb-headset-removed") {
-                returnValue = audioMixerObj->loadUSBSinkSource('z', soundcard_no, device_no, 0);
-                if (false == returnValue)
-                    reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-            }
-            else
-                reply = INVALID_PARAMETER_ERROR(event, string);
+        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+            "onDeviceAdded: audioMixerObj is null");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+    }
+    return reply;
+}
+
+std::string UdevDeviceManager::onDeviceRemoved(Device *device)
+{
+    std::string reply = STANDARD_JSON_SUCCESS;
+    AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
+    bool connected = false;
+    if (audioMixerObj)
+    {
+        if (device->event == "headset-removed") {
+            if (!audioMixerObj->programHeadsetRoute(eHeadsetState_None))
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+        }
+        else if (device->event == "usb-mic-removed") {
+            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected))
+                reply = INVALID_PARAMETER_ERROR(device->soundCardNumber, integer);
+        }
+        else if (device->event == "usb-headset-removed") {
+            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected))
+                reply = INVALID_PARAMETER_ERROR(device->soundCardNumber, integer);
         }
         else
-        {
-            PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                "loadUdevDeviceManager: audioMixerObj is null");
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
-        }
+            reply = INVALID_PARAMETER_ERROR(device->event, string);
     }
-    CLSError lserror;
-    if (!LSMessageReply(lshandle, message, reply, &lserror))
-        lserror.Print(__FUNCTION__, __LINE__);
-    return true;
+    else
+    {
+        PM_LOG_ERROR(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
+            "onDeviceRemoved: audioMixerObj is null");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+    }
+    return reply;
 }
 
 UdevDeviceManager::UdevDeviceManager()

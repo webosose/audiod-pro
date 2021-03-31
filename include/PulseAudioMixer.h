@@ -81,7 +81,7 @@ public:
     void playDtmf(const char *snd, EVirtualAudioSink sink) ;
     void playDtmf(const char *snd, const char* sink) ;
     void stopDtmf();
-    bool programHeadsetRoute (int route);
+    bool programHeadsetRoute (EHeadsetState route);
     bool externalSoundcardPathCheck (std::string filename,  int status);
     bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
     /// These should really be private, but they're needed for global callbacks...

@@ -550,7 +550,7 @@ bool AudioMixer::playSound(const char *snd, EVirtualAudioSink sink, \
     }
 }
 
-bool AudioMixer::programHeadsetRoute(int route)
+bool AudioMixer::programHeadsetRoute(EHeadsetState route)
 {
     PM_LOG_DEBUG("AudioMixer: programHeadsetRoute");
     if (mObjPulseAudioMixer)
