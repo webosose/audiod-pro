@@ -110,7 +110,7 @@ void lunaEventSubscriber::handleEvent(events::EVENTS_T* event)
         default:
         {
             PM_LOG_WARNING(MSGID_LUNA_EVENT_SUBSCRIBER, INIT_KVCOUNT,\
-                "subscribe:Unknown event");
+                "handleEvent:Unknown event");
         }
         break;
     }
@@ -140,7 +140,7 @@ bool lunaEventSubscriber::subscriptionToKeyCallback(LSHandle *lshandle, LSMessag
         eventKeyInfo.eventName = eEventToSubscribe;
         eventKeyInfo.type = eEventToSubscribe;
         eventKeyInfo.message = message;
-        pInstance->handleEvent((events::EVENTS_T*)&eventKeyInfo);
+        pInstance->publishModuleEvent((events::EVENTS_T*)&eventKeyInfo);
     }
     else
     {
@@ -166,7 +166,7 @@ bool lunaEventSubscriber::serviceStatusCallBack( LSHandle *sh,
         eventServerStatus.eventName = utils::eEventServerStatusSubscription;
         eventServerStatus.serviceName = eServerStatus;
         eventServerStatus.connectionStatus = connected;
-        pInstance->handleEvent((events::EVENTS_T*)&eventServerStatus);
+        pInstance->publishModuleEvent((events::EVENTS_T*)&eventServerStatus);
     }
     else
     {
@@ -316,7 +316,7 @@ void lunaEventSubscriber::eventSubscribeServerStatus(SERVER_TYPE_E eService)
         eventServerStatus.eventName = utils::eEventServerStatusSubscription;
         eventServerStatus.serviceName = eService;
         eventServerStatus.connectionStatus = connected;
-        mObjModuleManager->handleEvent((events::EVENTS_T*)&eventServerStatus);
+        mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventServerStatus);
     }
     else
     {

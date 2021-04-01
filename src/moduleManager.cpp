@@ -175,7 +175,7 @@ void ModuleManager::subscribeKeyInfo(ModuleInterface* module, EModuleEventType e
         eventSubscribeKey.serviceName = eService;
         eventSubscribeKey.api = key;
         eventSubscribeKey.payload = payload;
-        handleEvent((events::EVENTS_T*)&eventSubscribeKey);
+        publishModuleEvent((events::EVENTS_T*)&eventSubscribeKey);
     }
 }
 
@@ -194,12 +194,12 @@ void ModuleManager::subscribeServerStatusInfo(ModuleInterface* module, SERVER_TY
     events::EVENT_SUBSCRIBE_SERVER_STATUS_T eventSubscribeServerStatus;
     eventSubscribeServerStatus.eventName = utils::eEventLunaServerStatusSubscription;
     eventSubscribeServerStatus.serviceName = eStatus;
-    handleEvent((events::EVENTS_T*)&eventSubscribeServerStatus);
+    publishModuleEvent((events::EVENTS_T*)&eventSubscribeServerStatus);
 }
 
-void ModuleManager::handleEvent(events::EVENTS_T *ev)
+void ModuleManager::publishModuleEvent(events::EVENTS_T *ev)
 {
-    PM_LOG_DEBUG("handleEvent for eventType:%d", (int)ev->eventName);
+    PM_LOG_DEBUG("publishModuleEvent for eventType:%d", (int)ev->eventName);
     for (auto eventsItr = mapEventsSubscribers.begin(); eventsItr != mapEventsSubscribers.end(); ++eventsItr)
     {
         if (ev->eventName == eventsItr->first)

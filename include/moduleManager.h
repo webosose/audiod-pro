@@ -60,6 +60,6 @@ class ModuleManager
                 SERVER_TYPE_E eService, const std::string& key, const std::string& payload);
         void subscribeServerStatusInfo(ModuleInterface* module, SERVER_TYPE_E eStatus);
         //handling events
-        void handleEvent(events::EVENTS_T* ev);
+        void publishModuleEvent(events::EVENTS_T* ev);
 };
 #endif //_MODULE_MANAGER_H_

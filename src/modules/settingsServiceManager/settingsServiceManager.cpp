@@ -181,7 +181,7 @@ void SettingsServiceManager::handleEvent(events::EVENTS_T* event)
         default:
         {
             PM_LOG_WARNING(MSGID_SETTING_SERVICE_MANAGER, INIT_KVCOUNT,\
-                "subscribe:Unknown event");
+                "handleEvent:Unknown event");
         }
         break;
     }

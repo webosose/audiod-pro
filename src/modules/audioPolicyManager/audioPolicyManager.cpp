@@ -908,7 +908,7 @@ void AudioPolicyManager::notifyInputVolume(EVirtualAudioSink audioSink, const in
     eventInputVolume.volume = volume;
     eventInputVolume.ramp = ramp;
     if (mObjModuleManager)
-        mObjModuleManager->handleEvent((events::EVENTS_T*)&eventInputVolume);
+        mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventInputVolume);
 }
 
 bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
@@ -1163,7 +1163,7 @@ void AudioPolicyManager::handleEvent(events::EVENTS_T *event)
         default:
         {
             PM_LOG_WARNING(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "subscribe:Unknown event");
+                "handleEvent:Unknown event");
         }
         break;
     }
