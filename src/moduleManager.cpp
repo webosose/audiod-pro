@@ -94,7 +94,7 @@ bool ModuleManager::createModules()
     {
         ModuleInterface* handle = nullptr;
         mModulesCreatorMap modulesCreatorMap = mModuleFactory->getModulesCreatorMap();
-        std::vector<std::string> registerModulesVector (modulesCreatorMap.size());
+        std::vector<std::string> registerModulesVector (mSupportedModulesVector.size());
         for (mModulesCreatorMapItr it = modulesCreatorMap.begin(); it != modulesCreatorMap.end(); ++it)
         {
             std::vector<std::string>::iterator itr = std::find (mSupportedModulesVector.begin(), mSupportedModulesVector.end(), it->first);
@@ -113,8 +113,6 @@ bool ModuleManager::createModules()
             {
                 PM_LOG_ERROR(MSGID_MODULE_MANAGER, INIT_KVCOUNT,\
                     "ModuleManager: handle is nullptr for module: %s", *itr);
-                return false;
-                break;
             }
         }
     }
