@@ -87,6 +87,31 @@ bool AudioMixer::isStreamActive(EVirtualAudioSink sink)
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
     return false;
 }
+
+
+utils::vectorVirtualSource AudioMixer::getActiveSources()
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: getActiveSources");
+    return mActiveSources;
+}
+
+bool AudioMixer::isSourceActive(EVirtualSource source)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: isSourceActive Source:%d", (int)source);
+    if (IsValidVirtualSource(source))
+    {
+        utils::itVirtualSource it;
+        it = std::find(mActiveSources.begin(), mActiveSources.end(), source);
+        if (it != mActiveSources.end())
+            return true;
+    }
+    else
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Source", __FUNCTION__);
+    return false;
+}
+
 //Audio mixer calls end//
 
 //AudioMixer util functions start//
@@ -118,6 +143,19 @@ void AudioMixer::removeAudioSink(EVirtualAudioSink audioSink, utils::EMIXER_TYPE
         mActiveStreams.size(), mPulseStreams.size(), mUmiStreams.size());
 }
 
+void AudioMixer::removeAudioSource(EVirtualSource audioSource, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: removeAudioSource");
+    utils::itVirtualSource it;
+    it = std::find(mActiveSources.begin(), mActiveSources.end(), audioSource);
+    if (it != mActiveSources.end())
+        mActiveSources.erase(it);
+
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: removeAudioSource active streams:%d", (int)mActiveStreams.size());
+}
+
 void AudioMixer::addAudioSink(EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType)
 {
     PM_LOG_DEBUG("AudioMixer:: addAudioSink");
@@ -132,6 +170,14 @@ void AudioMixer::addAudioSink(EVirtualAudioSink audioSink, utils::EMIXER_TYPE mi
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer:: addAudioSink active streams:%d pulse streams:%d umi streams:%d",\
         mActiveStreams.size(), mPulseStreams.size(), mUmiStreams.size());
+}
+
+void AudioMixer::addAudioSource(EVirtualSource audioSource, utils::EMIXER_TYPE mixerType)
+{
+    mActiveSources.push_back(audioSource);
+
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer:: addAudioSource active sources:%d", (int)mActiveSources.size());
 }
 
 void AudioMixer::resetStreamInfo(utils::EMIXER_TYPE mixerType)
@@ -213,6 +259,39 @@ void AudioMixer::callBackSinkStatus(const std::string& source, const std::string
             eventSinkStatus.sinkStatus = sinkStatus;
             eventSinkStatus.mixerType = mixerType;
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventSinkStatus);
+        }
+    }
+    else
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
+}
+
+
+void AudioMixer::callBackSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
+            utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "callBackSourceStatus::source:%s sink:%s sourceId:%d sinkStatus:%d mixerType:%d",\
+        source.c_str(), sink.c_str(), (int)audioSource, (int)sourceStatus, (int)mixerType);
+    if (IsValidVirtualSource(audioSource))
+    {
+        if (utils::eSinkOpened == sourceStatus)
+        {
+            addAudioSource(audioSource, mixerType);
+        }
+        else if (utils::eSinkClosed == sourceStatus)
+        {
+            removeAudioSource(audioSource, mixerType);
+        }
+        if (mObjModuleManager)
+        {
+            events::EVENT_SOURCE_STATUS_T eventSourceStatus;
+            eventSourceStatus.eventName = utils::eEventSourceStatus;
+            eventSourceStatus.source = source;
+            eventSourceStatus.sink = sink;
+            eventSourceStatus.audioSource = audioSource;
+            eventSourceStatus.sourceStatus = sourceStatus;
+            eventSourceStatus.mixerType = mixerType;
+            mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventSourceStatus);
         }
     }
     else
@@ -381,6 +460,20 @@ bool AudioMixer::programVolume(EVirtualAudioSink sink, int volume, bool ramp)
     }
 }
 
+bool AudioMixer::programVolume(EVirtualSource source, int volume, bool ramp)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: programVolume");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->programVolume(source, volume, ramp);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "programVolume: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
 bool AudioMixer::programCallVoiceOrMICVolume(char cmd, int volume)
 {
     PM_LOG_DEBUG("AudioMixer: programCallVoiceOrMICVolume");
@@ -508,6 +601,50 @@ bool AudioMixer::setMute(int sink, int mutestatus)
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setMute: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+
+bool AudioMixer::muteSink(const int& sink, const int& mutestatus)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: muteSink");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->muteSink(sink, mutestatus);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "\
+        muteSink: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setPhysicalSourceMute(const char* source, const int& mutestatus)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setPhysicalSourceMute %s mute = %d", source, mutestatus);
+    if (mObjPulseAudioMixer)
+    {
+        return mObjPulseAudioMixer->setPhysicalSourceMute(source, mutestatus);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setPhysicalSourceMute: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setVirtualSourceMute(int source, int mutestatus)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setVirtualSourceMute mute = %d", mutestatus);
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setVirtualSourceMute(source, mutestatus);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setVirtualSourceMute: mObjPulseAudioMixer is null");
         return false;
     }
 }

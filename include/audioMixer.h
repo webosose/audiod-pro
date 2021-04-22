@@ -38,6 +38,7 @@ class AudioMixer : public MixerInterface
         PulseAudioMixer* mObjPulseAudioMixer;
         ModuleManager *mObjModuleManager;
         utils::vectorVirtualSink mActiveStreams;
+        utils::vectorVirtualSource mActiveSources;
         utils::vectorVirtualSink mUmiStreams;
         utils::vectorVirtualSink mPulseStreams;
         bool mUmiMixerStatus;
@@ -46,6 +47,9 @@ class AudioMixer : public MixerInterface
         //utility functions used within audio mixer class
         void addAudioSink(EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType);
         void removeAudioSink(EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType);
+        void addAudioSource(EVirtualSource audioSource, utils::EMIXER_TYPE mixerType);
+        void removeAudioSource(EVirtualSource audioSource, utils::EMIXER_TYPE mixerType);
+
         void resetStreamInfo(utils::EMIXER_TYPE mixerType);
 
     public:
@@ -74,6 +78,7 @@ class AudioMixer : public MixerInterface
 
         //pulseAudioMixer calls
         bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
+        bool programVolume(EVirtualSource source, int volume, bool ramp = false);
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);
         bool rampVolume(EVirtualAudioSink sink, int endVolume);
@@ -84,6 +89,10 @@ class AudioMixer : public MixerInterface
         bool muteAll();
         bool suspendAll();
         bool updateRate(int rate);
+        bool setPhysicalSourceMute(const char* source, const int& mutestatus);
+        bool muteSink(const int& sink, const int& mutestatus);
+        bool setVirtualSourceMute(int sink, int mutestatus);
+
         bool setMute(int sink, int mutestatus);
         bool setVolume(int display, int volume);
         bool playSystemSound(const char *snd, EVirtualAudioSink sink);
@@ -119,10 +128,16 @@ class AudioMixer : public MixerInterface
         //Audio mixer calls
         utils::vectorVirtualSink getActiveStreams();
         bool isStreamActive(EVirtualAudioSink sink);
+        utils::vectorVirtualSource getActiveSources();
+        bool isSourceActive(EVirtualSource source);
+
         //mixer interface implementation
         void callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
               utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
         void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType);
+        void callBackSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
+            utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
+
         void callBackMasterVolumeStatus();
 };
 

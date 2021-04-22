@@ -28,6 +28,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <list>
+#include <algorithm>
 #include <pbnjson.h>
 #include <pbnjson.hpp>
 
@@ -103,6 +105,13 @@ namespace utils
         eSinkClosed  = 2
     }ESINK_STATUS;
 
+    typedef enum EDeviceStatus
+    {
+        eDeviceNone    = 0,
+        eDeviceConnected  = 1,
+        eDeviceDisconnected  = 2
+    }E_DEVICE_STATUS;
+
     typedef enum EMixerType
     {
         eMixerNone,
@@ -114,12 +123,19 @@ namespace utils
     {
         eEventNone = -1,
         eEventSinkStatus = 0,
+        eEventSourceStatus,
         eEventServerStatusSubscription,
         eEventKeySubscription,
         eEventMixerStatus,
         eEventMasterVolumeStatus,
         eEventCurrentInputVolume,
         eEventInputVolume,
+        eEventDeviceConnectionStatus,
+        eEventSinkPolicyInfo,
+        eEventSourcePolicyInfo,
+        eEventSoundOutputInfo,
+        eEventBTDeviceDisplayInfo,
+        eEventActiveDeviceInfo,
         eEventLunaServerStatusSubscription,
         eEventLunaKeySubscription,
         eEventType_Count,
@@ -205,10 +221,21 @@ namespace utils
     typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
     typedef std::vector<EVirtualAudioSink>::iterator itVirtualSink;
 
+    typedef std::vector<EVirtualSource> vectorVirtualSource;
+    typedef std::vector<EVirtualSource>::iterator itVirtualSource;
+
+
     typedef std::map<EVirtualAudioSink, std::string> mapSinkToStream;
     typedef std::map<EVirtualAudioSink, std::string>::iterator itMapSinkToStream;
     typedef std::map<std::string, EVirtualAudioSink> mapStreamToSink;
     typedef std::map<std::string, EVirtualAudioSink>::iterator itMapStreamToSink;
+
+    typedef std::map<EVirtualSource, std::string> mapSourceToStream;
+    typedef std::map<EVirtualSource, std::string>::iterator itMapSourceToStream;
+    typedef std::map<std::string, EVirtualSource> mapStreamToSource;
+    typedef std::map<std::string, EVirtualSource>::iterator itMapStreamToSource;
+
+
 
     void LSMessageResponse(LSHandle* handle, LSMessage * message,\
         const char* reply, utils::EReplyType eType, bool isReferenced);
@@ -242,6 +269,20 @@ class ExtendEventEnum
 };
 
 typedef ExtendEventEnum<LUNA_KEY_TYPE_E, utils::EVENT_TYPE_E> EModuleEventType;
+
+class VirtualSourceSet
+{
+    public:
+        VirtualSourceSet() : mSet(0) {}
+        void clear() { mSet = 0; }
+        void add(EVirtualSource source) { mSet |= mask(source); }
+        void remove(EVirtualSource source) { mSet &= ~mask(source); }
+        bool operator == (const VirtualSourceSet & rhs) const { return mSet == rhs.mSet; }
+        bool operator != (const VirtualSourceSet & rhs) const { return mSet != rhs.mSet; }
+    private:
+        long mask(EVirtualSource sink) const { return (long)1 << sink; }
+        long mSet;
+};
 
 //Simple set class to hold a set of sinks & test it
 class VirtualSinkSet

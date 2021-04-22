@@ -1,0 +1,74 @@
+{
+    "streamDetails": [
+        {
+            "streamType": "record",
+            "policyVolume":50,
+            "priority":2,
+            "group":3,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
+            "streamType": "btcallsource",
+            "policyVolume":50,
+            "priority":4,
+            "group":0,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
+            "streamType": "alexa",
+            "policyVolume":50,
+            "priority":1,
+            "group":1,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
+            "streamType": "webcall",
+            "policyVolume":50,
+            "priority":4,
+            "group":0,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
+            "streamType": "voiceassistance",
+            "policyVolume":50,
+            "priority":1,
+            "group":3,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        }
+    ]
+}

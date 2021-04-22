@@ -40,8 +40,10 @@ public:
 
     //Will ignore volume of high latency sinks not playing and mute them.
     bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
+    bool programVolume(EVirtualSource source, int volume, bool ramp = false);
     bool programCallVoiceOrMICVolume(char cmd, int volume);
     bool programMute(EVirtualSource source, int mute);
+    bool msgToPulse(const char *buffer, const std::string& fname);
     /// Same as program volume, but ramped.
     bool rampVolume(EVirtualAudioSink sink, int endVolume)
         {return programVolume(sink, endVolume, true);}
@@ -66,12 +68,16 @@ public:
     bool suspendAll();
     /// Suspend sampling rate on sinks/sources
     bool updateRate(int rate);
+    bool setPhysicalSourceMute(const char* source, const int& mutestatus);
     /// Play a system sound using Pulse's API
     bool playSystemSound(const char *snd, EVirtualAudioSink sink);
     bool playSound(const char *snd, EVirtualAudioSink sink, \
         const char *format, int rate, int channels);
     /// Pre-load system sound in Pulse, if necessary
     void preloadSystemSound(const char * snd);
+    bool muteSink(const int& sink, const int& mutestatus);
+    //mute virtual source
+    bool setVirtualSourceMute(int sink, int mutestatus);
     /// mute/unmute the Physical sink
     bool setMute(int sink, int mutestatus);
     /// set volume on a particular display
@@ -93,6 +99,7 @@ public:
     bool suspendSink(int sink);
     bool programSource(char cmd, int sink, int value);
     void openCloseSink(EVirtualAudioSink sink, bool openNotClose);
+    void openCloseSource(EVirtualSource source, bool openNotClose);
     void setNREC(bool value);
     bool programLoadBluetooth (const char * address , const char *profile, const int displayID);
     bool programUnloadBluetooth (const char *profile, const int displayID);
@@ -115,11 +122,13 @@ private:
     PulseAudioLink mPulseLink;
     PulseDtmfGenerator* mCurrentDtmf;
     VirtualSinkSet mActiveStreams;
+    VirtualSourceSet mActiveSources;
     int mPulseStateVolume[eVirtualSink_Count+1];
     int mPulseStateVolumeHeadset[eVirtualSink_Count+1];
     int mPulseStateRoute[eVirtualSink_Count+1];
     int mPulseStateSourceRoute[eVirtualSource_Count+1];
     int mPulseStateActiveStreamCount[eVirtualSink_Count+1];
+    int mPulseStateActiveSourceCount[eVirtualSource_Count + 1];
     bool mPulseFilterEnabled;
     int mPulseStateFilter;
     int mPulseStateLatency;

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 LG Electronics, Inc.
+// Copyright (c) 2020-2021 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@
 #include <pbnjson.hpp>
 #include <pulse/module-palm-policy.h>
 #include "utils.h"
-#define VOLUME_POLICY_CONFIG "audiod_volume_policy_config.json"
+#define VOLUME_POLICY_CONFIG "audiod_sink_volume_policy_config.json"
+#define SOURCE_VOLUME_POLICY_CONFIG "audiod_source_volume_policy_config.json"
 
 class VolumePolicyInfoParser
 {
@@ -31,11 +32,12 @@ class VolumePolicyInfoParser
         VolumePolicyInfoParser(const VolumePolicyInfoParser&) = delete;
         VolumePolicyInfoParser& operator=(const VolumePolicyInfoParser&) = delete;
         pbnjson::JValue fileJsonVolumePolicyConfig;
+        pbnjson::JValue fileJsonSourceVolumePolicyConfig;
 
     public:
         VolumePolicyInfoParser();
         ~VolumePolicyInfoParser();
-        pbnjson::JValue getVolumePolicyInfo();
+        pbnjson::JValue getVolumePolicyInfo(const bool& isSink);
         bool loadVolumePolicyJsonConfig();
 };
 

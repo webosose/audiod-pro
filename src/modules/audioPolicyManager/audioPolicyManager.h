@@ -29,6 +29,9 @@
 #include "volumePolicyInfoParser.h"
 #include "audioMixer.h"
 
+#define VOLUME_POLICY_CONFIG "audiod_sink_volume_policy_config.json"
+#define SOURCE_VOLUME_POLICY_CONFIG "audiod_source_volume_policy_config.json"
+
 class AudioPolicyManager : public ModuleInterface
 {
     private:
@@ -38,8 +41,11 @@ class AudioPolicyManager : public ModuleInterface
         VolumePolicyInfoParser* mObjPolicyInfoParser;
         AudioMixer* mObjAudioMixer;
         std::vector<utils::VOLUME_POLICY_INFO_T> mVolumePolicyInfo;
+        std::vector<utils::VOLUME_POLICY_INFO_T> mSourceVolumePolicyInfo;
         utils::mapSinkToStream mSinkToStream;
         utils::mapStreamToSink mStreamToSink;
+        utils::mapSourceToStream mSourceToStream;
+        utils::mapStreamToSource mStreamToSource;
         static bool mIsObjRegistered;
         AudioPolicyManager(ModuleConfig* const pConfObj);
         //Register Object to object factory. This is called automatically
@@ -51,24 +57,47 @@ class AudioPolicyManager : public ModuleInterface
         void printPolicyInfo();
         void printActivePolicyInfo();
         void createSinkStreamMap(const pbnjson::JValue& policyInfo);
+        void createSourceStreamMap(const pbnjson::JValue& policyInfo);
+
         void updateCurrentVolume(const std::string& streamType, const int &volume);
+        void updateCurrentVolumeForSource(const std::string& streamType, const int &volume);
+        void updateMuteStatus(const std::string& streamType, const bool &mute);
+        void updateMuteStatusForSource(const std::string& streamType, const bool &mute);
+
         void applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
+        void applyVolumePolicy(EVirtualSource audioSource, const std::string& streamType, const int& priority);
         void removeVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
+        void removeVolumePolicy(EVirtualSource audioSource, const std::string& streamType, const int& priority);
         void updatePolicyStatus(const std::string& streamType, const bool& status);
+        void updatePolicyStatusForSource(const std::string& streamType, const bool& status);
         void initStreamVolume();
         bool setVolume(EVirtualAudioSink audioSink, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
-        bool initializePolicyInfo(const pbnjson::JValue& policyInfo);
+        bool setVolume(EVirtualSource audioSource, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
+        bool muteSink(EVirtualAudioSink audioSink, const int &muteStatus, utils::EMIXER_TYPE mixerType);
+        bool initializePolicyInfo(const pbnjson::JValue& policyInfo, bool isSink);
+
         bool getPolicyStatus(const std::string& streamType);
+        bool getPolicyStatusOfSource(const std::string& streamType);
         bool isHighPriorityStreamActive(const int& policyPriority, utils::vectorVirtualSink activeStreams);
+        bool isHighPrioritySourceActive(const int& policyPriority, utils::vectorVirtualSource activeStreams);
         bool isRampPolicyActive(const std::string& streamType);
+        bool isRampPolicyActiveForSource(const std::string& streamType);
         bool getStreamActiveStatus(const std::string& streamType);
+        bool getSourceActiveStatus(const std::string& streamType);
         int getPriority(const std::string& streamType);
+        int getPriorityOfSource(const std::string& streamType);
         int getPolicyVolume(const std::string& streamType);
+        int getPolicyVolumeofSource(const std::string& streamType);
         int getCurrentVolume(const std::string& streamType);
+        int getCurrentVolumeOfSource(const std::string& streamType);
         utils::EMIXER_TYPE getMixerType(const std::string& streamType);
+        utils::EMIXER_TYPE getMixerTypeofSource(const std::string& streamType);
         EVirtualAudioSink getSinkType(const std::string& streamType);
+        EVirtualSource getSourceType(const std::string& streamType);
         std::string getStreamType(EVirtualAudioSink audioSink);
+        std::string getStreamType(EVirtualSource audioSource);
         std::string getCategory(const std::string& streamType);
+        std::string getCategoryOfSource(const std::string& streamType);
 
     public:
         ~AudioPolicyManager();
@@ -91,19 +120,31 @@ class AudioPolicyManager : public ModuleInterface
 
         //luna api's
         static bool _setInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _setSourceInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _getSourceInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getStreamStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _getSourceStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _muteSource(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _muteSink(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void notifyGetVolumeSubscribers(const std::string& streamType, const int& volume);
+        void notifyGetSourceVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetStreamStatusSubscribers(const std::string& payload) const;
+        void notifyGetSourceStatusSubscribers(const std::string& payload) const;
         static bool _setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
+        void eventSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
+            utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
+
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
         void eventCurrentInputVolume(EVirtualAudioSink audioSink, const int& volume);
         void notifyInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp);
         std::string getStreamStatus(const std::string& streamType, bool subscribed);
+        std::string getSourceStatus(const std::string& streamType, bool subscribed);
         std::string getStreamStatus(bool subscribed);
+        std::string getSourceStatus(bool subscribed);
 };
 #endif //_AUDIO_POLICY_MGR_H_

@@ -61,6 +61,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
     for (int i = eVirtualSource_First; i <= eVirtualSource_Last; i++)
     {
         mPulseStateSourceRoute[i] = -1;
+        mPulseStateActiveSourceCount[i] = 0;
     }
     createPulseSocketCommunication();
 }
@@ -127,26 +128,51 @@ PulseAudioMixer::setMute(int sink, int mutestatus)
     return programSource ('k', sink, mutestatus);
 }
 
+
+bool PulseAudioMixer::setPhysicalSourceMute(const char* source, const int& mutestatus)
+{
+    char msgToBuf[SIZE_MESG_TO_PULSE];
+    sprintf(msgToBuf, "%c %s %d", '5', source, mutestatus);
+    return msgToPulse(msgToBuf, __FUNCTION__);
+}
+
+bool
+PulseAudioMixer::setVirtualSourceMute(int sink, int mutestatus)
+{
+    return programSource ('h', sink, mutestatus);
+}
+
+bool
+PulseAudioMixer::muteSink(const int& sink, const int& mutestatus)
+{
+    return programSource ('m', sink, mutestatus);
+}
+
+
 bool
 PulseAudioMixer::programSource (char cmd, int sink, int value)
 {
     if (NULL == mChannel)
         return false;
-
     EHeadsetState headset = eHeadsetState_None;
 
     bool    sendCmd = true;
     switch (cmd)
     {
         case 'm':
-            value = 0;    // the mute command is equivalent to
+               // the mute command is equivalent to
                        //  setting volume to 0, but faster. There is no unmute!
+            if (VERIFY(IsValidVirtualSink((EVirtualAudioSink)sink))){
+                sendCmd = true;
+                }
+            break;
         case 'v':
 
         case 'r':
-
+            PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "2");
             if (VERIFY(IsValidVirtualSink((EVirtualAudioSink)sink)))
             {
+                PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "3");
                 sendCmd = (mPulseStateVolume[sink] != value ||
                            mPulseStateVolumeHeadset[sink] != headset);
                 mPulseStateVolume[sink] = value;
@@ -243,11 +269,45 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
     return true;
 }
 
+
+bool PulseAudioMixer::msgToPulse(const char *buffer, const std::string& fname)
+{
+    bool returnValue = false;
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "msgToPulse");
+    int sockfd = g_io_channel_unix_get_fd (mChannel);
+    ssize_t bytes = send(sockfd, buffer, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
+    if (bytes != SIZE_MESG_TO_PULSE)
+    {
+        PM_LOG_WARNING(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "msgToPulse: Error sending msg from %s:%d", fname, (int)bytes);
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "msgToPulse: msg sent from %s of audiod:%d buffer:{%s}", fname.c_str(), (int)bytes, buffer);
+       returnValue = true;
+    }
+    return returnValue;
+}
+
+
 bool PulseAudioMixer::programVolume (EVirtualAudioSink sink, int volume, bool ramp)
 {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "programVolume: sink:%d, volume:%d, ramp%d", (int)sink, volume, ramp);
     return programSource ( (ramp ? 'r' : 'v'), sink, volume);
+}
+
+
+bool PulseAudioMixer::programVolume (EVirtualSource source, int volume, bool ramp)
+{
+    bool ret = false;
+    char buffer[SIZE_MESG_TO_PULSE];
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+        "programVolume: source:%d, volume:%d", (int)source, volume);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d", 'f', source, volume, ramp);
+    ret=msgToPulse(buffer, __FUNCTION__);
+    return ret;
 }
 
 bool PulseAudioMixer::programCallVoiceOrMICVolume (char cmd, int volume)
@@ -671,8 +731,10 @@ PulseAudioMixer::_connectSocket()
            source = EVirtualSource(source + 1))
     {
         mPulseStateSourceRoute[source] = -1;
+        mPulseStateActiveSourceCount[source] = 0;
     }
     mActiveStreams.clear();
+    mActiveSources.clear();
     mPulseStateFilter = 0;
     mPulseStateLatency = 65536;
 
@@ -724,6 +786,48 @@ void PulseAudioMixer::_timer()
         mTimeout *= 2;
         if (mTimeout > cMaxTimeout)
             mTimeout = cMinTimeout;
+    }
+}
+
+void PulseAudioMixer::openCloseSource(EVirtualSource source, bool openNotClose)
+{
+    if(!IsValidVirtualSource(source))
+        return;
+
+    int& sourceCount = mPulseStateActiveSourceCount[source];
+
+    if (openNotClose)
+        ++sourceCount;
+    else
+        --sourceCount;
+
+    if (sourceCount < 0)
+    {
+        PM_LOG_WARNING(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "openCloseSource: adjusting the stream %i-%s count to 0", \
+            (int)source, virtualSourceName(source));
+        sourceCount = 0;
+    }
+
+    VirtualSourceSet oldstreamflags = mActiveSources;
+
+    if (0 == sourceCount)
+        mActiveSources.remove(source);
+    else
+        mActiveSources.add(source);
+    if (oldstreamflags != mActiveSources)
+    {
+        utils::ESINK_STATUS eSourceStatus = openNotClose ? utils::eSinkOpened :
+                                           utils::eSinkClosed;
+        if (mObjMixerCallBack)
+        {
+            std::string sourceId = "source";
+            std::string sinkId = "sink";
+            mObjMixerCallBack->callBackSourceStatus(sourceId, sinkId, source, eSourceStatus, utils::ePulseMixer);
+        }
+        else
+             PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                 "mObjMixerCallBack is null");
     }
 }
 
@@ -868,9 +972,11 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     }
                     break;
                 case 'd':
+                    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "InputStream opened recieved");
                     inputStreamOpened (source);
                     break;
                 case 'k':
+                    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "InputStream closed recieved");
                     inputStreamClosed (source);
                     break;
                 case 'x':
@@ -944,12 +1050,16 @@ void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink)
 
 void PulseAudioMixer::inputStreamOpened (EVirtualSource source)
 {
-    //Will be updated once DAP design is updated
+    mInputStreamsCurrentlyOpenedCount++;
+    openCloseSource(source, true);
 }
 
 void PulseAudioMixer::inputStreamClosed (EVirtualSource source)
 {
-    //Will be updated once DAP design is updated
+    mInputStreamsCurrentlyOpenedCount--;
+    if (mInputStreamsCurrentlyOpenedCount < 0)
+        mInputStreamsCurrentlyOpenedCount = 0;
+    openCloseSource(source, false);
 }
 
 static int IdToDtmf(const char* snd) {

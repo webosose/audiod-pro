@@ -26,8 +26,11 @@
 #define DEFAULT_TWO "default2"
 
 #define AUDIOD_API_SET_INPUT_VOLUME    "/setInputVolume"
+#define AUDIOD_API_GET_SOURCE_INPUT_VOLUME    "/getSourceInputVolume"
 #define AUDIOD_API_GET_INPUT_VOLUME    "/getInputVolume"
 #define AUDIOD_API_GET_STREAM_STATUS   "/getStreamStatus"
+#define AUDIOD_API_GET_SOURCE_STATUS   "/getSourceStatus"
+#define AUDIOD_API_SET_MUTE_SINK     "/muteSink"
 
 bool AudioPolicyManager::mIsObjRegistered = AudioPolicyManager::RegisterObject();
 
@@ -84,6 +87,59 @@ void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::s
             "AudioPolicyManager::invalid sink");
 }
 
+
+void AudioPolicyManager::eventSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
+            utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager::eventSourceStatus source:%s sink:%s sourceId:%d sourceStatus:%d mixerType:%d",\
+        source.c_str(), sink.c_str(), (int)audioSource, (int)sourceStatus, (int)mixerType);
+    if (IsValidVirtualSource(audioSource))
+    {
+        std::string streamType = getStreamType(audioSource);
+        std::string payload = "";
+        int priority = 0;
+        int currentVolume = 100;
+        bool ramp = false;
+        for (auto &elements : mSourceVolumePolicyInfo)
+        {
+            if (elements.streamType == streamType)
+            {
+                elements.source = source;
+                elements.sink = sink;
+                elements.mixerType = mixerType;
+                priority = elements.priority;
+                currentVolume = elements.currentVolume;
+                ramp = elements.ramp;
+                elements.isStreamActive = (sourceStatus == utils::eSinkOpened) ? true : false;
+                break;
+            }
+        }
+        if (utils::eSinkOpened == sourceStatus)
+        {
+            if (setVolume(audioSource, currentVolume, mixerType, ramp))
+                notifyGetSourceVolumeSubscribers(streamType, currentVolume);
+            payload = getSourceStatus(true);
+            notifyGetSourceStatusSubscribers(payload);
+            applyVolumePolicy(audioSource, streamType, priority);
+        }
+        else if (utils::eSinkClosed == sourceStatus)
+        {
+            if (setVolume(audioSource, INIT_VOLUME, mixerType, ramp))
+                notifyGetSourceVolumeSubscribers(streamType, INIT_VOLUME);
+            payload = getSourceStatus(true);
+            notifyGetSourceStatusSubscribers(payload);
+            removeVolumePolicy(audioSource, streamType, priority);
+        }
+        else
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "AudioPolicyManager::invalid source status");
+    }
+    else
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "AudioPolicyManager::invalid source");
+}
+
 void AudioPolicyManager::eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -111,13 +167,34 @@ void AudioPolicyManager::readPolicyInfo()
     {
         if (mObjPolicyInfoParser->loadVolumePolicyJsonConfig())
         {
-            PM_LOG_DEBUG("loadVolumePolicyJsonConfig success");
-            pbnjson::JValue policyInfo = mObjPolicyInfoParser->getVolumePolicyInfo();
-            if (initializePolicyInfo(policyInfo))
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "loadVolumePolicyJsonConfig success");
+            pbnjson::JValue policyInfo = mObjPolicyInfoParser->getVolumePolicyInfo(true);
+            pbnjson::JValue policyInfoSources = mObjPolicyInfoParser->getVolumePolicyInfo(false);
+            if (mObjModuleManager)
+            {
+                events::EVENT_SINK_POLICY_INFO_T eventSinkPolicyInfo;
+                eventSinkPolicyInfo.eventName = utils::eEventSinkPolicyInfo;
+                eventSinkPolicyInfo.policyInfo =  policyInfo;
+                mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventSinkPolicyInfo);
+
+                events::EVENT_SOURCE_POLICY_INFO_T eventSourcePolicyInfo;
+                eventSourcePolicyInfo.eventName = utils::eEventSourcePolicyInfo;
+                eventSourcePolicyInfo.sourcePolicyInfo = policyInfoSources;
+                mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventSourcePolicyInfo);
+            }
+            else
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "readPolicyInfo: mObjModuleManager is null");
+            if (initializePolicyInfo(policyInfo, true))
                 PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "initializePolicyInfo success");
             else
                 PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "initializePolicyInfo failed");
             createSinkStreamMap(policyInfo);
+            if (initializePolicyInfo(policyInfoSources, false))
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "initializePolicyInfo success");
+            else
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "initializePolicyInfo failed");
+            createSourceStreamMap(policyInfoSources);
         }
         else
             PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Unable to load VolumePolicyJsonConfig");
@@ -126,7 +203,7 @@ void AudioPolicyManager::readPolicyInfo()
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mObjPolicyInfoParser is null");
 }
 
-bool AudioPolicyManager::initializePolicyInfo(const pbnjson::JValue& policyInfo)
+bool AudioPolicyManager::initializePolicyInfo(const pbnjson::JValue& policyInfo, bool isSink)
 {
     PM_LOG_DEBUG("AudioPolicyManager::initializePolicyInfo");
     if (!policyInfo.isArray())
@@ -168,7 +245,10 @@ bool AudioPolicyManager::initializePolicyInfo(const pbnjson::JValue& policyInfo)
                 stPolicyInfo.ramp = ramp;
             if (elements["category"].asString(category) == CONV_OK)
                 stPolicyInfo.category = category;
-            mVolumePolicyInfo.push_back(stPolicyInfo);
+            if (isSink)
+                mVolumePolicyInfo.push_back(stPolicyInfo);
+            else
+                mSourceVolumePolicyInfo.push_back(stPolicyInfo);
         }
     }
     printPolicyInfo();
@@ -184,6 +264,14 @@ void AudioPolicyManager::initStreamVolume()
     {
         sink = getSinkType(elements.streamType);
         if (!setVolume(sink, INIT_VOLUME, utils::ePulseMixer))
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                "AudioPolicyManager::initStreamVolume volume could not be set for stream:%s",\
+                elements.streamType.c_str());
+    }
+    for (const auto &elements : mSourceVolumePolicyInfo)
+    {
+        EVirtualSource source = getSourceType(elements.streamType);
+        if (!setVolume(source, INIT_VOLUME, utils::ePulseMixer))
             PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                 "AudioPolicyManager::initStreamVolume volume could not be set for stream:%s",\
                 elements.streamType.c_str());
@@ -206,6 +294,21 @@ void AudioPolicyManager::printPolicyInfo()
             elements.sink.c_str(), (int)elements.mixerType, (int)elements.ramp);
         PM_LOG_DEBUG("isPolicyInProgress:%d activeStatus:%d category:%s",\
             (int)elements.isPolicyInProgress, (int)elements.isStreamActive, elements.category.c_str());
+    }
+    PM_LOG_DEBUG("AudioPolicyManager::Sounces policy:\n");
+    for (const auto& elements : mSourceVolumePolicyInfo)
+    {
+        PM_LOG_DEBUG("*************%s*************", elements.streamType.c_str());
+        PM_LOG_DEBUG("policyVolume:%d", elements.policyVolume);
+        PM_LOG_DEBUG("priority:%d groupId:%d defaultVolume:%d",\
+            elements.priority, elements.groupId, elements.defaultVolume);
+        PM_LOG_DEBUG("maxVolume:%d minVolume:%d volumeAdjustable:%d",\
+             elements.maxVolume, elements.minVolume, elements.volumeAdjustable);
+        PM_LOG_DEBUG("currentVolume:%d muteStatus:%d source:%s sinkId:%s mixerType:%d ramp:%d",\
+            elements.currentVolume, elements.muteStatus, elements.source.c_str(),\
+            elements.sink.c_str(), elements.mixerType, (int)elements.ramp);
+        PM_LOG_DEBUG("isPolicyInProgress:%d activeStatus:%d category:%s",\
+            elements.isPolicyInProgress, elements.isStreamActive, elements.category.c_str());
     }
 }
 
@@ -242,6 +345,30 @@ std::string AudioPolicyManager::getStreamType(EVirtualAudioSink audioSink)
          return "";
 }
 
+std::string AudioPolicyManager::getStreamType(EVirtualSource audioSource)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager: getStreamType:%d", (int)audioSource);
+     utils::itMapSourceToStream it = mSourceToStream.find(audioSource);
+     if (it != mSourceToStream.end())
+         return it->second;
+     else
+         return "";
+}
+
+bool AudioPolicyManager::getSourceActiveStatus(const std::string& streamType)
+{
+    for (const auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+        {
+            return elements.isStreamActive;
+        }
+    }
+    return false;
+}
+
+
 bool AudioPolicyManager::getStreamActiveStatus(const std::string& streamType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -268,6 +395,18 @@ EVirtualAudioSink AudioPolicyManager::getSinkType(const std::string& streamType)
          return eVirtualSink_None;
 }
 
+
+EVirtualSource AudioPolicyManager::getSourceType(const std::string& streamType)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager: getSourceType:%s", streamType.c_str());
+     utils::itMapStreamToSource it = mStreamToSource.find(streamType);
+     if (it != mStreamToSource.end())
+         return it->second;
+     else
+         return eVirtualSource_None;
+}
+
 void AudioPolicyManager::createSinkStreamMap(const pbnjson::JValue& policyInfo)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -291,7 +430,32 @@ void AudioPolicyManager::createSinkStreamMap(const pbnjson::JValue& policyInfo)
             }
         }
     }
+}
 
+void AudioPolicyManager::createSourceStreamMap(const pbnjson::JValue& policyInfo)
+{
+    //Source related
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager: createSourceStreamMap");
+
+    if (!policyInfo.isArray())
+    {
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "policyInfo is not an array");
+        return;
+    }
+    else
+    {
+        std::string streamType;
+        for (const pbnjson::JValue& elements : policyInfo.items())
+        {
+            if (elements["streamType"].asString(streamType) == CONV_OK)
+            {
+                PM_LOG_DEBUG("AudioPolicyManager: createSinkStreamMap Inserting the elements into map for stream %s", streamType.c_str());
+                mSourceToStream[getSourceByName(streamType.c_str())] = streamType;
+                mStreamToSource[streamType] = getSourceByName(streamType.c_str());
+            }
+        }
+    }
 }
 
 void AudioPolicyManager::applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority)
@@ -365,6 +529,78 @@ void AudioPolicyManager::applyVolumePolicy(EVirtualAudioSink audioSink, const st
             "AudioPolicyManager:applyVolumePolicy mObjAudioMixer is null");
 }
 
+
+void AudioPolicyManager::applyVolumePolicy(EVirtualSource audioSource, const std::string& streamType, const int& priority)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:applyVolumePolicyForSource source:%d streamType:%s priority:%d",\
+        (int)audioSource, streamType.c_str(), priority);
+    if (mObjAudioMixer)
+    {
+        int policyPriority = MAX_PRIORITY;
+        bool isPolicyInProgress = false;
+        std::string policyStreamType;
+        int currentPolicyStreamVolume = MAX_VOLUME;
+        int currentVolume = MAX_VOLUME;
+        utils::vectorVirtualSource activeStreams = mObjAudioMixer->getActiveSources();
+        std::string incomingStreamCategory = getCategoryOfSource(streamType);
+        std::string activeStreamCategory;
+        for (const auto &it : activeStreams)
+        {
+            policyStreamType = getStreamType(it);
+            policyPriority  = getPriorityOfSource(policyStreamType);
+            activeStreamCategory  = getCategoryOfSource(policyStreamType);
+            if (incomingStreamCategory == activeStreamCategory)
+            {
+                if (priority < policyPriority)
+                {
+                    isPolicyInProgress = getPolicyStatusOfSource(policyStreamType);
+                    currentPolicyStreamVolume = getPolicyVolumeofSource(policyStreamType);
+                    currentVolume  = getCurrentVolumeOfSource(policyStreamType);
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:applyVolumePolicyForSource Incoming stream:%s is high priority than active stream:%s with priority:%d policyStatus:%d",\
+                        streamType.c_str(), policyStreamType.c_str(), policyPriority, isPolicyInProgress);
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:currentPolicyStreamVolume:%d currentVolume:%d",\
+                        currentPolicyStreamVolume, currentVolume);
+                    if (!isPolicyInProgress && currentVolume > currentPolicyStreamVolume)
+                    {
+                        if (setVolume(getSourceType(policyStreamType), currentPolicyStreamVolume,\
+                            getMixerTypeofSource(policyStreamType), isRampPolicyActiveForSource(policyStreamType)))
+                            updatePolicyStatusForSource(policyStreamType, true);
+                    }
+                    else
+                        PM_LOG_WARNING(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:applyVolumePolicyForSource current volume is less than policy volume");
+                }
+                else if (priority > policyPriority)
+                {
+                    isPolicyInProgress = getPolicyStatusOfSource(streamType);
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:applyVolumePolicyForSource Incoming stream is low priority than active stream:%s with priority:%d policyStatus:%d",\
+                        policyStreamType.c_str(), policyPriority, isPolicyInProgress);
+                    if (!isPolicyInProgress)
+                    {
+                        if (setVolume(audioSource, getPolicyVolumeofSource(streamType), getMixerTypeofSource(streamType), isRampPolicyActiveForSource(streamType)))
+                            updatePolicyStatusForSource(streamType, true);
+                    }
+                }
+                else
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:applyVolumePolicyForSource Incoming stream:%s and active stream:%s priority is same",\
+                        streamType.c_str(), policyStreamType.c_str());
+            }
+            else
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "AudioPolicyManager:incoming stream category:%s active stream category:%s are not same",\
+                    incomingStreamCategory.c_str(), activeStreamCategory.c_str());
+        }
+    }
+    else
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "AudioPolicyManager:applyVolumePolicyForSource mObjAudioMixer is null");
+}
+
 void AudioPolicyManager::removeVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -418,6 +654,79 @@ void AudioPolicyManager::removeVolumePolicy(EVirtualAudioSink audioSink, const s
     updatePolicyStatus(streamType, false);
 }
 
+void AudioPolicyManager::removeVolumePolicy(EVirtualSource audioSource, const std::string& streamType, const int& priority)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:removeVolumePolicy sink:%d streamType:%s priority:%d",\
+        (int)audioSource, streamType.c_str(), priority);
+    if (mObjAudioMixer)
+    {
+        int policyPriority = MAX_PRIORITY;
+        bool isPolicyInProgress = false;
+        std::string policyStreamType;
+        utils::vectorVirtualSource activeStreams = mObjAudioMixer->getActiveSources();
+        std::string incomingStreamCategory = getCategoryOfSource(streamType);
+        std::string activeStreamCategory;
+        for (const auto &it : activeStreams)
+        {
+            policyStreamType = getStreamType(it);
+            policyPriority  = getPriorityOfSource(policyStreamType);
+            activeStreamCategory = getCategoryOfSource(policyStreamType);
+            if (incomingStreamCategory == activeStreamCategory)
+            {
+                if (priority < policyPriority)
+                {
+                    isPolicyInProgress = getPolicyStatusOfSource(policyStreamType);
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:removeVolumePolicy Incoming stream:%s is high priority than active stream:%s with priority:%d policyStatus:%d",\
+                        streamType.c_str(), policyStreamType.c_str(), policyPriority, isPolicyInProgress);
+                    if (isPolicyInProgress && !isHighPrioritySourceActive(policyPriority, activeStreams))
+                    {
+                        if (setVolume(getSourceType(policyStreamType), getCurrentVolumeOfSource(policyStreamType),\
+                            getMixerTypeofSource(policyStreamType), isRampPolicyActiveForSource(policyStreamType)))
+                            updatePolicyStatusForSource(policyStreamType, false);
+                    }
+                    else
+                        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:removeVolumePolicy policy is not in progress or still other high priority streams are active");
+                }
+                else
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                        "AudioPolicyManager:removeVolumePolicy Incoming stream:%s priority is same or less than active stream:%s priority",\
+                        streamType.c_str(), policyStreamType.c_str());
+            }
+            else
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "AudioPolicyManager:removeVolumePolicy incoming stream category:%s active stream category:%s are not same",\
+                    incomingStreamCategory.c_str(), activeStreamCategory.c_str());
+        }
+    }
+    else
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "AudioPolicyManager:removeVolumePolicy mObjAudioMixer is null");
+    updatePolicyStatusForSource(streamType, false);
+}
+
+bool AudioPolicyManager::setVolume(EVirtualSource audioSource, const int& volume, \
+    utils::EMIXER_TYPE mixerType, bool ramp)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:setVolume:%d for audioSource:%d, ramp = %d", volume, (int)audioSource, (int)ramp);
+    bool returnStatus = false;
+    if (mObjAudioMixer)
+    {
+        if (utils::ePulseMixer == mixerType)
+        {
+            if (mObjAudioMixer->programVolume(audioSource, volume, ramp))
+                returnStatus = true;
+            else
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "AudioPolicyManager:programVolume failed");
+        }
+    }
+    return returnStatus;
+}
+
 bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volume, \
     utils::EMIXER_TYPE mixerType, bool ramp)
 {
@@ -465,6 +774,18 @@ std::string AudioPolicyManager::getCategory(const std::string& streamType)
     return "";
 }
 
+std::string AudioPolicyManager::getCategoryOfSource(const std::string& streamType)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:getCategoryOfSource streamType:%s", streamType.c_str());
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+            return elements.category;
+    }
+    return "";
+}
+
 bool AudioPolicyManager::isHighPriorityStreamActive(const int& policyPriority, utils::vectorVirtualSink activeStreams)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -479,11 +800,37 @@ bool AudioPolicyManager::isHighPriorityStreamActive(const int& policyPriority, u
     return false;
 }
 
+bool AudioPolicyManager::isHighPrioritySourceActive(const int& policyPriority, utils::vectorVirtualSource activeStreams)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:isHighPrioritySourceActive priority:%d", policyPriority);
+    int priority  = MAX_PRIORITY;
+    for (const auto &it : activeStreams)
+    {
+        priority  = getPriorityOfSource(getStreamType(it));
+        if (policyPriority > priority)
+            return true;
+    }
+    return false;
+}
+
 int AudioPolicyManager::getCurrentVolume(const std::string& streamType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
         "AudioPolicyManager:getCurrentVolume streamType:%s", streamType.c_str());
     for (const auto &elements : mVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+            return elements.currentVolume;
+    }
+    return MAX_VOLUME;
+}
+
+int AudioPolicyManager::getCurrentVolumeOfSource(const std::string& streamType)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:getCurrentVolumeOfSource streamType:%s", streamType.c_str());
+    for (auto &elements : mSourceVolumePolicyInfo)
     {
         if (elements.streamType == streamType)
             return elements.currentVolume;
@@ -507,6 +854,22 @@ void AudioPolicyManager::updatePolicyStatus(const std::string& streamType, const
     notifyGetStreamStatusSubscribers(payload);
 }
 
+void AudioPolicyManager::updatePolicyStatusForSource(const std::string& streamType, const bool& status)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:updatePolicyStatusForSource streamType:%s status:%d", streamType.c_str(), (int)status);
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+        {
+            elements.isPolicyInProgress = status;
+            break;
+        }
+    }
+    std::string payload = getSourceStatus(streamType, true);
+    notifyGetSourceStatusSubscribers(payload);
+}
+
 bool AudioPolicyManager::getPolicyStatus(const std::string& streamType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -519,11 +882,31 @@ bool AudioPolicyManager::getPolicyStatus(const std::string& streamType)
     return false;
 }
 
+bool AudioPolicyManager::getPolicyStatusOfSource(const std::string& streamType)
+{
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+            return elements.isPolicyInProgress;
+    }
+    return true;
+}
+
 int AudioPolicyManager::getPriority(const std::string& streamType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
         "AudioPolicyManager:getPriority streamType:%s", streamType.c_str());
     for (const auto &elements : mVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+            return elements.priority;
+    }
+    return MAX_PRIORITY;
+}
+
+int AudioPolicyManager::getPriorityOfSource(const std::string& streamType)
+{
+    for (auto &elements : mSourceVolumePolicyInfo)
     {
         if (elements.streamType == streamType)
             return elements.priority;
@@ -543,11 +926,31 @@ int AudioPolicyManager::getPolicyVolume(const std::string& streamType)
     return MAX_VOLUME;
 }
 
+int AudioPolicyManager::getPolicyVolumeofSource(const std::string& streamType)
+{
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+            return elements.policyVolume;
+    }
+    return MAX_VOLUME;
+}
+
 utils::EMIXER_TYPE AudioPolicyManager::getMixerType(const std::string& streamType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
         "AudioPolicyManager:getMixerType streamType:%s", streamType.c_str());
     for (const auto &elements : mVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+            return elements.mixerType;
+    }
+    return utils::eMixerNone;
+}
+
+utils::EMIXER_TYPE AudioPolicyManager::getMixerTypeofSource(const std::string& streamType)
+{
+    for (auto &elements : mSourceVolumePolicyInfo)
     {
         if (elements.streamType == streamType)
             return elements.mixerType;
@@ -569,6 +972,44 @@ void AudioPolicyManager::updateCurrentVolume(const std::string& streamType, cons
     }
 }
 
+void AudioPolicyManager::updateCurrentVolumeForSource(const std::string& streamType, const int &volume)
+{
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+        {
+            elements.currentVolume = volume;
+            return;
+        }
+    }
+}
+
+void AudioPolicyManager::updateMuteStatus(const std::string& streamType, const bool &mute)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:updateMuteStatus streamType:%s, MuteStatus = %d", streamType.c_str(), (int)mute);
+    for (auto &elements : mVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+        {
+            elements.muteStatus = mute;
+            return;
+        }
+    }
+}
+
+void AudioPolicyManager::updateMuteStatusForSource(const std::string& streamType, const bool &mute)
+{
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+        {
+            elements.currentVolume = mute;
+            return;
+        }
+    }
+}
+
 bool AudioPolicyManager::isRampPolicyActive(const std::string& streamType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -580,9 +1021,123 @@ bool AudioPolicyManager::isRampPolicyActive(const std::string& streamType)
     }
     return false;
 }
+
+bool AudioPolicyManager::isRampPolicyActiveForSource(const std::string& streamType)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:getMixerType isRampPolicyActive:%s", streamType.c_str());
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+            return elements.ramp;
+    }
+    return false;
+}
+
+bool AudioPolicyManager::muteSink(EVirtualAudioSink audioSink, const int& muteStatus, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:muteSink:%d for sink:%d, \
+     mixerType = %d", muteStatus, (int)audioSink, (int)mixerType);
+    bool returnStatus = false;
+    if (mObjAudioMixer)
+    {
+        if (utils::ePulseMixer == mixerType)
+        {
+            if (mObjAudioMixer->muteSink(audioSink, muteStatus))
+                returnStatus = true;
+            else
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:muteSink failed");
+        }
+        else if (utils::eUmiMixer == mixerType)
+        {
+            //Will be uncommented when umi mixer is enabled
+        }
+        else
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,"AudioPolicyManager:Invalid mixer type");
+    }
+    else
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,"AudioPolicyManager:muteSink mObjAudioMixer is null");
+    return returnStatus;
+}
 //Utility functions ends
 
 //API functions start
+
+bool AudioPolicyManager::_muteSink(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _muteSink");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(streamType, string), PROP(mute, boolean))
+                                                          REQUIRED_2(streamType, mute)));
+    std::string reply;
+    if (!msg.parse(__FUNCTION__, lshandle))
+       return true;
+    AudioPolicyManager *audioPolicyManagerInstance = AudioPolicyManager::getAudioPolicyManagerInstance();
+    if (audioPolicyManagerInstance)
+    {
+        bool status = false;
+        bool isValidStream = false;
+        bool isStreamActive = false;
+        std::string streamType;
+        bool mute = false;
+        msg.get ("streamType", streamType);
+        msg.get("mute", mute);
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "got sink = %s , mute = %d ",\
+         streamType.c_str(), (int)mute);
+        EVirtualAudioSink sink = audioPolicyManagerInstance->getSinkType(streamType);
+        if (sink != eVirtualSink_None)
+        {
+            isValidStream = true;
+        }
+        if (audioPolicyManagerInstance->getStreamActiveStatus(streamType))
+        {
+            isStreamActive = true;
+        }
+        if (isValidStream)
+        {
+            if (isStreamActive)
+            {
+                if (!audioPolicyManagerInstance->muteSink(sink, mute, audioPolicyManagerInstance->getMixerType(streamType)))
+                {
+                    PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "_muteSink: failed mixer call");
+                }
+                else
+                {
+                    status = true;
+                    PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Mute status updated successfully");
+                }
+            }
+        }
+        if (status)
+        {
+            pbnjson::JValue muteSinkResponse = pbnjson::Object();
+            muteSinkResponse.put("returnValue", status);
+            muteSinkResponse.put("mute", mute);
+            muteSinkResponse.put("streamType", streamType);
+            reply = muteSinkResponse.stringify();
+        }
+        else
+        {
+            if (!isValidStream)
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Audiod Unknown Stream");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
+            }
+            else
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Audiod internal error");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+            }
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager instance Null");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+    }
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+    return true;
+}
+
 bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setInputVolume");
@@ -686,6 +1241,107 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
     return true;
 }
 
+
+bool AudioPolicyManager::_setSourceInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setInputVolume");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(sourceType, string), PROP(volume, integer),
+                                                           PROP(ramp, boolean)) REQUIRED_2(sourceType, volume)));
+
+    std::string reply;
+    if (!msg.parse(__FUNCTION__,lshandle))
+       return true;
+
+    AudioPolicyManager *audioPolicyManagerInstance = AudioPolicyManager::getAudioPolicyManagerInstance();
+    if (audioPolicyManagerInstance)
+    {
+        bool status = false;
+        bool isValidVolume = false;
+        bool isValidStream = false;
+        bool isStreamActive = false;
+        int volume = 0;
+        std::string streamType;
+        bool ramp = false;
+        msg.get ("sourceType", streamType);
+        msg.get ("volume", volume);
+        if (!msg.get ("ramp", ramp))
+        {
+            ramp = false;
+        }
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+            "got sink = %s , vol = %d", streamType.c_str(), volume);
+
+        EVirtualSource source = audioPolicyManagerInstance->getSourceType(streamType);
+        if (source != eVirtualSource_None)
+        {
+            isValidStream = true;
+        }
+
+        if ((volume >= INIT_VOLUME) && (volume <= MAX_VOLUME))
+        {
+            isValidVolume = true;
+        }
+
+        if (audioPolicyManagerInstance->getSourceActiveStatus(streamType))
+        {
+            isStreamActive = true;
+        }
+
+        if (isValidStream && isValidVolume)
+        {
+            if (isStreamActive)
+            {
+                if (!audioPolicyManagerInstance->setVolume(source, volume, \
+                    audioPolicyManagerInstance->getMixerTypeofSource(streamType), ramp))
+                    PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                        "_setSourceInputVolume: failed mixer call");
+            }
+            status = true;
+            audioPolicyManagerInstance->updateCurrentVolumeForSource(streamType, volume);
+            PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                "Volume updated successfully");
+        }
+        if (status)
+        {
+            pbnjson::JValue setInputVolumeResponse = pbnjson::Object();
+            setInputVolumeResponse.put("returnValue", true);
+            setInputVolumeResponse.put("volume", volume);
+            setInputVolumeResponse.put("sourceType", streamType);
+            reply = setInputVolumeResponse.stringify();
+            audioPolicyManagerInstance->notifyGetSourceVolumeSubscribers(streamType, volume);
+        }
+        else
+        {
+            if (!isValidStream)
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "Audiod Unknown Stream");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
+            }
+            else if (!isValidVolume)
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "Volume Not in Range");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
+            }
+            else
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "Audiod internal error");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+            }
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "AudioPolicyManager instance Null");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+    }
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+    return true;
+}
+
 bool AudioPolicyManager::_getInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(streamType, string), PROP(subscribe, boolean)) REQUIRED_1(streamType)));
@@ -746,6 +1402,67 @@ bool AudioPolicyManager::_getInputVolume(LSHandle *lshandle, LSMessage *message,
     return true;
 }
 
+
+bool AudioPolicyManager::_getSourceInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(sourceType, string), PROP(subscribe, boolean)) REQUIRED_1(sourceType)));
+    if (!msg.parse(__FUNCTION__,lshandle))
+    {
+        PM_LOG_CRITICAL(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT, "msg.parse failed");
+        return true;
+    }
+    bool subscribed = false;
+    std::string reply = STANDARD_JSON_SUCCESS;
+    std::string streamType;
+    CLSError lserror;
+    int volume = 0;
+    msg.get("subscribe", subscribed);
+    AudioPolicyManager *audioPolicyManagerInstance = AudioPolicyManager::getAudioPolicyManagerInstance();
+    if (msg.get("sourceType", streamType))
+    {
+        if (audioPolicyManagerInstance)
+        {
+            EVirtualSource audioSource = audioPolicyManagerInstance->getSourceType(streamType);
+            if (IsValidVirtualSource(audioSource))
+            {
+                if (LSMessageIsSubscription (message))
+                {
+                    if(!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
+                    {
+                        lserror.Print(__FUNCTION__, __LINE__);
+                        PM_LOG_CRITICAL(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "LSSubscriptionProcess failed");
+                        return true;
+                    }
+                }
+                pbnjson::JValue returnPayload = pbnjson::Object();
+                volume = audioPolicyManagerInstance->getCurrentVolumeOfSource(streamType);
+                returnPayload.put("subscribed", subscribed);
+                returnPayload.put("sourceType", streamType);
+                returnPayload.put("volume", volume);
+                returnPayload.put("returnValue", true);
+                reply = returnPayload.stringify();
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: Unknown stream type");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
+            }
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,"AudioPolicyManager: audioPolicyManagerInstance is null");
+            reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod Internal Error");
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:Missing stream type");
+        reply =  MISSING_PARAMETER_ERROR(streamType, string);
+    }
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+    return true;
+}
+
 void AudioPolicyManager::notifyGetVolumeSubscribers(const std::string& streamType, const int& volume)
 {
     PM_LOG_DEBUG("AudioPolicyManager notifyGetVolumeSubscribers with streamType:%s volume:%d", streamType.c_str(), volume);
@@ -757,6 +1474,23 @@ void AudioPolicyManager::notifyGetVolumeSubscribers(const std::string& streamTyp
     CLSError lserror;
     LSHandle *lsHandle = GetPalmService ();
     if (! LSSubscriptionReply(lsHandle, AUDIOD_API_GET_INPUT_VOLUME, returnPayload.stringify().c_str(), &lserror))
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+        PM_LOG_CRITICAL(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Notify error");
+    }
+}
+
+void AudioPolicyManager::notifyGetSourceVolumeSubscribers(const std::string& streamType, const int& volume)
+{
+    PM_LOG_DEBUG("AudioPolicyManager notifyGetSourceVolumeSubscribers with streamType:%s volume:%d", streamType.c_str(), volume);
+    pbnjson::JValue returnPayload = pbnjson::Object();
+    returnPayload.put("subscribed", true);
+    returnPayload.put("sourceType", streamType);
+    returnPayload.put("volume", volume);
+    returnPayload.put("returnValue", true);
+    CLSError lserror;
+    LSHandle *lsHandle = GetPalmService ();
+    if (! LSSubscriptionReply(lsHandle, AUDIOD_API_GET_SOURCE_INPUT_VOLUME, returnPayload.stringify().c_str(), &lserror))
     {
         lserror.Print(__FUNCTION__, __LINE__);
         PM_LOG_CRITICAL(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Notify error");
@@ -790,6 +1524,130 @@ std::string AudioPolicyManager::getStreamStatus(const std::string& streamType, b
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                 "getStreamStatus returning payload = %s", finalString.stringify().c_str());
     return finalString.stringify();
+}
+
+std::string AudioPolicyManager::getSourceStatus(const std::string& streamType, bool subscribed)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                "getStreamStatus streamType %s subscribed %d", streamType.c_str(), (int)subscribed);
+    pbnjson::JValue streamObjectArray = pbnjson::Array();
+    pbnjson::JObject streamObject = pbnjson::JObject();
+    pbnjson::JObject finalString = pbnjson::JObject();
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (elements.streamType == streamType)
+        {
+            streamObject = pbnjson::JObject();
+            streamObject.put("sourceType", elements.streamType);
+            streamObject.put("muteStatus", elements.muteStatus);
+            streamObject.put("inputVolume", elements.currentVolume);
+            streamObject.put("sink", elements.sink);
+            streamObject.put("source", elements.source);
+            streamObject.put("policyStatus", elements.isPolicyInProgress);
+            streamObject.put("activeStatus", elements.isStreamActive);
+            streamObjectArray.append(streamObject);
+        }
+    }
+    finalString = pbnjson::JObject{{"sourceObject", streamObjectArray}};
+    finalString.put("returnValue", true);
+    finalString.put("subscribed", subscribed);
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                "getSourceStatus returning payload = %s", finalString.stringify().c_str());
+    return finalString.stringify();
+}
+
+std::string AudioPolicyManager::getSourceStatus(bool subscribed)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                "getSourceStatus subscribed %d", subscribed);
+    pbnjson::JValue streamObjectArray = pbnjson::Array();
+    pbnjson::JObject streamObject = pbnjson::JObject();
+    pbnjson::JObject finalString = pbnjson::JObject();
+    for (auto &elements : mSourceVolumePolicyInfo)
+    {
+        if (true == elements.isStreamActive)
+        {
+            streamObject = pbnjson::JObject();
+            streamObject.put("sourceType", elements.streamType);
+            streamObject.put("muteStatus", elements.muteStatus);
+            streamObject.put("inputVolume", elements.currentVolume);
+            streamObject.put("sink", elements.sink);
+            streamObject.put("source", elements.source);
+            streamObject.put("policyStatus", elements.isPolicyInProgress);
+            streamObject.put("activeStatus", elements.isStreamActive);
+            streamObjectArray.append(streamObject);
+        }
+    }
+    finalString = pbnjson::JObject{{"sourceObject", streamObjectArray}};
+    finalString.put("returnValue", true);
+    finalString.put("subscribed", subscribed);
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                "getSourceStatus returning payload = %s", finalString.stringify().c_str());
+    return finalString.stringify();
+}
+
+bool AudioPolicyManager::_getSourceStatus(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(sourceType, string), PROP(subscribe, boolean))));
+    if (!msg.parse(__FUNCTION__,lshandle))
+    {
+        PM_LOG_CRITICAL(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT, "msg parse failed");
+        return true;
+    }
+    bool subscribed = false;
+    bool addSubscribers = false;
+    std::string reply = STANDARD_JSON_SUCCESS;
+    std::string streamType;
+    CLSError lserror;
+    msg.get("subscribe", subscribed);
+
+    AudioPolicyManager *audioPolicyManagerInstance = AudioPolicyManager::getAudioPolicyManagerInstance();
+    if(msg.get("sourceType", streamType))
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "sourceType is present %s", streamType.c_str());
+        if (audioPolicyManagerInstance)
+        {
+            EVirtualSource audioSource = audioPolicyManagerInstance->getSourceType(streamType);
+            if (IsValidVirtualSource(audioSource))
+            {
+                addSubscribers = true;
+                reply = audioPolicyManagerInstance->getSourceStatus(streamType, subscribed);
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: Unknown stream type");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
+            }
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,"AudioPolicyManager: audioPolicyManagerInstance is null");
+            reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod Internal Error");
+        }
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "reply : %s", reply.c_str());
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "_getSourceStatus request received for all active streams");
+        addSubscribers = true;
+        reply = audioPolicyManagerInstance->getSourceStatus(subscribed);
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "reply: %s", reply.c_str());
+    }
+    if (addSubscribers)
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "_getSourceStatus request - adding the subscribers");
+        if (LSMessageIsSubscription (message))
+        {
+            if(!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+                PM_LOG_CRITICAL(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "LSSubscriptionProcess failed");
+                return true;
+            }
+        }
+    }
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+    return true;
 }
 
 std::string AudioPolicyManager::getStreamStatus(bool subscribed)
@@ -885,6 +1743,95 @@ bool AudioPolicyManager::_getStreamStatus(LSHandle *lshandle, LSMessage *message
     return true;
 }
 
+//TODO: is this required?
+std::vector<std::string> physicalSources = {
+    "pcm_input",
+    "micinput1",
+    "micinput2",
+    "micinput3"
+};
+
+bool AudioPolicyManager::_muteSource(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    //To be changed to virtual source
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _muteSource");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(sourceType, string), PROP(mute, boolean)) REQUIRED_2(sourceType,mute)));
+    std::string reply ;
+    if (!msg.parse(__FUNCTION__,lshandle))
+       return true;
+    std::string streamType;
+    bool mute = false;
+    bool isValidStream = false;
+    bool isStreamActive = false;
+    bool retVal = false;
+    AudioPolicyManager *AudioPolicyManagerObj = AudioPolicyManager::getAudioPolicyManagerInstance();
+
+    msg.get ("sourceType", streamType);
+    msg.get ("mute", mute);
+
+    auto it = std::find (physicalSources.begin(), physicalSources.end(), streamType);
+    if (it != physicalSources.end())
+    {
+        retVal = AudioPolicyManagerObj->mObjAudioMixer->setPhysicalSourceMute(streamType.c_str(), mute);
+        if (retVal)
+        {
+            pbnjson::JValue responseObj = pbnjson::Object();
+            responseObj.put("returnValue", true);
+            responseObj.put("sourceType", streamType);
+            responseObj.put("mute", mute);
+            reply = responseObj.stringify();
+        }
+        else
+        {
+            PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "Audiod internal error");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+        }
+    }
+    else
+    {
+        EVirtualSource sourceId = AudioPolicyManagerObj->getSourceType(streamType);
+        if (sourceId != eVirtualSource_None)
+        {
+            isValidStream = true;
+        }
+        if (isValidStream && AudioPolicyManagerObj->getSourceActiveStatus(streamType))
+        {
+            retVal = AudioPolicyManagerObj->mObjAudioMixer->setVirtualSourceMute(sourceId, mute);
+        }
+        if (retVal)
+        {
+            AudioPolicyManagerObj->updateMuteStatusForSource(streamType, mute);
+            //Mute status change is notified via getStatus subscription
+            std::string payload = AudioPolicyManagerObj->getSourceStatus(streamType, true);
+            AudioPolicyManagerObj->notifyGetSourceStatusSubscribers(payload);
+
+            pbnjson::JValue setInputVolumeResponse = pbnjson::Object();
+            setInputVolumeResponse.put("returnValue", true);
+            setInputVolumeResponse.put("mute", mute);
+            setInputVolumeResponse.put("sourceType", streamType);
+            reply = setInputVolumeResponse.stringify();
+        }
+        else
+        {
+            if (!isValidStream)
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                        "Audiod Unknown Stream");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
+            }
+            else
+            {
+                PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                    "Audiod internal error");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+            }
+        }
+    }
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+    return true;
+}
+
 void AudioPolicyManager::notifyGetStreamStatusSubscribers(const std::string& payload) const
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
@@ -892,6 +1839,19 @@ void AudioPolicyManager::notifyGetStreamStatusSubscribers(const std::string& pay
     CLSError lserror;
     LSHandle *lsHandle = GetPalmService();
     if (!LSSubscriptionReply(lsHandle, AUDIOD_API_GET_STREAM_STATUS, payload.c_str(), &lserror))
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+        PM_LOG_CRITICAL(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Notify error");
+    }
+}
+
+void AudioPolicyManager::notifyGetSourceStatusSubscribers(const std::string& payload) const
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+               "AudioPolicyManager notifyGetSourceStatusSubscribers with payload = %s", payload.c_str());
+    CLSError lserror;
+    LSHandle *lsHandle = GetPalmService();
+    if (!LSSubscriptionReply(lsHandle, AUDIOD_API_GET_SOURCE_STATUS, payload.c_str(), &lserror))
     {
         lserror.Print(__FUNCTION__, __LINE__);
         PM_LOG_CRITICAL(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Notify error");
@@ -1056,6 +2016,11 @@ static LSMethod InputVolumeMethods[] = {
     {"setInputVolume", AudioPolicyManager::_setInputVolume},
     {"getInputVolume", AudioPolicyManager::_getInputVolume},
     {"getStreamStatus", AudioPolicyManager::_getStreamStatus},
+    {"getSourceStatus", AudioPolicyManager::_getSourceStatus},
+    {"muteSource", AudioPolicyManager::_muteSource},
+    {"muteSink", AudioPolicyManager::_muteSink},
+    {"setSourceInputVolume", AudioPolicyManager::_setSourceInputVolume},
+    {"getSourceInputVolume", AudioPolicyManager::_getSourceInputVolume},
     { },
 };
 
@@ -1082,6 +2047,7 @@ AudioPolicyManager::AudioPolicyManager(ModuleConfig* const pConfObj):mObjModuleM
     if (mObjModuleManager)
     {
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventSinkStatus);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventSourceStatus);
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventMixerStatus);
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventCurrentInputVolume);
     }
@@ -1150,6 +2116,14 @@ void AudioPolicyManager::handleEvent(events::EVENTS_T *event)
                     "handleEvent:: eEventSinkStatus");
             events::EVENT_SINK_STATUS_T *sinkStatusEvent = (events::EVENT_SINK_STATUS_T*)event;
             eventSinkStatus(sinkStatusEvent->source, sinkStatusEvent->sink, sinkStatusEvent->audioSink, sinkStatusEvent->sinkStatus, sinkStatusEvent->mixerType);
+        }
+        break;
+        case utils::eEventSourceStatus:
+        {
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventSourceStatus");
+            events::EVENT_SOURCE_STATUS_T *sourceStatusEvent = (events::EVENT_SOURCE_STATUS_T*)event;
+            eventSourceStatus(sourceStatusEvent->source, sourceStatusEvent->sink, sourceStatusEvent->audioSource, sourceStatusEvent->sourceStatus, sourceStatusEvent->mixerType);
         }
         break;
         case utils::eEventMixerStatus:

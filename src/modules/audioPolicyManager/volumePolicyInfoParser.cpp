@@ -47,19 +47,37 @@ bool VolumePolicyInfoParser::loadVolumePolicyJsonConfig()
         pbnjson::JSchema::AllSchema());
     if (!fileJsonVolumePolicyConfig.isValid() || !fileJsonVolumePolicyConfig.isObject())
     {
-        PM_LOG_ERROR(MSGID_INVALID_INPUT, INIT_KVCOUNT,\
+        PM_LOG_ERROR(MSGID_POLICY_CONFIGURATOR, INIT_KVCOUNT,\
             "loadVolumePolicyJsonConfig : Failed to parse json config file, using defaults. File: %s",\
+            jsonFilePath.str().c_str());
+        loadStatus = false;
+    }
+
+    std::stringstream jsonFilePathSource;
+    jsonFilePathSource.clear();
+    jsonFilePathSource << CONFIG_DIR_PATH << "/" << SOURCE_VOLUME_POLICY_CONFIG;
+    PM_LOG_INFO(MSGID_POLICY_CONFIGURATOR, INIT_KVCOUNT, "Loading volume policy info from json file %s",\
+        jsonFilePathSource.str().c_str());
+    fileJsonSourceVolumePolicyConfig = pbnjson::JDomParser::fromFile(jsonFilePathSource.str().c_str(),\
+        pbnjson::JSchema::AllSchema());
+    if (!fileJsonSourceVolumePolicyConfig.isValid() || !fileJsonSourceVolumePolicyConfig.isObject())
+    {
+        PM_LOG_ERROR(MSGID_POLICY_CONFIGURATOR, INIT_KVCOUNT,\
+        "loadVolumePolicyJsonConfig : Failed to parse json config file, using defaults. File: %s",\
             jsonFilePath.str().c_str());
         loadStatus = false;
     }
     return loadStatus;
 }
 
-pbnjson::JValue VolumePolicyInfoParser::getVolumePolicyInfo()
+pbnjson::JValue VolumePolicyInfoParser::getVolumePolicyInfo(const bool& isSink)
 {
     PM_LOG_DEBUG("getVolumePolicyInfo");
     pbnjson::JValue policyVolumeInfo = pbnjson::Object();
-    policyVolumeInfo = fileJsonVolumePolicyConfig["streamDetails"];
+   if (isSink)
+        policyVolumeInfo = fileJsonVolumePolicyConfig["streamDetails"];
+    else
+        policyVolumeInfo = fileJsonSourceVolumePolicyConfig["streamDetails"];
     PM_LOG_INFO(MSGID_POLICY_CONFIGURATOR, INIT_KVCOUNT, "Policy info json value is %s",\
         policyVolumeInfo.stringify().c_str());
     return policyVolumeInfo;

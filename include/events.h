@@ -35,6 +35,16 @@ namespace events
     typedef struct
     {
         EModuleEventType eventName;
+        std::string source;
+        std::string sink;
+        EVirtualSource audioSource;
+        utils::ESINK_STATUS sourceStatus;
+        utils::EMIXER_TYPE mixerType;
+    }EVENT_SOURCE_STATUS_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
         EModuleEventType type;
         LSMessage *message;
     }EVENT_KEY_INFO_T;
@@ -81,6 +91,17 @@ namespace events
         SERVER_TYPE_E serviceName;
     }EVENT_SUBSCRIBE_SERVER_STATUS_T;
 
+    typedef struct
+    {
+        EModuleEventType eventName;
+        pbnjson::JValue policyInfo;
+    }EVENT_SINK_POLICY_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        pbnjson::JValue sourcePolicyInfo;
+    }EVENT_SOURCE_POLICY_INFO_T;
 
     typedef struct
     {
