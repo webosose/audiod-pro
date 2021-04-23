@@ -126,12 +126,12 @@ SET (modules_files
         src/modules/bluetoothManager/bluetoothManager.cpp
         src/modules/connectionManager/connectionManager.cpp
         src/modules/masterVolumeManager/masterVolumeManager.cpp
-        src/modules/masterVolumeManager/soundOutputManager.cpp
-        src/modules/masterVolumeManager/soundOutputListParser.cpp
         src/modules/settingsServiceManager/settingsServiceManager.cpp
         src/modules/systemSoundsManager/systemSoundsManager.cpp
         src/modules/deviceManager/deviceManager.cpp
         src/modules/playbackManager/playbackManager.cpp
+        src/modules/audioRouter/deviceRoutingConfigParser.cpp
+        src/modules/audioRouter/audioRouter.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")
@@ -141,7 +141,7 @@ SET (modules_files
     install(FILES files/config/audiod_sink_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_source_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_module_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
-    install(FILES files/config/audiod_sound_output_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
+    install(FILES files/config/audiod_device_routing_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/bluetooth_configuration.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
 
 if (WEBOS_LTTNG_ENABLED)

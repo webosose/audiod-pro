@@ -196,7 +196,7 @@ namespace utils
             category = "";
         }
     }VOLUME_POLICY_INFO_T;
-
+    //TODO: delete this
     typedef struct soundOutputListInfo
     {
         bool activeStatus;
@@ -218,6 +218,57 @@ namespace utils
         }
     }SOUNDOUTPUT_LIST_T;
 
+    typedef struct deviceInfo
+    {
+        std::string deviceName;
+        bool activeStatus;
+        bool muteStatus;
+        bool adjustVolume;
+        int volume;
+        int maxVolume;
+        int minVolume;
+        int volumeStep;
+        std::string display;
+        int priority;
+        bool isConnected;
+        deviceInfo()
+        {
+            activeStatus = false;
+            muteStatus = false;
+            adjustVolume = true;
+            volume = 100;
+            maxVolume = 100;
+            minVolume = 0;
+            volumeStep = 1;
+            priority = -1;
+            isConnected  = false;
+        }
+    }DEVICE_INFO_T;
+
+    typedef struct sinkRoutingInfo
+    {
+        EVirtualAudioSink startSink;
+        EVirtualAudioSink endSink;
+        std::list<EVirtualAudioSink> sinkList;
+        sinkRoutingInfo()
+        {
+            startSink = eVirtualSink_None;
+            endSink = eVirtualSink_None;
+        }
+    }SINK_ROUTING_INFO_T;
+
+    typedef struct sourceRoutingInfo
+    {
+        EVirtualSource startSource;
+        EVirtualSource endSource;
+        std::list<EVirtualSource> sourceList;
+        sourceRoutingInfo()
+        {
+            startSource = eVirtualSource_None ;
+            endSource = eVirtualSource_None ;
+        }
+    }SOURCE_ROUTING_INFO_T;
+
     typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
     typedef std::vector<EVirtualAudioSink>::iterator itVirtualSink;
 
@@ -235,7 +286,18 @@ namespace utils
     typedef std::map<std::string, EVirtualSource> mapStreamToSource;
     typedef std::map<std::string, EVirtualSource>::iterator itMapStreamToSource;
 
+    typedef std::map<std::string, utils::SINK_ROUTING_INFO_T> mapSinkRoutingInfo;
+    typedef std::map<std::string, utils::SINK_ROUTING_INFO_T>::iterator itMapSinkRoutingInfo;
 
+    typedef std::map<std::string, utils::SOURCE_ROUTING_INFO_T> mapSourceRoutingInfo;
+    typedef std::map<std::string, utils::SOURCE_ROUTING_INFO_T>::iterator itMapSourceRoutingInfo;
+
+    typedef std::map<int, std::vector<std::string>> mapDisplaySoundOutputInfo;
+
+    typedef std::map<std::string, int> mapBTDeviceInfo;
+    typedef std::map<std::string, int>::iterator itMapBTDeviceInfo;
+
+    typedef std::map<std::string, std::vector<DEVICE_INFO_T>> mapDeviceInfo;
 
     void LSMessageResponse(LSHandle* handle, LSMessage * message,\
         const char* reply, utils::EReplyType eType, bool isReferenced);

@@ -150,7 +150,10 @@ extern PmLogContext audiodLogContext;
 #define MSGID_PULSE_LINK                               "PULSE_LINK"                        //For PulseAudio link
 #define MSGID_PLAYBACK_MANAGER                         "PLAYBACK_MANAGER"                  //For Playback manager
 #define MSGID_SOUND_SETTINGS                           "SOUND_SETTINGS"                    //For sound Settings
-#define MSGID_SOUNDOUTPUT_LIST_PARSER                  "SOUNDOUTPUT_CONFIG_PARSER"         //SoundOutputList Configuration
+#define MSGID_DEVICE_ROUTING_CONFIG_PARSER             "DEVICE_ROUTING_CONFIG_PARSER"      //Device routing config parser
+#define MSGID_SOUNDOUTPUT_LIST_PARSER                   "DEVICE_ROUTING_CONFIG_PARSER"      //Device routing config parser //TODO
+#define MSGID_AUDIOROUTER                              "AUDIO_ROUTER"                      //For Auto class
+
 #define MSGID_SYSTEMSOUND_MANAGER                      "SYSTEM_SOUND"                      //For System sound plays
 #define MSGID_CONNECTION_MANAGER                       "CONNECTION_MANAGER"                //Connection manager
 #define MSGID_GINIT_FUNTION                            "INIT_FUNCTIONS"                    //For utils, init and hook functions

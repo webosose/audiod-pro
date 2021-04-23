@@ -30,6 +30,8 @@ class DeviceManager : public ModuleInterface
         DeviceManager(const DeviceManager&) = delete;
         DeviceManager& operator=(const DeviceManager&) = delete;
         DeviceManager(ModuleConfig* const pConfObj);
+        AudioMixer *mObjAudioMixer;
+        ModuleManager *mObjModuleManager;
         static bool mIsObjRegistered;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
@@ -56,6 +58,7 @@ class DeviceManager : public ModuleInterface
         }
         void initialize();
         void deInitialize();
+        void eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixerType);
         void handleEvent(events::EVENTS_T* ev);
         static bool _event(LSHandle *lshandle, LSMessage *message, void *ctx);
 };

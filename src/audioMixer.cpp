@@ -298,6 +298,30 @@ void AudioMixer::callBackSourceStatus(const std::string& source, const std::stri
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
 }
 
+void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "callBackDeviceConnectionStatus::deviceName:%s deviceStatus:%d mixerType:%d",\
+        deviceName.c_str(), (int)deviceStatus, (int)mixerType);
+    if (deviceName == "pcm_headphone")
+    {
+        PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "pcm_headphone loaded, routing is from udev");
+        return;
+    }
+    if (mObjModuleManager)
+    {
+        events::EVENT_DEVICE_CONNECTION_STATUS_T  stEventDeviceConnectionStatus;
+        stEventDeviceConnectionStatus.eventName = utils::eEventDeviceConnectionStatus;
+        stEventDeviceConnectionStatus.devicename = deviceName;
+        stEventDeviceConnectionStatus.deviceStatus = deviceStatus;
+        stEventDeviceConnectionStatus.mixerType = mixerType;
+        mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventDeviceConnectionStatus);
+    }
+    else
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "callBackDeviceConnectionStatus mObjModuleManager is null");
+}
+
 void AudioMixer::callBackMasterVolumeStatus()
 {
     PM_LOG_DEBUG("callBackMasterVolumeStatus");
@@ -360,6 +384,7 @@ bool AudioMixer::setMasterVolume(const std::string &strSoundOutPut, const int &i
         return false;
     }
 }
+
 bool AudioMixer::getMasterVolume(LSFilterFunc cb, envelopeRef *message)
 {
     PM_LOG_DEBUG("AudioMixer: getMasterVolume");
@@ -510,26 +535,115 @@ bool AudioMixer::rampVolume(EVirtualAudioSink sink, int endVolume)
     }
 }
 
-bool AudioMixer::programDestination(EVirtualAudioSink sink, EPhysicalSink destination)
+bool AudioMixer::moveOutputDeviceRouting(EVirtualAudioSink sink, const char* deviceName)
 {
-    PM_LOG_DEBUG("AudioMixer: programDestination");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: moveOutputDeviceRouting");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programDestination(sink, destination);
+        return mObjPulseAudioMixer->moveOutputDeviceRouting(sink, deviceName);
     else
     {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programDestination: mObjPulseAudioMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "moveOutputDeviceRouting: mObjPulseAudioMixer is null");
         return false;
     }
 }
 
-bool AudioMixer::programDestination(EVirtualSource source, EPhysicalSource destination)
+bool AudioMixer::moveInputDeviceRouting(EVirtualSource source, const char* deviceName)
 {
-    PM_LOG_DEBUG("AudioMixer: programDestination");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: moveInputDeviceRouting");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programDestination(source, destination);
+        return mObjPulseAudioMixer->moveInputDeviceRouting(source, deviceName);
     else
     {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programDestination: mObjPulseAudioMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "moveInputDeviceRouting: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setSoundOutputOnRange(EVirtualAudioSink startSink, EVirtualAudioSink endSink, const char* deviceName)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setSoundOutputOnRange");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setSoundOutputOnRange(startSink, endSink, deviceName);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setSoundoutputOnRange: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setSoundInputOnRange(EVirtualSource startSource,\
+            EVirtualSource endSource, const char* deviceName)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setSoundInputOnRange");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setSoundInputOnRange(startSource, endSource, deviceName);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setSoundInputOnRange: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtualAudioSink endSink)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setDefaultSinkRouting");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setDefaultSinkRouting(startSink, endSink);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setDefaultSinkRouting: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtualSource endSource)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setDefaultSourceRouting");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setDefaultSourceRouting(startSource, endSource);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setDefaultSourceRouting: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setSinkOutputDevice(const std::string& soundOutput,const int& sink)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setSinkOutputDevice got soundoutput = %s sinkID = %d",soundOutput.c_str(),sink);
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setSinkOutputDevice(soundOutput, sink);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setSinkOutputDevice: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::setSourceInputDevice(EVirtualSource source, const char* deviceName)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setSourceInputDevice got deviceName:%s sourceId:%d", deviceName, (int)source);
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setSourceInputDevice(source, deviceName);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setSourceInputDevice: mObjPulseAudioMixer is null");
         return false;
     }
 }
@@ -542,18 +656,6 @@ bool AudioMixer::programFilter(int filterTable)
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programFilter: mObjPulseAudioMixer is null");
-        return false;
-    }
-}
-
-bool AudioMixer::programBalance(int balance)
-{
-    PM_LOG_DEBUG("AudioMixer: programBalance");
-    if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programBalance(balance);
-    else
-    {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programBalance: mObjPulseAudioMixer is null");
         return false;
     }
 }
@@ -593,18 +695,19 @@ bool AudioMixer::updateRate(int rate)
     }
 }
 
-bool AudioMixer::setMute(int sink, int mutestatus)
+bool AudioMixer::setMute(const char* deviceName, const int& mutestatus)
 {
-    PM_LOG_DEBUG("AudioMixer: setMute");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setMute");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setMute(sink, mutestatus);
+        return mObjPulseAudioMixer->setMute(deviceName, mutestatus);
     else
     {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setMute: mObjPulseAudioMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setMute: mObjPulseAudioMixer is null");
         return false;
     }
 }
-
 
 bool AudioMixer::muteSink(const int& sink, const int& mutestatus)
 {
@@ -649,14 +752,16 @@ bool AudioMixer::setVirtualSourceMute(int source, int mutestatus)
     }
 }
 
-bool AudioMixer::setVolume(int display, int volume)
+bool AudioMixer::setVolume(const char* deviceName, const int& volume)
 {
-    PM_LOG_DEBUG("AudioMixer: setVolume");
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setVolume");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setVolume(display, volume);
+        return mObjPulseAudioMixer->setVolume(deviceName, volume);
     else
     {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setVolume: mObjPulseAudioMixer is null");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setVolume: mObjPulseAudioMixer is null");
         return false;
     }
 }
@@ -707,6 +812,20 @@ bool AudioMixer::externalSoundcardPathCheck(std::string filename,  int status)
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "externalSoundcardPathCheck: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isLineOut, const char* deviceName)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: loadInternalSoundCard");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->loadInternalSoundCard(cmd, cardno, deviceno, status, isLineOut, deviceName);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "loadInternalSoundCard: mObjPulseAudioMixer is null");
         return false;
     }
 }

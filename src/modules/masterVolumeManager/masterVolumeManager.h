@@ -69,6 +69,8 @@ class MasterVolumeManager : public ModuleInterface
         void deInitialize();
         void handleEvent(events::EVENTS_T *event);
         void eventMasterVolumeStatus();
+        void eventActiveDeviceInfo(const std::string deviceName,\
+            const std::string& display, const bool& isConnected, const bool& isOutput);
 
         //Internal API for Volume and Mute, will be implemented during dynamic audio policy handling redesign
         bool _setVolume(int volume, bool notifySubscriber = true){return true;}

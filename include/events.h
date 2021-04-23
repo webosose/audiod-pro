@@ -106,6 +106,31 @@ namespace events
     typedef struct
     {
         EModuleEventType eventName;
+        std::string devicename;
+        utils::E_DEVICE_STATUS deviceStatus;
+        utils::EMIXER_TYPE mixerType;
+    }EVENT_DEVICE_CONNECTION_STATUS_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        std::string deviceName;
+        std::string display;
+        bool isConnected;
+        bool isOutput;
+    }EVENT_ACTIVE_DEVICE_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        bool state;
+        std::string address;
+        int displayId;
+    }EVENT_BT_DEVICE_DISPAY_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
     }EVENTS_T;
 }
 

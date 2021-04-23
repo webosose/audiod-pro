@@ -82,10 +82,18 @@ class AudioMixer : public MixerInterface
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);
         bool rampVolume(EVirtualAudioSink sink, int endVolume);
-        bool programDestination(EVirtualAudioSink sink, EPhysicalSink destination);
-        bool programDestination(EVirtualSource source, EPhysicalSource destination);
+        bool moveOutputDeviceRouting(EVirtualAudioSink sink, const char* deviceName);
+        bool moveInputDeviceRouting(EVirtualSource source, const char* deviceName);
+        bool setSoundOutputOnRange(EVirtualAudioSink startSink,\
+            EVirtualAudioSink endSink, const char* deviceName);
+        bool setSoundInputOnRange(EVirtualSource startSource,\
+            EVirtualSource endSource, const char* deviceName);
+        bool setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtualAudioSink endSink);
+        bool setDefaultSourceRouting(EVirtualSource startSource, EVirtualSource endSource);
+        bool setSinkOutputDevice(const std::string& soundOutput, const int& sink);
+        bool setSourceInputDevice(EVirtualSource source, const char* deviceName);
+
         bool programFilter(int filterTable);
-        bool programBalance(int balance);
         bool muteAll();
         bool suspendAll();
         bool updateRate(int rate);
@@ -93,14 +101,15 @@ class AudioMixer : public MixerInterface
         bool muteSink(const int& sink, const int& mutestatus);
         bool setVirtualSourceMute(int sink, int mutestatus);
 
-        bool setMute(int sink, int mutestatus);
-        bool setVolume(int display, int volume);
+        bool setMute(const char* deviceName, const int& mutestatus);
+        bool setVolume(const char* deviceName, const int& volume);
         bool playSystemSound(const char *snd, EVirtualAudioSink sink);
         bool playSound(const char *snd, EVirtualAudioSink sink, \
             const char *format, int rate, int channels);
         bool programHeadsetRoute(EHeadsetState route);
         bool externalSoundcardPathCheck(std::string filename,  int status);
         bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+        bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status,bool isLineOut, const char* deviceName);
         bool _connectSocket();
         bool suspendSink(int sink);
         bool programLoadBluetooth(const char * address , const char *profile, const int displayID);
@@ -137,7 +146,7 @@ class AudioMixer : public MixerInterface
         void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType);
         void callBackSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
-
+        void callBackDeviceConnectionStatus(const std::string &deviceName, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType);
         void callBackMasterVolumeStatus();
 };
 

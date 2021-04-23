@@ -51,5 +51,6 @@ class UdevDeviceManager : public DeviceManagerInterface
         }
         std::string onDeviceAdded(Device *device);
         std::string onDeviceRemoved(Device *device);
+        bool setHeadphoneSoundOut(const bool& connected);
 };
 #endif //_UDEV_DEVICE_MANAGER_H_

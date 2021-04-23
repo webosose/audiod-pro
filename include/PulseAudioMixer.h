@@ -48,12 +48,21 @@ public:
     bool rampVolume(EVirtualAudioSink sink, int endVolume)
         {return programVolume(sink, endVolume, true);}
     /// Program destination of a sink
-    bool programDestination(EVirtualAudioSink sink, EPhysicalSink destination);
-    /// Program destination of a source
-    bool programDestination(EVirtualSource source, EPhysicalSource destination);
+    bool moveOutputDeviceRouting(EVirtualAudioSink sink, const char* deviceName);
+    bool moveInputDeviceRouting(EVirtualSource source, const char* deviceName);
+    bool setSoundOutputOnRange(EVirtualAudioSink startSink,\
+        EVirtualAudioSink endSink, const char* deviceName);
+    bool setSoundInputOnRange(EVirtualSource startSource,\
+        EVirtualSource endSource, const char* deviceName);
+    bool setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtualAudioSink endSink);
+    bool setDefaultSourceRouting(EVirtualSource startSource, EVirtualSource endSource);
+    //setSoundInput
+    bool setSourceInputDevice(EVirtualSource source, const char* deviceName);
+    //setSoundOutput
+    bool setSinkOutputDevice(const std::string& soundOutput, const int& sink);
+
     /// Program a filter
     bool programFilter(int filterTable);
-    bool programBalance(int balance);
     bool muteAll();
     /// Get active streams set to test which sinks are active.
     VirtualSinkSet getActiveStreams()
@@ -75,13 +84,15 @@ public:
         const char *format, int rate, int channels);
     /// Pre-load system sound in Pulse, if necessary
     void preloadSystemSound(const char * snd);
-    bool muteSink(const int& sink, const int& mutestatus);
+    bool muteSink(const int& sink, const int& mutestatus);  //TODO : remove
+    bool setMute(const char* deviceName, const int& mutestatus);
     //mute virtual source
     bool setVirtualSourceMute(int sink, int mutestatus);
     /// mute/unmute the Physical sink
     bool setMute(int sink, int mutestatus);
     /// set volume on a particular display
-    bool setVolume(int display, int volume);
+    bool setVolume(int display, int volume);    //TODO: remove
+    bool setVolume(const char* deviceName, const int& volume);
     void playOneshotDtmf(const char *snd, EVirtualAudioSink sink) ;
     void playOneshotDtmf(const char *snd, const char* sink) ;
     void playDtmf(const char *snd, EVirtualAudioSink sink) ;
@@ -90,6 +101,7 @@ public:
     bool programHeadsetRoute (EHeadsetState route);
     bool externalSoundcardPathCheck (std::string filename,  int status);
     bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+    bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isLineOut, const char* deviceName);
     /// These should really be private, but they're needed for global callbacks...
     bool _connectSocket();
     void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);
@@ -107,6 +119,9 @@ public:
     bool setRouting(const ConstString & scenario);
     int loopback_set_parameters(const char * value);
     void init(GMainLoop * loop, LSHandle * handle);
+    void deviceConnectionStatus (const std::string &deviceName, const bool &connectionStatus);
+    bool loadCombinedSink(const char* sinkname, const char* device1, const char *device2, EVirtualAudioSink startSink,
+            EVirtualAudioSink endSink, int display);
 
 private:
     PulseAudioMixer() = delete;

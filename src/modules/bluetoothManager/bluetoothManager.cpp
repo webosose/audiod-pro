@@ -206,6 +206,16 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address, char *
             mConnectedAddressVector.erase(it);
         }
     }
+    if (mObjModuleManager)
+    {
+        events::EVENT_BT_DEVICE_DISPAY_INFO_T stEventBtDeviceDisplayInfo;
+        stEventBtDeviceDisplayInfo.eventName = utils::eEventBTDeviceDisplayInfo;
+        stEventBtDeviceDisplayInfo.displayId = display;
+        stEventBtDeviceDisplayInfo.address = address;
+        stEventBtDeviceDisplayInfo.state = state;
+        if (display != 0)
+            mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventBtDeviceDisplayInfo);
+    }
 }
 
 void BluetoothManager::btAdapterQueryInfo(LSMessage *message)

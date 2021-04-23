@@ -69,12 +69,20 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     if (DISPLAY_TWO == display)
     {
+        std::string activeDevice = getDisplaySoundOutput(DISPLAY_TWO);
+        PM_LOG_DEBUG("active soundoutput = %s", activeDevice.c_str());
         if (soundOutput != "alsa")
         {
             PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
             reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
         }
-        else if ((isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(displayId, volume)))
+        else if (activeDevice.empty())
+        {
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput is not in range");
+
+        }
+        else if ((isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(activeDevice.c_str(), volume)))
         {
             PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
             displayTwoVolume = volume;
@@ -98,7 +106,14 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
     }
     else if (DISPLAY_ONE == display)
     {
-        if ((isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(displayId, volume)))
+        std::string activeDevice = getDisplaySoundOutput(DISPLAY_ONE);
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "active soundoutput for display 1 = %s", activeDevice.c_str());
+        if (activeDevice.empty())
+        {
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput is not in range");
+        }
+        if ((isValidVolume) && (audioMixerObj) && (audioMixerObj->setVolume(activeDevice.c_str(), volume)))
         {
             PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
             displayOneVolume = volume;
@@ -326,7 +341,15 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
     std::string callerId = LSMessageGetSenderServiceName(message);
     if (DISPLAY_TWO == display)
     {
-        if (audioMixerObj && audioMixerObj->setMute(displayId, mute))
+        std::string activeDevice = getDisplaySoundOutput(DISPLAY_TWO);
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "active soundoutput for display 2 = %s", activeDevice.c_str());
+        if (activeDevice.empty())
+        {
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to mute volume %d for display: %d", \
+                        mute, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+        }
+        if (audioMixerObj && audioMixerObj->setMute(activeDevice.c_str(), mute))
         {
             displayTwoMuteStatus = mute;
             notifyVolumeSubscriber(displayId, callerId);
@@ -349,7 +372,15 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
     }
     else if (DISPLAY_ONE == display)
     {
-        if (audioMixerObj && audioMixerObj->setMute(displayId, mute))
+        std::string activeDevice = getDisplaySoundOutput(DISPLAY_ONE);;
+        PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "active soundoutput for display 1 = %s", activeDevice.c_str());
+        if (activeDevice.empty())
+        {
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to mute volume %d for display: %d", \
+                        mute, displayId);
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+        }
+        if (audioMixerObj && audioMixerObj->setMute(activeDevice.c_str(), mute))
         {
             PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Successfully set mute volume %d for display: %d", \
                         mute, displayId);
@@ -533,7 +564,13 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
             }
             else
                 PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Volume up value not in range");
-            if ((isValidVolume) && (audioMixerInstance->setVolume(displayId, volume)))
+            std::string activeDevice = getDisplaySoundOutput(DISPLAY_TWO);
+            if (activeDevice.empty())
+            {
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput is not in range");
+            }
+            else if ((isValidVolume) && (audioMixerInstance->setVolume(activeDevice.c_str(), volume)))
             {
                 PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 ++(displayTwoVolume);
@@ -568,7 +605,12 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
                 if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
                     lserror.Print(__FUNCTION__, __LINE__);
             }
-            if (isValidVolume && (audioMixerInstance->setVolume(displayId, volume)))
+            std::string activeDevice = getDisplaySoundOutput(DISPLAY_ONE);
+            if (activeDevice.empty())
+            {
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "soundoutput not in range");
+            }
+            else if (isValidVolume && (audioMixerInstance->setVolume(activeDevice.c_str(), volume)))
             {
                 PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 ++(displayOneVolume);
@@ -743,7 +785,13 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
             }
             else
                 PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Volume down value not in range");
-            if ((isValidVolume) && (audioMixerInstance->setVolume(displayId, volume)))
+            std::string activeDevice = getDisplaySoundOutput(DISPLAY_TWO);
+            if (activeDevice.empty())
+            {
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput is not in range");
+            }
+            else if ((isValidVolume) && (audioMixerInstance->setVolume(activeDevice.c_str(), volume)))
             {
                 PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 --(displayTwoVolume);
@@ -778,7 +826,13 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
                 if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
                     lserror.Print(__FUNCTION__, __LINE__);
             }
-            if ((isValidVolume) && (audioMixerInstance->setVolume(displayId, volume)))
+            std::string activeDevice = getDisplaySoundOutput(DISPLAY_ONE);
+            if (activeDevice.empty())
+            {
+                PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "SoundOutput is not in range");
+            }
+            else if ((isValidVolume) && (audioMixerInstance->setVolume(activeDevice.c_str(), volume)))
             {
                 PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
                 --(displayOneVolume);
@@ -920,6 +974,22 @@ void OSEMasterVolumeManager::notifyVolumeSubscriber(const int &displayId, const 
     }
 }
 
+std::string OSEMasterVolumeManager::getDisplaySoundOutput(const int& display)
+{
+    std::string soundOutput;
+    if (display == DISPLAY_ONE)
+    {
+        soundOutput = displayOneSoundoutput;
+    }
+    else if (display == DISPLAY_TWO)
+    {
+        soundOutput = displayTwoSoundoutput;
+    }
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,
+        "getDisplaySoundOutput display = %d, sound output = %s", display, soundOutput.c_str());
+    return soundOutput;
+}
+
 void OSEMasterVolumeManager::setCurrentVolume(int iVolume)
 {
     mVolume = iVolume;
@@ -968,14 +1038,33 @@ void OSEMasterVolumeManager::setVolume(const int &displayId)
 {
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     int volume = 0;
+    std::string soundOutput;
     if (DEFAULT_ONE_DISPLAY_ID == displayId)
+    {
         volume = displayOneVolume;
+        soundOutput = getDisplaySoundOutput(DISPLAY_ONE);
+    }
     else if (DEFAULT_TWO_DISPLAY_ID == displayId)
+    {
         volume = displayTwoVolume;
-    if (audioMixerObj && audioMixerObj->setVolume(displayId, volume))
+        soundOutput = displayTwoSoundoutput;
+    }
+    if (audioMixerObj && audioMixerObj->setVolume(soundOutput.c_str(), volume))
         PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set volume %d for display: %d", volume, displayId);
     else
         PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Did not able to set volume %d for display: %d", volume, displayId);
+}
+
+void OSEMasterVolumeManager::setDisplaySoundOutput(const std::string& display, const std::string& soundOutput)
+{
+    if (display == DISPLAY_ONE_NAME)
+    {
+        displayOneSoundoutput = soundOutput;
+    }
+    else if (display == DISPLAY_TWO_NAME)
+    {
+        displayTwoSoundoutput = soundOutput;
+    }
 }
 
 void OSEMasterVolumeManager::setMuteStatus(const int &displayId)
@@ -983,20 +1072,20 @@ void OSEMasterVolumeManager::setMuteStatus(const int &displayId)
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     if (DEFAULT_ONE_DISPLAY_ID == displayId && audioMixerObj)
     {
-        audioMixerObj->setMute(displayId, displayOneMuteStatus);
+        audioMixerObj->setMute(displayOneSoundoutput.c_str(), displayOneMuteStatus);
         PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set mute status %d for display: %d", displayOneMuteStatus, displayId);
     }
     else if (DEFAULT_TWO_DISPLAY_ID == displayId && audioMixerObj)
     {
-        audioMixerObj->setMute(displayId, displayTwoMuteStatus);
+        audioMixerObj->setMute(displayTwoSoundoutput.c_str(), displayTwoMuteStatus);
         PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set mute status %d for display: %d", displayTwoMuteStatus, displayId);
     }
     else
     {
         if (audioMixerObj)
         {
-            audioMixerObj->setMute(displayId, displayOneMuteStatus);
-            audioMixerObj->setMute(displayId, displayTwoMuteStatus);
+            audioMixerObj->setMute(displayOneSoundoutput.c_str(), displayOneMuteStatus);
+            audioMixerObj->setMute(displayTwoSoundoutput.c_str(), displayTwoMuteStatus);
             PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "set mute status is %d for display one and mute status is %d for display two", \
                         displayOneMuteStatus, displayTwoMuteStatus);
         }

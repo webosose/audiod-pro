@@ -4,6 +4,7 @@
 {
      "load_module":[
                       "load_luna_event_subscriber",
+                      "load_audio_router_manager",
                       "load_audio_policy_manager",
                       "load_bluetooth_manager",
                       "load_system_sounds_manager",

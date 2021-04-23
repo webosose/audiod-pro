@@ -149,6 +149,20 @@ void MasterVolumeManager::eventMasterVolumeStatus()
         PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
 }
 
+void MasterVolumeManager::eventActiveDeviceInfo(const std::string deviceName,\
+    const std::string& display, const bool& isConnected, const bool& isOutput)
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+        "eventActiveDeviceInfo deviceName:%s display:%s isConnected:%d isOutput:%d", \
+        deviceName.c_str(), display.c_str(), (int)isConnected, (int)isOutput);
+    std::string device;
+    if (isOutput)
+    {
+        if (isConnected)
+            device = deviceName;
+        mMasterVolumeClientInstance->setDisplaySoundOutput(display, deviceName);
+    }
+}
 /* TODO
 currently these luna API's are not in sync with exsting master volume
 In future existing master volume will be removed and these below luna API's will be used
@@ -164,6 +178,7 @@ static LSMethod MasterVolumeMethods[] =
     { },
 };
 
+#if 0
 static LSMethod SoundOutputManagerMethods[] = {
     {"setSoundOut", SoundOutputManager::_SetSoundOut},
     { },
@@ -191,7 +206,7 @@ void MasterVolumeManager::initSoundOutputManager()
             PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module soundOutputManager");
     }
 }
-
+#endif
 void MasterVolumeManager::initialize()
 {
     CLSError lserror;
@@ -204,7 +219,7 @@ void MasterVolumeManager::initialize()
                         __FUNCTION__, "/master");
            lserror.Print(__FUNCTION__, __LINE__);
         }
-        initSoundOutputManager();
+        //initSoundOutputManager();
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
             "Successfully initialized MasterVolumeManager");
     }
@@ -238,6 +253,15 @@ void MasterVolumeManager::handleEvent(events::EVENTS_T *event)
             eventMasterVolumeStatus();
         }
         break;
+        case utils::eEventActiveDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventActiveDeviceInfo");
+            events::EVENT_ACTIVE_DEVICE_INFO_T *stActiveDeviceInfo = (events::EVENT_ACTIVE_DEVICE_INFO_T*)event;
+            eventActiveDeviceInfo(stActiveDeviceInfo->deviceName, stActiveDeviceInfo->display, stActiveDeviceInfo->isConnected,
+                stActiveDeviceInfo->isOutput);
+        }
+        break;
         default:
         {
             PM_LOG_WARNING(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
@@ -252,7 +276,10 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
     PM_LOG_DEBUG("MasterVolumeManager: constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     if (mObjModuleManager)
+    {
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventMasterVolumeStatus);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventActiveDeviceInfo);
+    }
     else
         PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mObjModuleManager is nullptr");
     mMasterVolumeClientInstance = MasterVolumeInterface::getClientInstance();
@@ -263,11 +290,11 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
 MasterVolumeManager::~MasterVolumeManager()
 {
     PM_LOG_DEBUG("MasterVolumeManager: destructor");
-    if (mObjSoundOutputManager)
+    /*if (mObjSoundOutputManager)
     {
         delete mObjSoundOutputManager;
         mObjSoundOutputManager = nullptr;
-    }
+    }*/
     if (mMasterVolumeClientInstance)
     {
         delete mMasterVolumeClientInstance;

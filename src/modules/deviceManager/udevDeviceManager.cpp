@@ -29,7 +29,7 @@ std::string UdevDeviceManager::onDeviceAdded(Device *device)
     if (audioMixerObj)
     {
         if (device->event == "headset-inserted") {
-            if (!audioMixerObj->programHeadsetRoute(eHeadsetState_Headset))
+            if (!setHeadphoneSoundOut(true))
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
         }
         else if (device->event == "usb-mic-inserted") {
@@ -60,7 +60,7 @@ std::string UdevDeviceManager::onDeviceRemoved(Device *device)
     if (audioMixerObj)
     {
         if (device->event == "headset-removed") {
-            if (!audioMixerObj->programHeadsetRoute(eHeadsetState_None))
+            if (!setHeadphoneSoundOut(false))
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
         }
         else if (device->event == "usb-mic-removed") {
@@ -81,6 +81,27 @@ std::string UdevDeviceManager::onDeviceRemoved(Device *device)
         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
     }
     return reply;
+}
+
+bool UdevDeviceManager::setHeadphoneSoundOut(const bool& connected)
+{
+    ModuleManager* mObjModuleManager = ModuleManager::getModuleManagerInstance();
+    PM_LOG_DEBUG("UdevDeviceManager setHeadphoneSoundOut");
+    events::EVENT_DEVICE_CONNECTION_STATUS_T  stEventDeviceConnectionStatus;
+    stEventDeviceConnectionStatus.eventName = utils::eEventDeviceConnectionStatus;
+    stEventDeviceConnectionStatus.devicename = "pcm_headphone";
+    if (connected)
+    {
+        stEventDeviceConnectionStatus.deviceStatus = utils::eDeviceConnected;
+    }
+    else
+    {
+        stEventDeviceConnectionStatus.deviceStatus = utils::eDeviceDisconnected;
+
+    }
+    stEventDeviceConnectionStatus.mixerType = utils::ePulseMixer;
+    mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventDeviceConnectionStatus);
+    return true;
 }
 
 UdevDeviceManager::UdevDeviceManager()

@@ -27,6 +27,8 @@
 #define MAX_VOLUME 100
 #define DEFAULT_ONE_DISPLAY_ID 1
 #define DEFAULT_TWO_DISPLAY_ID 2
+#define DISPLAY_ONE_NAME "display1"
+#define DISPLAY_TWO_NAME "display2"
 
 class OSEMasterVolumeManager : public MasterVolumeInterface
 {
@@ -38,6 +40,9 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         int displayTwoVolume;
         int displayOneMuteStatus;
         int displayTwoMuteStatus;
+        std::string displayOneSoundoutput;
+        std::string displayTwoSoundoutput;
+        std::string getDisplaySoundOutput(const int& display);
         bool mMuteStatus;
         static bool mIsObjRegistered;
         //Register Object to object factory. This is called automatically
@@ -63,6 +68,7 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
         void setVolume(const int &displayId);
         void setMuteStatus(const int &displayId);
+        void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput);
         std::string getVolumeInfo(const int &displayId, const std::string &callerId);
 
         void setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);

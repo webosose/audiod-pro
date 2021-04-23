@@ -336,7 +336,7 @@ const char * virtualSinkName(EVirtualAudioSink sink, bool prettyName)
 {
     const char * name = "<invalid sink>";
     if (IsValidVirtualSink(sink))
-        name = systemdependantvirtualsinkmap[sink].virtualsinkname +
+        name = virtualsinkmap[sink].virtualsinkname +
                                                       (prettyName ? 1 : 0);
     else if (sink == eVirtualSink_None)
         name = "<none>";
@@ -348,12 +348,19 @@ const char * virtualSinkName(EVirtualAudioSink sink, bool prettyName)
 EVirtualAudioSink getSinkByName(const char * name)
 {
     EVirtualAudioSink sink = eVirtualSink_None;
+    int incomingSinkNameLength = (int)strlen(name);
+    int virtulSinkNameLength = 0;
+    int compareLength = 0;
     for (int i = eVirtualSink_First; i <= eVirtualSink_Last; i++)
     {
-        if (0 == strcmp(name, systemdependantvirtualsinkmap[i].virtualsinkname) ||
-             0 == strcmp(name, systemdependantvirtualsinkmap[i].virtualsinkname + 1))
+        virtulSinkNameLength = (int)strlen(virtualsinkmap[i].virtualsinkname);
+        if (incomingSinkNameLength >= virtulSinkNameLength)
+            compareLength = incomingSinkNameLength;
+        else
+            compareLength = virtulSinkNameLength;
+        if (0 == strncmp(name, virtualsinkmap[i].virtualsinkname, compareLength))
         {
-            sink = (EVirtualAudioSink) systemdependantvirtualsinkmap[i].virtualsinkidentifier;
+            sink = (EVirtualAudioSink) virtualsinkmap[i].virtualsinkidentifier;
             break;
         }
     }
@@ -365,7 +372,7 @@ const char * virtualSourceName(EVirtualSource source, bool prettyName)
 {
     const char * name = "<invalid source>";
     if (IsValidVirtualSource(source))
-        name = systemdependantvirtualsourcemap[source].virtualsourcename +
+        name = virtualsourcemap[source].virtualsourcename +
                                                        (prettyName ? 1 : 0);
     else if (source == eVirtualSource_None)
         name = "<none>";
@@ -377,12 +384,19 @@ const char * virtualSourceName(EVirtualSource source, bool prettyName)
 EVirtualSource getSourceByName(const char* sourceName)
 {
     EVirtualSource source = eVirtualSource_None;
+    int incomingSourceNameLength = (int)strlen(sourceName);
+    int virtulSourceNameLength = 0;
+    int compareLength = 0;
     for (int i = eVirtualSource_First; i <= eVirtualSource_Last; i++)
     {
-        if (0 == strcmp(sourceName, systemdependantvirtualsourcemap[i].virtualsourcename) ||
-            0 == strcmp(sourceName, systemdependantvirtualsourcemap[i].virtualsourcename + 1))
+        virtulSourceNameLength = (int)strlen(virtualsourcemap[i].virtualsourcename);
+        if (incomingSourceNameLength >= virtulSourceNameLength)
+            compareLength = incomingSourceNameLength;
+        else
+            compareLength = virtulSourceNameLength;
+        if (0 == strncmp(sourceName, virtualsourcemap[i].virtualsourcename, compareLength))
         {
-            source = (EVirtualSource) systemdependantvirtualsourcemap[i].virtualsourceidentifier;
+            source = (EVirtualSource)virtualsourcemap[i].virtualsourceidentifier;
             break;
         }
     }

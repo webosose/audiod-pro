@@ -69,6 +69,34 @@
             "muteStatus": false,
             "ramp":true,
             "category": "display1"
+        },
+        {
+            "streamType": "record1",
+            "policyVolume":50,
+            "priority":1,
+            "group":3,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display2"
+        },
+        {
+            "streamType": "alexa1",
+            "policyVolume":50,
+            "priority":1,
+            "group":3,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display2"
         }
     ]
 }

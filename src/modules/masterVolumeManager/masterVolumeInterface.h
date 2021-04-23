@@ -58,6 +58,7 @@ public:
     virtual void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void setMuteStatus(const int &displayId) = 0;
     virtual void setVolume(const int &displayId) = 0;
+    virtual void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput) = 0;
 };
 
 #endif //MASTERVOLUME_INTERFACE_H
