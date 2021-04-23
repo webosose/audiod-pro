@@ -36,8 +36,9 @@
 #define BT_ADAPTER_GET_STATUS   "luna://com.webos.service.bluetooth2/adapter/getStatus"
 
 typedef std::map<std::string, bool> adapterInfo;
-typedef std::map<int, std::string> adapterDisplayIDMap;
+typedef std::map<std::string, int> adapterDisplayIDMap;
 typedef std::map<std::string, int> adapterAddressDisplayIDMap;
+typedef std::map<int, bool> displayConnectionStatus;
 typedef std::vector<std::string> connectedAddressVector;
 
 #define CONFIG_DIR_PATH "/etc/palm/audiod"
@@ -60,7 +61,9 @@ class BluetoothManager : public ModuleInterface
         adapterInfo mAdapterSubscriptionStatusMap;
         adapterDisplayIDMap mAdapterDisplayIDMap;
         adapterAddressDisplayIDMap mAdapterAddressDisplayIDMap;
+        displayConnectionStatus mDisplayConnectionStatus;
         connectedAddressVector mConnectedAddressVector;
+        connectedAddressVector mA2dpGetStatus;
 
         BluetoothManager (const BluetoothManager&) = delete;
         BluetoothManager& operator=(const BluetoothManager&) = delete;
@@ -96,7 +99,7 @@ class BluetoothManager : public ModuleInterface
         void eventServerStatusInfo (SERVER_TYPE_E serviceName, bool connected);
         void eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message);
 
-        void setBlueToothA2DPActive (bool state, char *address, char *profile);
+        void setBlueToothA2DPActive (bool state, char *address, char *profile, std::string adapterAddress);
         void btAdapterQueryInfo (LSMessage *message);
         void btDeviceGetStatusInfo (LSMessage *message);
         void btA2DPGetStatusInfo (LSMessage *message);
