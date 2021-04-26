@@ -830,11 +830,11 @@ bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int s
     }
 }
 
-bool AudioMixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status)
+bool AudioMixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status, const char* deviceName)
 {
     PM_LOG_DEBUG("AudioMixer: loadUSBSinkSource");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->loadUSBSinkSource(cmd, cardno, deviceno, status);
+        return mObjPulseAudioMixer->loadUSBSinkSource(cmd, cardno, deviceno, status, deviceName);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "loadUSBSinkSource: mObjPulseAudioMixer is null");

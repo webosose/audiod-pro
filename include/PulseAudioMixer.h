@@ -100,7 +100,7 @@ public:
     void stopDtmf();
     bool programHeadsetRoute (EHeadsetState route);
     bool externalSoundcardPathCheck (std::string filename,  int status);
-    bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+    bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, const char* deviceName);
     bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isLineOut, const char* deviceName);
     /// These should really be private, but they're needed for global callbacks...
     bool _connectSocket();

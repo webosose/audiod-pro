@@ -604,7 +604,7 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     return returnValue;
 }
 
-bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status)
+bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, const char* deviceName)
 {
     char buffer[SIZE_MESG_TO_PULSE] = "";
     bool ret  = false;
@@ -637,7 +637,7 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
         return ret;
 
     PM_LOG_DEBUG("loadUSBSinkSource sending message");
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d", cmd, cardno, deviceno, status);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %s", cmd, cardno, deviceno, status, deviceName);
     ret = msgToPulse(buffer, __FUNCTION__);
     if (mObjMixerCallBack)
         mObjMixerCallBack->callBackMasterVolumeStatus();

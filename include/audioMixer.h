@@ -108,7 +108,7 @@ class AudioMixer : public MixerInterface
             const char *format, int rate, int channels);
         bool programHeadsetRoute(EHeadsetState route);
         bool externalSoundcardPathCheck(std::string filename,  int status);
-        bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+        bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, const char* deviceName);
         bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status,bool isLineOut, const char* deviceName);
         bool _connectSocket();
         bool suspendSink(int sink);
