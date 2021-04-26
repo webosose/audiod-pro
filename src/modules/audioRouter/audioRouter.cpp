@@ -318,7 +318,10 @@ void AudioRouter::resetInputDeviceRouting(const std::string &deviceName, const i
                 updateDeviceStatus(display, activeDevice, true, true, false);
         }
         else
+        {
             mObjAudioMixer->setDefaultSourceRouting(sourceInfo.startSource, sourceInfo.endSource);
+            notifyGetSoundInput("", display);
+        }
     }
 }
 
@@ -569,8 +572,31 @@ void AudioRouter::updateDeviceStatus(const std::string& display, const std::stri
             stEventActiveDeviceInfo.isOutput = isOutput;
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventActiveDeviceInfo);
         }
+        if (isActive)
+        {
+            notifyGetSoundInput(deviceName, display);
+        }
             //mObjModuleManager->notifyActiveDeviceInfo(getActualOutputDevice(deviceName), display, isConnected, isOutput);
         printDeviceInfo(false);
+    }
+}
+
+void AudioRouter::notifyGetSoundInput(const std::string& soundInput, const std::string& display)
+{
+    CLSError lserror;
+    std::string reply;
+
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "notifyGetSoundInput");
+    pbnjson::JValue responseObj = pbnjson::JObject();
+    responseObj.put("returnValue",true);
+    responseObj.put("subscribed",true);
+    responseObj.put("soundInput",soundInput);
+    responseObj.put("displayId",getNotificationSessionId(display));
+    reply = responseObj.stringify();
+    if (!LSSubscriptionReply(GetPalmService(), AUDIOD_API_GET_SOUNDINPUT, reply.c_str(), &lserror))
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+        PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT, "Notify error");
     }
 }
 
@@ -1069,7 +1095,7 @@ bool AudioRouter::_setSoundInput(LSHandle *lshandle, LSMessage *message, void *c
 
 bool AudioRouter::_getSoundInput(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(subscribe, boolean),PROP("displayId",integer))));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(subscribe, boolean),PROP(displayId,integer))));
     if (!msg.parse(__FUNCTION__,lshandle))
     {
         PM_LOG_CRITICAL(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT, "msg.parse failed");
@@ -1120,6 +1146,116 @@ bool AudioRouter::_getSoundInput(LSHandle *lshandle, LSMessage *message, void *c
     utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
     return true;
 }
+//Soundoutput API start
+
+
+bool AudioRouter::_SetSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(soundOut, string)) REQUIRED_1(soundOut)));
+
+    if (!msg.parse(__FUNCTION__, lshandle))
+    {
+        return true;
+    }
+    std::string soundOut = "";
+    msg.get("soundOut", soundOut);
+    envelopeRef *envelopeObj = new (std::nothrow)envelopeRef;
+    bool status = false;
+    std::string reply = STANDARD_JSON_SUCCESS;
+    if (nullptr != envelopeObj)
+    {
+        envelopeObj->message = message;
+        envelopeObj->context = (AudioRouter*)ctx;
+        AudioRouter *soundOutputManagerObj = (AudioRouter*)ctx;
+        if (nullptr != soundOutputManagerObj->mObjAudioMixer)
+        {
+            if (soundOutputManagerObj->mObjAudioMixer->setSoundOut(soundOut,_updateSoundOutStatus,envelopeObj))
+            {
+                PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "SoundSettings: SetSoundOut Successful");
+                LSMessageRef(message);
+                status = true;
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "Sound Settings: SetSoundOut call failed");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_FAILED_MIXER_CALL, "Internal error");
+            }
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "Sound Settings :mObjAudioMixer is NULL");
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_MIXER_INSTANCE, "Internal error");
+        }
+    }
+    else
+    {
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
+    }
+
+    if (status == false)
+    {
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        {
+            lserror.Print(__FUNCTION__, __LINE__);
+        }
+        if (nullptr != envelopeObj)
+        {
+            delete envelopeObj;
+            envelopeObj = nullptr;
+        }
+    }
+    return true;
+}
+
+bool AudioRouter::_updateSoundOutStatus(LSHandle *sh, LSMessage *reply, void *ctx)
+{
+    PM_LOG_DEBUG("_updateSoundOutStatus Received");
+
+    LSMessageJsonParser msg(reply, NORMAL_SCHEMA(PROPS_1(PROP(returnValue, boolean))
+                                                 REQUIRED_1(returnValue)));
+    if(!msg.parse(__FUNCTION__, sh))
+        return true;
+
+    bool returnValue = false;
+    msg.get("returnValue", returnValue);
+
+    if (false == returnValue)
+    {
+        PM_LOG_ERROR(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "%s:%d no update. Could not updateSoundOutStatus", __FUNCTION__, __LINE__);
+    }
+    else
+    {
+        LSMessageJsonParser msgData(reply, STRICT_SCHEMA(PROPS_2(PROP(returnValue, boolean),
+        PROP(soundOut, string)) REQUIRED_2(returnValue, soundOut)));
+        std::string l_strSoundOut;
+        msgData.get("soundOut", l_strSoundOut);
+        PM_LOG_INFO(MSGID_SOUND_SETTINGS, INIT_KVCOUNT, "Soundoutmode set Successfully for sound out %s",l_strSoundOut.c_str());
+    }
+    if (nullptr != ctx)
+    {
+        envelopeRef *envelopeObj = (envelopeRef*)ctx;
+        LSMessage *message = (LSMessage*)envelopeObj->message;
+        if (nullptr != message)
+        {
+            CLSError lserror;
+            std::string payload = LSMessageGetPayload(reply);
+            if (!LSMessageRespond(message, payload.c_str(), &lserror))
+                lserror.Print(__FUNCTION__, __LINE__);
+            LSMessageUnref(message);
+        }
+
+        if (nullptr != envelopeObj)
+        {
+            delete envelopeObj;
+            envelopeObj = nullptr;
+        }
+    }
+    PM_LOG_DEBUG("_updateSoundOutStatus Done");
+    return returnValue;
+}
+
+//Soundoutput API end
 
 //Class init start
 AudioRouter* AudioRouter::mAudioRouter = nullptr;
@@ -1175,6 +1311,12 @@ static LSMethod SoundOutputMethods[] = {
     { },
 };
 
+
+static LSMethod SoundOutputManagerMethods[] = {
+    {"setSoundOut", AudioRouter::_SetSoundOut},
+    { },
+};
+
 void AudioRouter::initialize()
 {
     CLSError lserror;
@@ -1188,6 +1330,13 @@ void AudioRouter::initialize()
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, \
             "%s: Registering Service for '%s' category failed", __FUNCTION__, "/");
+            lserror.Print(__FUNCTION__, __LINE__);
+        }
+        bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/soundSettings", SoundOutputManagerMethods, nullptr, &lserror);
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/soundSettings", mAudioRouter, &lserror))
+        {
+            PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                "%s: Registering Service for '%s' category failed", __FUNCTION__, "/soundSettings");
             lserror.Print(__FUNCTION__, __LINE__);
         }
     }

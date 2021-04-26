@@ -27,7 +27,6 @@
 #include "moduleInterface.h"
 #include "moduleManager.h"
 #include "audioMixer.h"
-#include "soundOutputManager.h"
 #include "moduleFactory.h"
 #include "masterVolumeInterface.h"
 
@@ -40,7 +39,6 @@ class MasterVolumeManager : public ModuleInterface
 
         ModuleManager* mObjModuleManager;
         AudioMixer *mObjAudioMixer;
-        static SoundOutputManager *mObjSoundOutputManager;
         static bool mIsObjRegistered;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()

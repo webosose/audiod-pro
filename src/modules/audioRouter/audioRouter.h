@@ -39,6 +39,7 @@
 #define MAX_SESSIONS        3
 
 #define AUDIOD_API_GET_SOUNDOUT "/getSoundOutput"
+#define AUDIOD_API_GET_SOUNDINPUT "/getSoundInput"
 //used only for BT sink remapping
 #define BT_DISPLAY_ONE 1
 #define BT_DISPLAY_TWO 2
@@ -94,6 +95,7 @@ class AudioRouter : public ModuleInterface
         void readDeviceRoutingInfo();
         int getPriority(const std::string& display, const std::string &deviceName, const bool& isOutput);
         void notifyGetSoundoutput(const std::string& soundoutput, const std::string& display);
+        void notifyGetSoundInput(const std::string& soundInput, const std::string& display);
         std::string getPriorityDevice(const std::string& display, const bool& isOutput);
         std::string getActiveDevice(const std::string& display, const bool& isOutput);
         std::string getActualOutputDevice(const std::string &deviceName);
@@ -118,6 +120,8 @@ class AudioRouter : public ModuleInterface
         static bool _setSoundInput(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getSoundInput(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getSoundOutput(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _SetSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _updateSoundOutStatus(LSHandle *sh, LSMessage *reply, void *ctx);
 
 
         ~AudioRouter();

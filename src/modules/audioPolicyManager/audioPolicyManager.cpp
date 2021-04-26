@@ -1745,10 +1745,7 @@ bool AudioPolicyManager::_getStreamStatus(LSHandle *lshandle, LSMessage *message
 
 //TODO: is this required?
 std::vector<std::string> physicalSources = {
-    "pcm_input",
-    "micinput1",
-    "micinput2",
-    "micinput3"
+    "pcm_input"
 };
 
 bool AudioPolicyManager::_muteSource(LSHandle *lshandle, LSMessage *message, void *ctx)

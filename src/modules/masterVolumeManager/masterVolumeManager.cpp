@@ -20,7 +20,6 @@
 
 bool MasterVolumeManager::mIsObjRegistered = MasterVolumeManager::RegisterObject();
 MasterVolumeManager* MasterVolumeManager::mMasterVolumeManager = nullptr;
-SoundOutputManager* MasterVolumeManager::mObjSoundOutputManager = nullptr;
 MasterVolumeInterface* MasterVolumeManager::mMasterVolumeClientInstance = nullptr;
 MasterVolumeInterface* MasterVolumeInterface::mClientInstance = nullptr;
 pFuncCreateClient MasterVolumeInterface::mClientFuncPointer = nullptr;
@@ -178,35 +177,6 @@ static LSMethod MasterVolumeMethods[] =
     { },
 };
 
-#if 0
-static LSMethod SoundOutputManagerMethods[] = {
-    {"setSoundOut", SoundOutputManager::_SetSoundOut},
-    { },
-};
-
-void MasterVolumeManager::initSoundOutputManager()
-{
-    PM_LOG_DEBUG("initSoundOutputManager::initialising sound output manager module");
-    CLSError lserror;
-    if (!mObjSoundOutputManager)
-    {
-        mObjSoundOutputManager = new (std::nothrow)SoundOutputManager();
-        if (mObjSoundOutputManager)
-        {
-            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "load module soundOutputManager successful");
-            bool result = LSRegisterCategoryAppend(GetPalmService(), "/soundSettings", SoundOutputManagerMethods, nullptr, &lserror);
-            if (!result || !LSCategorySetData(GetPalmService(), "/soundSettings", mObjSoundOutputManager, &lserror))
-            {
-                PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
-                    "%s: Registering Service for '%s' category failed", __FUNCTION__, "/soundSettings");
-                lserror.Print(__FUNCTION__, __LINE__);
-            }
-        }
-        else
-            PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Could not load module soundOutputManager");
-    }
-}
-#endif
 void MasterVolumeManager::initialize()
 {
     CLSError lserror;
@@ -219,7 +189,6 @@ void MasterVolumeManager::initialize()
                         __FUNCTION__, "/master");
            lserror.Print(__FUNCTION__, __LINE__);
         }
-        //initSoundOutputManager();
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
             "Successfully initialized MasterVolumeManager");
     }
@@ -290,11 +259,6 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
 MasterVolumeManager::~MasterVolumeManager()
 {
     PM_LOG_DEBUG("MasterVolumeManager: destructor");
-    /*if (mObjSoundOutputManager)
-    {
-        delete mObjSoundOutputManager;
-        mObjSoundOutputManager = nullptr;
-    }*/
     if (mMasterVolumeClientInstance)
     {
         delete mMasterVolumeClientInstance;
