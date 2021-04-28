@@ -539,7 +539,7 @@ void AudioRouter::updateDeviceStatus(const std::string& display, const std::stri
             stEventActiveDeviceInfo.eventName = utils::eEventActiveDeviceInfo;
             stEventActiveDeviceInfo.display = display;
             stEventActiveDeviceInfo.deviceName = getActualOutputDevice(deviceName);
-            stEventActiveDeviceInfo.isConnected = isConnected;
+            stEventActiveDeviceInfo.isConnected = isActive;
             stEventActiveDeviceInfo.isOutput = isOutput;
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventActiveDeviceInfo);
         }
@@ -568,7 +568,7 @@ void AudioRouter::updateDeviceStatus(const std::string& display, const std::stri
             stEventActiveDeviceInfo.eventName = utils::eEventActiveDeviceInfo;
             stEventActiveDeviceInfo.display = display;
             stEventActiveDeviceInfo.deviceName = getActualOutputDevice(deviceName);
-            stEventActiveDeviceInfo.isConnected = isConnected;
+            stEventActiveDeviceInfo.isConnected = isActive;
             stEventActiveDeviceInfo.isOutput = isOutput;
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventActiveDeviceInfo);
         }

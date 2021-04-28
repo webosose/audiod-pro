@@ -158,8 +158,13 @@ void MasterVolumeManager::eventActiveDeviceInfo(const std::string deviceName,\
     if (isOutput)
     {
         if (isConnected)
-            device = deviceName;
-        mMasterVolumeClientInstance->setDisplaySoundOutput(display, deviceName);
+        {
+            mMasterVolumeClientInstance->setDisplaySoundOutput(display, deviceName);
+            mMasterVolumeClientInstance->setMuteStatus(DEFAULT_ONE_DISPLAY_ID);
+            mMasterVolumeClientInstance->setVolume(DEFAULT_ONE_DISPLAY_ID);
+            mMasterVolumeClientInstance->setMuteStatus(DEFAULT_TWO_DISPLAY_ID);
+            mMasterVolumeClientInstance->setVolume(DEFAULT_TWO_DISPLAY_ID);
+        }
     }
 }
 /* TODO

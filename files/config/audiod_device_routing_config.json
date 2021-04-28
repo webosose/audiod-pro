@@ -38,7 +38,7 @@
                     "muteStatus":false,
                     "maxVolume":100,
                     "display":"display1",
-                    "priority":2,
+                    "priority":1,
                     "multipleSoundOut":false,
                     "volumeSync":[
                                  ]
@@ -51,7 +51,7 @@
                     "muteStatus":false,
                     "maxVolume":100,
                     "display":"display1",
-                    "priority":1,
+                    "priority":2,
                     "multipleSoundOut":false,
                     "volumeSync":[
                                  ]
