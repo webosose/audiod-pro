@@ -837,10 +837,11 @@ bool AudioRouter::setSoundOutput(const std::string& soundOutput, const int &disp
                 {
                     utils::SINK_ROUTING_INFO_T sinkInfo = getSinkRoutingInfo(display);
                     activeDevice = getActiveDevice(display, true);
-                    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setSoundOutput: sinkid:%d",\
-                     (int)sinkInfo.startSink);
+                    std::string outputDevice = getActualOutputDevice(soundOutput);
+                    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setSoundOutput: %s sinkid:%d to %d",\
+                        outputDevice.c_str(), (int)sinkInfo.startSink, (int)sinkInfo.endSink);
                     if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink,
-                        soundOutput.c_str()))
+                        outputDevice.c_str()))
                     {
                         updateDeviceStatus(display, soundOutput, true, true, true);
                         updateDeviceStatus(display, activeDevice, true, false, true);

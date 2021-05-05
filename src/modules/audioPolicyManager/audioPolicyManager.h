@@ -64,6 +64,9 @@ class AudioPolicyManager : public ModuleInterface
         void updateMuteStatus(const std::string& streamType, const bool &mute);
         void updateMuteStatusForSource(const std::string& streamType, const bool &mute);
 
+        int getCurrentSinkMuteStatus(const std::string &streamType);
+        int getCurrentSourceMuteStatus(const std::string &streamType);
+
         void applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
         void applyVolumePolicy(EVirtualSource audioSource, const std::string& streamType, const int& priority);
         void removeVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
@@ -78,7 +81,7 @@ class AudioPolicyManager : public ModuleInterface
 
         bool getPolicyStatus(const std::string& streamType);
         bool getPolicyStatusOfSource(const std::string& streamType);
-        bool isHighPriorityStreamActive(const int& policyPriority, utils::vectorVirtualSink activeStreams);
+        bool isHighPriorityStreamActive(const int& policyPriority, utils::vectorVirtualSink activeStreams, const std::string &category);
         bool isHighPrioritySourceActive(const int& policyPriority, utils::vectorVirtualSource activeStreams);
         bool isRampPolicyActive(const std::string& streamType);
         bool isRampPolicyActiveForSource(const std::string& streamType);
