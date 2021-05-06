@@ -331,7 +331,7 @@ bool PulseAudioMixer::moveOutputDeviceRouting(EVirtualAudioSink sink, const char
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "moveOutputDeviceRouting: sink:%d, deviceName:%s", (int)sink, deviceName);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'd', sink, deviceName);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'd', (int)sink, deviceName);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }
@@ -342,7 +342,7 @@ bool PulseAudioMixer::moveInputDeviceRouting(EVirtualSource source, const char* 
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "moveInputDeviceRouting: source:%d, deviceName:%s", (int)source, deviceName);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'e', source, deviceName);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'e', (int)source, deviceName);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }
@@ -354,7 +354,7 @@ bool PulseAudioMixer::setSoundOutputOnRange(EVirtualAudioSink startSink,\
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "setSoundOutputOnRange: startsink:%d, endsink:%d, deviceName:%s", (int)startSink, (int)endSink, deviceName);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %s", 'o', startSink, endSink, deviceName);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %s", 'o', (int)startSink, (int)endSink, deviceName);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }
@@ -366,7 +366,7 @@ bool PulseAudioMixer::setSoundInputOnRange(EVirtualSource startSource,\
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "setSoundInputOnRange: startSource:%d, endSource:%d, deviceName:%s", (int)startSource, (int)endSource, deviceName);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %s", 'a', startSource, endSource, deviceName);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %s", 'a', (int)startSource, (int)endSource, deviceName);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }
@@ -377,7 +377,7 @@ bool PulseAudioMixer::setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtua
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "setDefaultSinkRouting: startSink:%d, endSink:%d", (int)startSink, (int)endSink);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '2', startSink, endSink);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '2', (int)startSink, (int)endSink);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }
@@ -388,24 +388,21 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "setDefaultSourceRouting: startSource:%d, endSource:%d", (int)startSource, (int)endSource);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '3', startSource, endSource);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '3', (int)startSource, (int)endSource);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }
 
-bool PulseAudioMixer::setSinkOutputDevice(const std::string& soundOutput, const int& sink)
+bool PulseAudioMixer::setSinkOutputDevice(const char* soundOutput, const int& sink)
 {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "PulseAudioMixer: setSinkOutputDevice got soundoutput=%s sinkID=%d",soundOutput.c_str(),sink);
+        "PulseAudioMixer: setSinkOutputDevice got soundoutput=%s sinkID=%d",soundOutput, sink);
     char buffer[SIZE_MESG_TO_PULSE];
     char cmd = 'q';
     bool ret = false;
-    int n = soundOutput.length();
-    char char_array[n + 1];
-    strcpy(char_array, soundOutput.c_str());
     if (VERIFY(IsValidVirtualSink((EVirtualAudioSink)sink)))
     {
-      snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", cmd, sink,char_array);
+      snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", cmd, sink, soundOutput);
       ret = msgToPulse(buffer, __FUNCTION__);
     }
     return ret;
@@ -417,7 +414,7 @@ bool PulseAudioMixer::setSourceInputDevice(EVirtualSource source, const char* de
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "setSourceInputDevice: source:%d, deviceName:%s", (int)source, deviceName);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'y', source, deviceName);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'y', (int)source, deviceName);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }

@@ -59,7 +59,7 @@ public:
     //setSoundInput
     bool setSourceInputDevice(EVirtualSource source, const char* deviceName);
     //setSoundOutput
-    bool setSinkOutputDevice(const std::string& soundOutput, const int& sink);
+    bool setSinkOutputDevice(const char* soundOutput, const int& sink);
 
     /// Program a filter
     bool programFilter(int filterTable);

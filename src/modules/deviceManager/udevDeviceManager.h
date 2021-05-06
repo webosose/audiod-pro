@@ -43,7 +43,6 @@ class UdevDeviceManager : public DeviceManagerInterface
         {
             return (DeviceManagerInterface::Register(&UdevDeviceManager::CreateObject));
         }
-        AudioMixer *mObjAudioMixer;
         vectorUdevDeviceInfo mMicInfo;
         vectorUdevDeviceInfo mSpeakerInfo;
         void printMicInfo();

@@ -1265,7 +1265,8 @@ AudioRouter* AudioRouter::getAudioRouterInstance()
     return mAudioRouter;
 }
 
-AudioRouter::AudioRouter(ModuleConfig* const pConfObj)
+AudioRouter::AudioRouter(ModuleConfig* const pConfObj):mObjModuleManager(nullptr),\
+                                                       mObjAudioMixer(nullptr)
 {
     PM_LOG_DEBUG("AudioRouter constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();

@@ -62,8 +62,6 @@ class AudioRouter : public ModuleInterface
             return (ModuleFactory::getInstance()->Register("load_audio_router_manager", &AudioRouter::CreateObject));
         }
 
-
-        bool isMirrorModeEnabled;
         DeviceRoutingConfigParser* mObjDeviceRoutingParser;
 
         utils::mapDisplaySoundOutputInfo mDisplaySoundOutputInfo;

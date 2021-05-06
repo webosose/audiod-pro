@@ -28,7 +28,7 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
 {
     if (mixerStatus && (mixerType == utils::ePulseMixer))
     {
-        FILE *fp;
+        FILE *fp = NULL;
         int HDMI0CardNumber = 0;
         int HeadphoneCardNumber = -1;
         char snd_card_info[500];
@@ -39,6 +39,7 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
         if ((fp = fopen("/proc/asound/cards", "r")) == NULL )
         {
             PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Cannot open /proc/asound/cards file to get sound card info");
+            return;
         }
 
         while (fgets(snd_card_info, sizeof(snd_card_info), fp) != NULL)

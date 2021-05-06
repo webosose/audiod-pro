@@ -90,7 +90,7 @@ class AudioMixer : public MixerInterface
             EVirtualSource endSource, const char* deviceName);
         bool setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtualAudioSink endSink);
         bool setDefaultSourceRouting(EVirtualSource startSource, EVirtualSource endSource);
-        bool setSinkOutputDevice(const std::string& soundOutput, const int& sink);
+        bool setSinkOutputDevice(const char* soundOutput, const int& sink);
         bool setSourceInputDevice(EVirtualSource source, const char* deviceName);
 
         bool programFilter(int filterTable);

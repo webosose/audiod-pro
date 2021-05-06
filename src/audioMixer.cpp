@@ -620,10 +620,10 @@ bool AudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtualSou
     }
 }
 
-bool AudioMixer::setSinkOutputDevice(const std::string& soundOutput,const int& sink)
+bool AudioMixer::setSinkOutputDevice(const char* soundOutput,const int& sink)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-        "AudioMixer: setSinkOutputDevice got soundoutput = %s sinkID = %d",soundOutput.c_str(),sink);
+        "AudioMixer: setSinkOutputDevice got soundoutput = %s sinkID = %d",soundOutput, sink);
     if (mObjPulseAudioMixer)
         return mObjPulseAudioMixer->setSinkOutputDevice(soundOutput, sink);
     else
