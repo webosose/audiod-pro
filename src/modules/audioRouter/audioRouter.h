@@ -46,6 +46,8 @@
 #define BLUETOOTH_ONE "bluetooth_speaker0"
 #define BLUETOOTH_TWO "bluetooth_speaker1"
 #define BLUETOOTH_SINK_IDENTIFIER "bluez_sink."
+#define BT_SINK_IDENTIFIER_LENGTH 11
+#define BT_DEVICE_ADDRESS_LENGTH 17
 
 class AudioRouter : public ModuleInterface
 {
@@ -74,6 +76,8 @@ class AudioRouter : public ModuleInterface
         utils::mapDeviceInfo mSoundOutputInfo;
         utils::mapDeviceInfo mSoundInputInfo;
 
+        std::list<std::string> mBTDeviceList;
+
         void setOutputDeviceRouting(const std::string &deviceName, const int &priority,\
             const std::string &display, utils::EMIXER_TYPE mixerType);
         void resetOutputDeviceRouting(const std::string &deviceName, const int &priority,\
@@ -91,6 +95,7 @@ class AudioRouter : public ModuleInterface
         void printDeviceInfo(const bool& isOutput);
         void setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo);
         void readDeviceRoutingInfo();
+        void setBTDeviceRouting(const std::string &deviceName);
         int getPriority(const std::string& display, const std::string &deviceName, const bool& isOutput);
         void notifyGetSoundoutput(const std::string& soundoutput, const std::string& display);
         void notifyGetSoundInput(const std::string& soundInput, const std::string& display);

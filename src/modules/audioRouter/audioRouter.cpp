@@ -57,6 +57,7 @@ void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName,\
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
         "eventDeviceConnectionStatus with deviceName:%s deviceStatus:%d mixerType:%d",\
         deviceName.c_str(), (int)deviceStatus, (int)mixerType);
+    bool isBTDeviceMapped = false;
     std::string actualDeviceName = deviceName;
     if (deviceName.find(BLUETOOTH_SINK_IDENTIFIER) != std::string::npos)
     {
@@ -68,9 +69,15 @@ void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName,\
                     actualDeviceName = BLUETOOTH_ONE;
                 else if (BT_DISPLAY_TWO == items.second)
                     actualDeviceName = BLUETOOTH_TWO;
+                isBTDeviceMapped = true;
             }
             else
                 PM_LOG_WARNING(MSGID_AUDIOROUTER, INIT_KVCOUNT, "deviceName not found in:%s", items.first.c_str());
+        }
+        if (!isBTDeviceMapped)
+        {
+            PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "adding device to mBTDeviceList");
+            mBTDeviceList.push_back(deviceName);
         }
         PM_LOG_DEBUG("remapped soundoutput:%s", actualDeviceName.c_str());
     }
@@ -128,12 +135,22 @@ void AudioRouter::eventBTDeviceDisplayInfo(const bool &connectionStatus, const s
             it->second = displayId;
         else
             mMapBTDeviceInfo[btDeviceAddress] = displayId;
+        setBTDeviceRouting(btDeviceAddress);
     }
     else
     {
         utils::itMapBTDeviceInfo it = mMapBTDeviceInfo.find(btDeviceAddress);
         if (it != mMapBTDeviceInfo.end())
             mMapBTDeviceInfo.erase(it);
+        for (auto it = mBTDeviceList.begin(); it != mBTDeviceList.end(); it++)
+        {
+            std::string btDevice = *it;
+            if (btDevice.find(btDeviceAddress) != std::string::npos)
+            {
+                mBTDeviceList.erase(it);
+                break;
+            }
+        }
     }
 }
 
@@ -223,6 +240,31 @@ void AudioRouter::eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo)
         PM_LOG_DEBUG("start source id:%d name:%s  end sourceId id:%d name:%s ",\
             (int)items.second.startSource, virtualSourceName(items.second.startSource),\
             (int)items.second.endSource, virtualSourceName(items.second.endSource));
+    }
+}
+
+void AudioRouter::setBTDeviceRouting(const std::string &deviceName)
+{
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+        "setBTDeviceRouting deviceName:%s", deviceName.c_str());
+    for (auto const& items : mBTDeviceList)
+    {
+        if (items.find(deviceName) != std::string::npos)
+        {
+            PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setBTDeviceRouting notifying deviceConnectionStatus internally");
+            if (mObjModuleManager)
+            {
+                events::EVENT_DEVICE_CONNECTION_STATUS_T deviceConnectionStatus;
+                deviceConnectionStatus.eventName = utils::eEventDeviceConnectionStatus;
+                deviceConnectionStatus.devicename = items;
+                deviceConnectionStatus.deviceStatus = utils::eDeviceConnected;
+                deviceConnectionStatus.mixerType = utils::ePulseMixer;
+                mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&deviceConnectionStatus);
+            }
+            else
+                PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setBTDeviceRouting mObjModuleManager is null");
+            break;
+        }
     }
 }
 
