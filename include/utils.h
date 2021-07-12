@@ -342,7 +342,13 @@ class VirtualSourceSet
         bool operator == (const VirtualSourceSet & rhs) const { return mSet == rhs.mSet; }
         bool operator != (const VirtualSourceSet & rhs) const { return mSet != rhs.mSet; }
     private:
-        long mask(EVirtualSource sink) const { return (long)1 << sink; }
+        long mask(EVirtualSource sink) const
+        {
+            if (sink >= 0)
+                return (long)1 << sink;
+            else
+                return -1;
+        }
         long mSet;
 };
 
