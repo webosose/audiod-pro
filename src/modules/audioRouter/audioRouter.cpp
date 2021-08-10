@@ -434,6 +434,26 @@ utils::SOURCE_ROUTING_INFO_T AudioRouter::getSourceRoutingInfo(const std::string
     return sourceInfo;
 }
 
+int AudioRouter::getDisplayId(const std::string &deviceName, const bool &isOutput)
+{
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+        "getDisplayId %s, isOutput %d", deviceName.c_str(), (int)isOutput);
+    if (isOutput)
+    {
+        for (const auto &display:mSoundOutputInfo)
+        {
+            for(const auto &devices:display.second)
+            {
+                if(deviceName == devices.deviceName)
+                {
+                    return getNotificationSessionId(display.first);
+                }
+            }
+        }
+    }
+    return -1;
+}
+
 int AudioRouter::getPriority(const std::string& display, const std::string &deviceName, const bool& isOutput)
 {
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
@@ -869,7 +889,6 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
     }
 }
 
-
 bool AudioRouter::setSoundOutput(const std::string& soundOutput, const int &displayId)
 {
     std::string activeDevice;
@@ -891,7 +910,11 @@ bool AudioRouter::setSoundOutput(const std::string& soundOutput, const int &disp
                     std::string outputDevice = getActualOutputDevice(soundOutput);
                     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setSoundOutput: %s sinkid:%d to %d",\
                         outputDevice.c_str(), (int)sinkInfo.startSink, (int)sinkInfo.endSink);
-                    if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink,
+                    if (activeDevice == soundOutput)
+                    {
+                        returnStatus = true;
+                    }
+                    else if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink,
                         outputDevice.c_str()))
                     {
                         updateDeviceStatus(display, soundOutput, true, true, true);
@@ -1047,10 +1070,13 @@ bool AudioRouter::_setSoundOutput(LSHandle *lshandle, LSMessage *message, void *
     {
         if (audioRouterInstance)
         {
-
+            displayId = audioRouterInstance->getDisplayId(soundOutput, true);
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "got soundOutput = %s", soundOutput.c_str());
-
-            if (!audioRouterInstance->setSoundOutput(soundOutput, displayId))
+            if (displayId == -1)
+            {
+                PM_LOG_ERROR (MSGID_AUDIOROUTER, INIT_KVCOUNT,"_setSoundOutput : invalid sound output");
+            }
+            else if (!audioRouterInstance->setSoundOutput(soundOutput, displayId))
             {
                 PM_LOG_ERROR (MSGID_AUDIOROUTER, INIT_KVCOUNT,"_setSoundOutput: failed setting soundOtput");
             }

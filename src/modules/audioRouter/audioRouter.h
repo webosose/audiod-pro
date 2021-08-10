@@ -99,6 +99,7 @@ class AudioRouter : public ModuleInterface
         void readDeviceRoutingInfo();
         void setBTDeviceRouting(const std::string &deviceName);
         int getPriority(const std::string& display, const std::string &deviceName, const bool& isOutput);
+        int getDisplayId(const std::string &deviceName, const bool &isOutput);
         void notifyGetSoundoutput(const std::string& soundoutput, const std::string& display);
         void notifyGetSoundInput(const std::string& soundInput, const std::string& display);
         std::string getPriorityDevice(const std::string& display, const bool& isOutput);
