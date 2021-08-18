@@ -49,6 +49,8 @@
 #define BT_SINK_IDENTIFIER_LENGTH 11
 #define BT_DEVICE_ADDRESS_LENGTH 17
 
+#define DEFAULT_DISPLAY "display1"
+
 class AudioRouter : public ModuleInterface
 {
     private:

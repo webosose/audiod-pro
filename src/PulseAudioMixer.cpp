@@ -174,10 +174,8 @@ PulseAudioMixer::programSource (char cmd, int sink, int value)
         case 'v':
 
         case 'r':
-            PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "2");
             if (VERIFY(IsValidVirtualSink((EVirtualAudioSink)sink)))
             {
-                PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "3");
                 sendCmd = (mPulseStateVolume[sink] != value ||
                            mPulseStateVolumeHeadset[sink] != headset);
                 mPulseStateVolume[sink] = value;

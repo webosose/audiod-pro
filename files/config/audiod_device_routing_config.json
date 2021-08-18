@@ -18,6 +18,19 @@
                                  ]
                 },
                 {
+                    "soundOutput":"pcm_output1",
+                    "volume":100,
+                    "activeStatus":false,
+                    "adjustVolume":false,
+                    "muteStatus":false,
+                    "maxVolume":100,
+                    "display":"display2",
+                    "priority":4,
+                    "multipleSoundOut":false,
+                    "volumeSync":[
+                                 ]
+                },
+                {
                     "soundOutput":"pcm_headphone",
                     "volume":100,
                     "activeStatus":false,

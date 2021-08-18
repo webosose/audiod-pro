@@ -168,6 +168,7 @@ void AudioRouter::eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo)
         std::list<EVirtualAudioSink> sinkList;
         utils::SINK_ROUTING_INFO_T outputRoutingInfo;
         mMapSinkRoutingInfo["display1"] = outputRoutingInfo;
+        mMapSinkRoutingInfo["display2"] = outputRoutingInfo;
         utils::itMapSinkRoutingInfo it;
         for (const pbnjson::JValue& elements : sinkPolicyInfo.items())
         {
@@ -176,12 +177,18 @@ void AudioRouter::eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo)
             if ((elements["category"].asString(category) == CONV_OK) && \
                 (elements["streamType"].asString(streamType) == CONV_OK))
             {
-                it = mMapSinkRoutingInfo.find("display1");
+                it = mMapSinkRoutingInfo.find(category);
                 if (it != mMapSinkRoutingInfo.end())
                     it->second.sinkList.push_back(getSinkByName(streamType.c_str()));
             }
         }
         it = mMapSinkRoutingInfo.find("display1");      ////only one category, since only 1 set of displays are supported
+        if (it != mMapSinkRoutingInfo.end())
+        {
+            it->second.startSink = it->second.sinkList.front();
+            it->second.endSink = it->second.sinkList.back();
+        }
+        it = mMapSinkRoutingInfo.find("display2");
         if (it != mMapSinkRoutingInfo.end())
         {
             it->second.startSink = it->second.sinkList.front();
@@ -301,6 +308,7 @@ void AudioRouter::resetOutputDeviceRouting(const std::string &deviceName, const 
         "resetOutputDeviceRouting deviceName:%s mixerType:%d",\
         deviceName.c_str(), (int)mixerType);
     updateDeviceStatus(display, deviceName, false, false, true);
+
     if (nullptr != mObjAudioMixer)
     {
         std::string activeDevice = getPriorityDevice(display, true);
@@ -768,6 +776,7 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                     deviceInfo.adjustVolume = true;
                 deviceInfo.priority = arrItem["priority"].asNumber<int>();
                 deviceInfo.deviceName = soundoutput;
+
                 if (arrItem["display"].asString(display) == CONV_OK)
                 {
                     auto it = mSoundOutputInfo.find(display);

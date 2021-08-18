@@ -30,9 +30,11 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
     {
         FILE *fp = NULL;
         int HDMI0CardNumber = 0;
+        int HDMI1CardNumber = -1;
         int HeadphoneCardNumber = -1;
         char snd_card_info[500];
         char *snd_hdmi0_card_info_parse = NULL;
+        char *snd_hdmi1_card_info_parse = NULL;
         char *snd_headphone_card_info_parse = NULL;
         int lengthOfHDMI0Card = strlen("b1");
         int lengthOfHeadphoneCard = strlen("Headphones");
@@ -46,27 +48,40 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
         {
             PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found card %s", snd_card_info);
             snd_hdmi0_card_info_parse = strstr(snd_card_info, "b1");
+            snd_hdmi1_card_info_parse = strstr(snd_card_info, "b2");
             snd_headphone_card_info_parse = strstr(snd_card_info, "Headphones");
             if (snd_hdmi0_card_info_parse && !strncmp(snd_hdmi0_card_info_parse, "b1", lengthOfHDMI0Card))
             {
                 PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card b1");
                 char card = snd_card_info[1];
                 HDMI0CardNumber =  card - '0';
+
+            }
+            if (snd_hdmi1_card_info_parse && !strncmp(snd_hdmi1_card_info_parse, "b2", lengthOfHDMI0Card))
+            {
+                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card b1");
+                char card = snd_card_info[1];
+                HDMI1CardNumber =  card - '0';
             }
             if (snd_headphone_card_info_parse && !strncmp(snd_headphone_card_info_parse, "Headphones", lengthOfHeadphoneCard) && (-1 == HeadphoneCardNumber))
             {
                 PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card Headphones");
                 char card = snd_card_info[1];
                 HeadphoneCardNumber =  card - '0';
+                mObjAudioMixer->loadInternalSoundCard('i', HeadphoneCardNumber, 0, 1, false, "pcm_headphone");
             }
         }
+        mObjAudioMixer->loadInternalSoundCard('i', HDMI0CardNumber, 0, 1, true, "pcm_output");
+        if (HDMI1CardNumber != -1)
+        {
+            mObjAudioMixer->loadInternalSoundCard('i', HDMI1CardNumber, 0, 1, true, "pcm_output1");
+        }
+
         if (fp)
         {
             fclose(fp);
             fp = NULL;
         }
-        mObjAudioMixer->loadInternalSoundCard('i', HDMI0CardNumber, 0, 1, true, "pcm_output");
-        mObjAudioMixer->loadInternalSoundCard('i', HeadphoneCardNumber, 0, 1, false, "pcm_headphone");
     }
 }
 
