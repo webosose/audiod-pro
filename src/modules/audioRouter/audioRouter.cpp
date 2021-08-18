@@ -177,7 +177,10 @@ void AudioRouter::eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo)
             if ((elements["category"].asString(category) == CONV_OK) && \
                 (elements["streamType"].asString(streamType) == CONV_OK))
             {
-                it = mMapSinkRoutingInfo.find(category);
+                if (WEBOS_SOC_TYPE == "RPI4")
+                    it = mMapSinkRoutingInfo.find(category);
+                else
+                    it = mMapSinkRoutingInfo.find("display1");
                 if (it != mMapSinkRoutingInfo.end())
                     it->second.sinkList.push_back(getSinkByName(streamType.c_str()));
             }
