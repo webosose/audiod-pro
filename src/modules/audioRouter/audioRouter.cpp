@@ -290,13 +290,26 @@ void AudioRouter::setOutputDeviceRouting(const std::string &deviceName, const in
     {
         if (nullptr != mObjAudioMixer)
         {
-            utils::SINK_ROUTING_INFO_T sinkInfo = getSinkRoutingInfo(display);
-            std::string outputDevice = getActualOutputDevice(deviceName);
-            if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink, outputDevice.c_str()))
+            updateDeviceStatus(display, deviceName, true, true, true);
+            updateDeviceStatus(display, activeDevice, true, false, true);
+
+            for (const auto &it:mSoundOutputInfo)
             {
-                updateDeviceStatus(display, deviceName, true, true, true);
-                updateDeviceStatus(display, activeDevice, true, false, true);
-                setStatus = true;
+                std::string displayDevice = getActiveDevice(it.first,true);
+                utils::SINK_ROUTING_INFO_T sinkInfo = getSinkRoutingInfo(it.first);
+                if (displayDevice.empty())
+                {
+                    mObjAudioMixer->setDefaultSinkRouting(sinkInfo.startSink, sinkInfo.endSink);
+                    continue;
+                }
+                std::string outputDevice = getActualOutputDevice(displayDevice);
+                PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                    "setOutputDeviceRouting deviceName:%s priority:%d display:%s mixerType:%d",\
+                    outputDevice.c_str(), priority, it.first.c_str(), (int)mixerType);
+                if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink, outputDevice.c_str()))
+                {
+                    setStatus = true;
+                }
             }
         }
     }
@@ -314,16 +327,22 @@ void AudioRouter::resetOutputDeviceRouting(const std::string &deviceName, const 
 
     if (nullptr != mObjAudioMixer)
     {
-        std::string activeDevice = getPriorityDevice(display, true);
-        utils::SINK_ROUTING_INFO_T sinkInfo = getSinkRoutingInfo(display);
-        if (!activeDevice.empty())
+        for (const auto &it : mSoundOutputInfo)
         {
-            std::string outputDevice = getActualOutputDevice(activeDevice);
-            if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink, outputDevice.c_str()))
-                updateDeviceStatus(display, activeDevice, true, true, true);
+            std::string activeDevice = getPriorityDevice(it.first, true);
+            utils::SINK_ROUTING_INFO_T sinkInfo = getSinkRoutingInfo(it.first);
+            PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                    "resetOutputDeviceRouting deviceName:%s priority:%d display:%s mixerType:%d",\
+                    activeDevice.c_str(), priority, it.first.c_str(), (int)mixerType);
+            if (!activeDevice.empty())
+            {
+                std::string outputDevice = getActualOutputDevice(activeDevice);
+                if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink, outputDevice.c_str()))
+                    updateDeviceStatus(it.first, activeDevice, true, true, true);
+            }
+            else
+                mObjAudioMixer->setDefaultSinkRouting(sinkInfo.startSink, sinkInfo.endSink);
         }
-        else
-            mObjAudioMixer->setDefaultSinkRouting(sinkInfo.startSink, sinkInfo.endSink);
     }
 }
 

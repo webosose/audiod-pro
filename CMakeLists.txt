@@ -187,7 +187,12 @@ target_link_libraries(audiod     ${GLIB2_LDFLAGS}
 endif (WEBOS_LTTNG_ENABLED)
 add_definitions(-DENABLE_POWEROFF_REBOOT_SIGNAL)
 add_definitions(-DENABLE_WAKELOCK_FOR_SLEEP_STATE)
-add_definitions(-DWEBOS_SOC_TYPE="${WEBOS_SOC}")
+IF (${WEBOS_TARGET_MACHINE} STREQUAL qemux86)
+add_definitions(-DWEBOS_SOC_TYPE="x86")
+ELSE()
+add_definitions(-DWEBOS_SOC_TYPE="RPI4")
+ENDIF()
+
 
 webos_build_system_bus_files()
 webos_build_daemon()
