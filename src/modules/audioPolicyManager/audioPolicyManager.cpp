@@ -37,11 +37,12 @@ bool AudioPolicyManager::mIsObjRegistered = AudioPolicyManager::RegisterObject()
 
 //Event handling starts
 void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
-            utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType)
+            utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType,const int& sinkIndex, const std::string& appName)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager::eventSinkStatus source:%s sink:%s sinkId:%d sinkStatus:%d mixerType:%d",\
-        source.c_str(), sink.c_str(), (int)audioSink, (int)sinkStatus, (int)mixerType);
+        "AudioPolicyManager::eventSinkStatus source:%s sink:%s sinkId:%d sinkStatus:%d mixerType:%d sinkIndex:%d, app : %s",\
+        source.c_str(), sink.c_str(), (int)audioSink, (int)sinkStatus, (int)mixerType,\
+        sinkIndex, appName.c_str());
     if (IsValidVirtualSink(audioSink))
     {
         std::string streamType = getStreamType(audioSink);
@@ -2346,7 +2347,8 @@ void AudioPolicyManager::handleEvent(events::EVENTS_T *event)
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                     "handleEvent:: eEventSinkStatus");
             events::EVENT_SINK_STATUS_T *sinkStatusEvent = (events::EVENT_SINK_STATUS_T*)event;
-            eventSinkStatus(sinkStatusEvent->source, sinkStatusEvent->sink, sinkStatusEvent->audioSink, sinkStatusEvent->sinkStatus, sinkStatusEvent->mixerType);
+            eventSinkStatus(sinkStatusEvent->source, sinkStatusEvent->sink, sinkStatusEvent->audioSink, sinkStatusEvent->sinkStatus, sinkStatusEvent->mixerType,sinkStatusEvent->sinkIndex, \
+            sinkStatusEvent->appName);
         }
         break;
         case utils::eEventSourceStatus:

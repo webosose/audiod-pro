@@ -136,6 +136,7 @@ namespace utils
         eEventSoundOutputInfo,
         eEventBTDeviceDisplayInfo,
         eEventActiveDeviceInfo,
+        eEventSinkAppId,
         eEventLunaServerStatusSubscription,
         eEventLunaKeySubscription,
         eEventType_Count,

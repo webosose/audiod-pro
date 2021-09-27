@@ -1,4 +1,4 @@
-// Copyright (c) 2021 LG Electronics, Inc.
+// Copyright (c) 2021-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ namespace events
         EVirtualAudioSink audioSink;
         utils::ESINK_STATUS sinkStatus;
         utils::EMIXER_TYPE mixerType;
+        int sinkIndex;
+        std::string appName;
     }EVENT_SINK_STATUS_T;
 
     typedef struct
@@ -41,6 +43,14 @@ namespace events
         utils::ESINK_STATUS sourceStatus;
         utils::EMIXER_TYPE mixerType;
     }EVENT_SOURCE_STATUS_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        std::string appName;
+        int sinkIndex;
+        int sinkId;
+    }EVENT_SINK_APP_ID;
 
     typedef struct
     {

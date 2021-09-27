@@ -793,7 +793,7 @@ PulseAudioMixer::_connectSocket()
         mPulseStateVolumeHeadset[sink] = -1;
         mPulseStateRoute[sink] = -1;
         while (mPulseStateActiveStreamCount[sink] > 0)
-            outputStreamClosed(sink);
+            outputStreamClosed(sink, 0,  "");
         mPulseStateActiveStreamCount[sink] = 0;    // shouldn't be necessary
     }
 
@@ -904,7 +904,7 @@ void PulseAudioMixer::openCloseSource(EVirtualSource source, bool openNotClose)
 }
 
 void
-PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose)
+PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string appName)
 {
     if (!VERIFY(IsValidVirtualSink(sink)))
         return;
@@ -938,7 +938,7 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose)
         {
             std::string sourceId = "source";
             std::string sinkId = "sink";
-            mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer);
+            mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer, sinkIndex, appName);
         }
         else
             PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -1025,7 +1025,11 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                 case 'o':
                         if (VERIFY(IsValidVirtualSink(sink)))
                         {
-                            outputStreamOpened (sink);
+                            char temp;      //to bypass the scan of cmd from buffer
+                            char appname[100],sinkIndex,sinkType;
+                            sscanf(buffer,"%c %i %i %s",&temp,&sinkType,&sinkIndex,appname);
+
+                            outputStreamOpened (sink , sinkIndex, appname);
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
                             "%s: sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
                                     __FUNCTION__, (int)sink, virtualSinkName(sink), \
@@ -1039,7 +1043,10 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     case 'c':
                         if (VERIFY(IsValidVirtualSink(sink)))
                         {
-                            outputStreamClosed (sink);
+                            char temp;      //to bypass the scan of cmd from buffer
+                            char appname[100],sinkIndex,sinkType;
+                            sscanf(buffer,"%c %i %i %s",&temp,&sinkType,&sinkIndex,appname);
+                            outputStreamClosed (sink,sinkIndex,appname);
 
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
                             "%s: sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
@@ -1059,9 +1066,9 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                                     (int)sink, virtualSinkName(sink), \
                                     ((info > 1) ? "are" : "is"));
                             while (mPulseStateActiveStreamCount[sink] < info)
-                                outputStreamOpened (sink);
+                                outputStreamOpened (sink , -1 , "");
                             while (mPulseStateActiveStreamCount[sink] > info)
-                                outputStreamClosed (sink);
+                                outputStreamClosed (sink , -1, "");
                         }
                         break;
                     case 'I':
@@ -1126,10 +1133,10 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
     }
 }
 
-void PulseAudioMixer::outputStreamOpened (EVirtualAudioSink sink)
+void PulseAudioMixer::outputStreamOpened (EVirtualAudioSink sink, int sinkIndex, std::string appName)
 {
     if (IsValidVirtualSink(sink))
-        openCloseSink (sink, true);
+        openCloseSink (sink, true, sinkIndex, appName);
     if (mOutputStreamsCurrentlyOpenedCount == 0)
     {
         //Will be removed or updated once DAP design is updated
@@ -1138,7 +1145,7 @@ void PulseAudioMixer::outputStreamOpened (EVirtualAudioSink sink)
     mOutputStreamsCurrentlyOpenedCount++;
 }
 
-void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink)
+void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink, int sinkIndex, std::string appName)
 {
     mOutputStreamsCurrentlyOpenedCount--;
     if (mOutputStreamsCurrentlyOpenedCount <= 0)
@@ -1153,7 +1160,7 @@ void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink)
         mOutputStreamsCurrentlyOpenedCount = 0;
     }
     if (IsValidVirtualSink(sink))
-        openCloseSink (sink, false);
+        openCloseSink (sink, false, sinkIndex,  appName);
 }
 
 void PulseAudioMixer::inputStreamOpened (EVirtualSource source)

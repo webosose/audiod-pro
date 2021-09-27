@@ -144,7 +144,7 @@ class AudioPolicyManager : public ModuleInterface
         static bool _setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
-            utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
+            utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType,const int& sinkIndex = -1, const std::string& appName="");
         void eventSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
 

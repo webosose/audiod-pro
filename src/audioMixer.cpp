@@ -238,11 +238,12 @@ void AudioMixer::callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE
 }
 
 void AudioMixer::callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
-              utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType)
+              utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType, const int& sinkIndex, const std::string& appName)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-                "callBackSinkStatus::source:%s sink:%s sinkId:%d sinkStatus:%d mixerType:%d",\
-                source.c_str(), sink.c_str(), (int)audioSink, (int)sinkStatus, (int)mixerType);
+                "callBackSinkStatus::source:%s sink:%s sinkId:%d sinkStatus:%d mixerType:%d sinkIndex:%d, app : %s",\
+                source.c_str(), sink.c_str(), (int)audioSink, (int)sinkStatus, (int)mixerType,\
+                sinkIndex, appName.c_str());
     if (IsValidVirtualSink(audioSink))
     {
         if (utils::eSinkOpened == sinkStatus)
@@ -258,6 +259,8 @@ void AudioMixer::callBackSinkStatus(const std::string& source, const std::string
             eventSinkStatus.audioSink = audioSink;
             eventSinkStatus.sinkStatus = sinkStatus;
             eventSinkStatus.mixerType = mixerType;
+            eventSinkStatus.appName = appName;
+            eventSinkStatus.sinkIndex = sinkIndex;
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventSinkStatus);
         }
     }
@@ -939,20 +942,20 @@ bool AudioMixer::programSource(char cmd, int sink, int value)
     }
 }
 
-void AudioMixer::outputStreamOpened(EVirtualAudioSink sink)
+void AudioMixer::outputStreamOpened(EVirtualAudioSink sink, int sinkIndex, std::string appName)
 {
     PM_LOG_DEBUG("AudioMixer: outputStreamOpened");
     if (mObjPulseAudioMixer)
-        mObjPulseAudioMixer->outputStreamOpened(sink);
+        mObjPulseAudioMixer->outputStreamOpened(sink, sinkIndex,  appName);
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "outputStreamOpened: mObjPulseAudioMixer is null");
 }
 
-void AudioMixer::outputStreamClosed(EVirtualAudioSink sink)
+void AudioMixer::outputStreamClosed(EVirtualAudioSink sink, int sinkIndex, std::string appName)
 {
     PM_LOG_DEBUG("AudioMixer: outputStreamClosed");
     if (mObjPulseAudioMixer)
-        mObjPulseAudioMixer->outputStreamClosed(sink);
+        mObjPulseAudioMixer->outputStreamClosed(sink , sinkIndex, appName);
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "outputStreamClosed: mObjPulseAudioMixer is null");
 }
@@ -1056,11 +1059,11 @@ void AudioMixer::setNREC(bool value)
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setNREC: mObjPulseAudioMixer is null");
 }
 
-void AudioMixer::openCloseSink(EVirtualAudioSink sink, bool openNotClose)
+void AudioMixer::openCloseSink(EVirtualAudioSink sink, bool openNotClose , int sinkIndex, std::string appName)
 {
     PM_LOG_DEBUG("AudioMixer: openCloseSink");
     if (mObjPulseAudioMixer)
-        mObjPulseAudioMixer->openCloseSink(sink, openNotClose);
+        mObjPulseAudioMixer->openCloseSink(sink, openNotClose,  sinkIndex,  appName);
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "openCloseSink: mObjPulseAudioMixer is null");
 }
