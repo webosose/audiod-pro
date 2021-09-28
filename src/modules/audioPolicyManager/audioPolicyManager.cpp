@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2022 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@
 #define AUDIOD_API_GET_INPUT_VOLUME    "/getInputVolume"
 #define AUDIOD_API_GET_STREAM_STATUS   "/getStreamStatus"
 #define AUDIOD_API_GET_SOURCE_STATUS   "/getSourceStatus"
-#define AUDIOD_API_SET_MUTE_SINK     "/muteSink"
+#define AUDIOD_API_SET_MUTE_SINK       "/muteSink"
+#define AUDIOD_API_SET_APP_VOLUME      "/setAppVolume"
 
 bool AudioPolicyManager::mIsObjRegistered = AudioPolicyManager::RegisterObject();
 
@@ -734,6 +735,102 @@ bool AudioPolicyManager::setVolume(EVirtualSource audioSource, const int& volume
     return returnStatus;
 }
 
+bool AudioPolicyManager::storeAppVolume(const std::string &mediaId, const int &volume, EVirtualAudioSink audioSink)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                "AudioPolicyManager:storeAppVolume volume%d for mediaId:%s, sink = %d", volume, mediaId.c_str(), (int)audioSink);
+    bool status = false;
+    auto it = mAppVolumeInfo.find(mediaId);
+    if (it != mAppVolumeInfo.end())
+    {
+        for (auto &elements : it->second)
+        {
+            if (elements.audioSink == audioSink)
+            {
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeAppVolume Updating volume for existing mediaId and sink");
+                elements.volume = volume;
+                status = true;
+                break;
+            }
+        }
+        if (!status)
+        {
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeAppVolume adding volume for new sink with existing mediaId");
+            utils::APP_VOLUME_INFO_T stAppVolumeInfo;
+            stAppVolumeInfo.audioSink = audioSink;
+            stAppVolumeInfo.volume = volume;
+            it->second.push_back(stAppVolumeInfo);
+        }
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeAppVolume Adding mediaId for the first time");
+        utils::APP_VOLUME_INFO_T stAppVolumeInfo;
+        stAppVolumeInfo.audioSink = audioSink;
+        stAppVolumeInfo.volume = volume;
+        stAppVolumeInfo.sinkInputIndex = -1;    //default initialization
+        mVectAppVolumeInfo.push_back(stAppVolumeInfo);
+        mAppVolumeInfo[mediaId] = mVectAppVolumeInfo;
+    }
+    printAppVolumeInfo();
+    return true;
+}
+
+void AudioPolicyManager::printAppVolumeInfo()
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager::printAppVolumeInfo");
+    for (const auto it : mAppVolumeInfo)
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mAppVolumeInfo: mediaId:%s", it.first.c_str());
+        for (const auto& volumeInfo : it.second)
+        {
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "audioSink:%d volume:%d", (int)volumeInfo.audioSink, volumeInfo.volume);
+        }
+    }
+}
+
+bool AudioPolicyManager::setAppVolume(const std::string& mediaId, const int &volume, EVirtualAudioSink audioSink, \
+    utils::EMIXER_TYPE mixerType, bool ramp)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager:setAppVolume:%d for sink:%d, mixerType = %d, ramp = %d", volume, (int)audioSink, (int)mixerType, (int)ramp);
+    bool returnStatus = false;
+    if (mObjAudioMixer)
+    {
+        if (utils::ePulseMixer == mixerType)
+        {
+            auto it = mAppVolumeInfo.find(mediaId);
+            if (it != mAppVolumeInfo.end())
+            {
+                for (auto &elements : it->second)
+                {
+                    if ((elements.audioSink == audioSink) && (elements.sinkInputIndex != -1))
+                    {
+                        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager calling programVolume");
+                        if (mObjAudioMixer->programAppVolume(audioSink, elements.sinkInputIndex, volume, ramp))
+                            returnStatus = true;
+                        else
+                            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:programAppVolume failed");
+                    }
+                }
+            }
+            else
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: mediaId is not present");
+        }
+        else if (utils::eUmiMixer == mixerType)
+        {
+            //Will be uncommented when umi mixer is enabled
+        }
+        else
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                "AudioPolicyManager:Invalid mixer type");
+    }
+    else
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "AudioPolicyManager:applyVolumePolicy mObjAudioMixer is null");
+    return returnStatus;
+}
+
 bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volume, \
     utils::EMIXER_TYPE mixerType, bool ramp)
 {
@@ -1284,6 +1381,99 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
     return true;
 }
 
+bool AudioPolicyManager::_setAppVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setAppVolume");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(streamType, string), PROP(volume, integer),
+                                                           PROP(mediaId, string)) REQUIRED_3(streamType, volume, mediaId)));
+
+    std::string reply;
+    if (!msg.parse(__FUNCTION__,lshandle))
+       return true;
+
+    AudioPolicyManager *audioPolicyManagerInstance = AudioPolicyManager::getAudioPolicyManagerInstance();
+    if (audioPolicyManagerInstance)
+    {
+        bool status = false;
+        bool isValidVolume = false;
+        bool isValidStream = false;
+        bool isStreamActive = false;
+        int volume = 0;
+        std::string streamType;
+        std::string mediaId;
+
+        msg.get("streamType", streamType);
+        msg.get("volume", volume);
+        msg.get("mediaId", mediaId);
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+            "got sink = %s , vol = %d , mediaId = %s", streamType.c_str(), volume, mediaId.c_str());
+
+        EVirtualAudioSink sink = audioPolicyManagerInstance->getSinkType(streamType);
+        if (sink != eVirtualSink_None)
+        {
+            isValidStream = true;
+        }
+
+        if ((volume >= INIT_VOLUME) && (volume <= MAX_VOLUME))
+        {
+            isValidVolume = true;
+        }
+
+        if (audioPolicyManagerInstance->getStreamActiveStatus(streamType))
+        {
+            isStreamActive = true;
+        }
+
+        if (isValidStream && isValidVolume)
+        {
+            if (audioPolicyManagerInstance->storeAppVolume(mediaId, volume, sink))
+            {
+                if (!audioPolicyManagerInstance->setAppVolume(mediaId, volume, sink, audioPolicyManagerInstance->getMixerType(streamType), true))
+                    PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setAppVolume: failed mixer call");
+                status = true;
+            }
+            //status = true;
+            //audioPolicyManagerInstance->updateCurrentVolume(streamType, volume);
+            //audioPolicyManagerInstance->notifyInputVolume(sink, volume, ramp);
+            //PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setAppVolume updated successfully");
+        }
+
+        if (status)
+        {
+            pbnjson::JValue setAppVolumeResponse = pbnjson::Object();
+            setAppVolumeResponse.put("returnValue", true);
+            setAppVolumeResponse.put("mediaId", mediaId);
+            setAppVolumeResponse.put("volume", volume);
+            setAppVolumeResponse.put("streamType", streamType);
+            reply = setAppVolumeResponse.stringify();
+        }
+        else
+        {
+            if (!isValidStream)
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Audiod Unknown Stream");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
+            }
+            else if (!isValidVolume)
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume Not in Range");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Audiod internal error");
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+            }
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager instance Null");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
+    }
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+    return true;
+}
 
 bool AudioPolicyManager::_setSourceInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
@@ -2061,6 +2251,7 @@ static LSMethod InputVolumeMethods[] = {
     {"muteSink", AudioPolicyManager::_muteSink},
     {"setSourceInputVolume", AudioPolicyManager::_setSourceInputVolume},
     {"getSourceInputVolume", AudioPolicyManager::_getSourceInputVolume},
+    {"setAppVolume", AudioPolicyManager::_setAppVolume},
     { },
 };
 

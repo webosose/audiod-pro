@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 LG Electronics, Inc.
+// Copyright (c) 2012-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -269,6 +269,19 @@ namespace utils
         }
     }SOURCE_ROUTING_INFO_T;
 
+    typedef struct appVolumeInfo
+    {
+        EVirtualAudioSink audioSink;
+        int volume;
+        int sinkInputIndex;
+        appVolumeInfo()
+        {
+            audioSink = eVirtualSink_None;
+            volume = 100;
+            sinkInputIndex = -1;
+        }
+    }APP_VOLUME_INFO_T;
+
     typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
     typedef std::vector<EVirtualAudioSink>::iterator itVirtualSink;
 
@@ -298,6 +311,7 @@ namespace utils
     typedef std::map<std::string, int>::iterator itMapBTDeviceInfo;
 
     typedef std::map<std::string, std::vector<DEVICE_INFO_T>> mapDeviceInfo;
+    typedef std::map<std::string, std::vector<APP_VOLUME_INFO_T>> mapAppVolumeInfo;
 
     void LSMessageResponse(LSHandle* handle, LSMessage * message,\
         const char* reply, utils::EReplyType eType, bool isReferenced);

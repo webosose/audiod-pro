@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 LG Electronics, Inc.
+// Copyright (c) 2012-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ public:
 
     //Will ignore volume of high latency sinks not playing and mute them.
     bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
+    bool programAppVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp = false);
     bool programVolume(EVirtualSource source, int volume, bool ramp = false);
     bool programCallVoiceOrMICVolume(char cmd, int volume);
     bool programMute(EVirtualSource source, int mute);

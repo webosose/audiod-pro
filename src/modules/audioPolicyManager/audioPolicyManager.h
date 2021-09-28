@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2022 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -42,10 +42,12 @@ class AudioPolicyManager : public ModuleInterface
         AudioMixer* mObjAudioMixer;
         std::vector<utils::VOLUME_POLICY_INFO_T> mVolumePolicyInfo;
         std::vector<utils::VOLUME_POLICY_INFO_T> mSourceVolumePolicyInfo;
+        std::vector<utils::APP_VOLUME_INFO_T> mVectAppVolumeInfo;
         utils::mapSinkToStream mSinkToStream;
         utils::mapStreamToSink mStreamToSink;
         utils::mapSourceToStream mSourceToStream;
         utils::mapStreamToSource mStreamToSource;
+        utils::mapAppVolumeInfo mAppVolumeInfo;
         static bool mIsObjRegistered;
         AudioPolicyManager(ModuleConfig* const pConfObj);
         //Register Object to object factory. This is called automatically
@@ -75,7 +77,9 @@ class AudioPolicyManager : public ModuleInterface
         void updatePolicyStatusForSource(const std::string& streamType, const bool& status);
         void initStreamVolume();
         bool setVolume(EVirtualAudioSink audioSink, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
+        bool setAppVolume(const std::string& mediaId, const int &volume, EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType, bool ramp = false);
         bool setVolume(EVirtualSource audioSource, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
+        bool storeAppVolume(const std::string &mediaId, const int &volume, EVirtualAudioSink audioSink);
         bool muteSink(EVirtualAudioSink audioSink, const int &muteStatus, utils::EMIXER_TYPE mixerType);
         bool initializePolicyInfo(const pbnjson::JValue& policyInfo, bool isSink);
 
@@ -130,11 +134,13 @@ class AudioPolicyManager : public ModuleInterface
         static bool _getSourceStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _muteSource(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _muteSink(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _setAppVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void notifyGetVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetSourceVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetStreamStatusSubscribers(const std::string& payload) const;
         void notifyGetSourceStatusSubscribers(const std::string& payload) const;
+        void printAppVolumeInfo();
         static bool _setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \

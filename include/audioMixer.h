@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2022 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -78,6 +78,7 @@ class AudioMixer : public MixerInterface
 
         //pulseAudioMixer calls
         bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
+        bool programAppVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp = false);
         bool programVolume(EVirtualSource source, int volume, bool ramp = false);
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);

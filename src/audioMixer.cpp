@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2022 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -481,6 +481,18 @@ bool AudioMixer::programVolume(EVirtualAudioSink sink, int volume, bool ramp)
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programVolume: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::programAppVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp)
+{
+    PM_LOG_DEBUG("AudioMixer: programAppVolume");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->programAppVolume(sink, sinkIndex, volume, ramp);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programAppVolume: mObjPulseAudioMixer is nullptr");
         return false;
     }
 }
