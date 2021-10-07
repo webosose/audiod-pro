@@ -66,6 +66,7 @@ void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::s
         }
         if (utils::eSinkOpened == sinkStatus)
         {
+            addSinkInput(appName, sinkIndex, getStreamType(audioSink));
             muteSink(audioSink, getCurrentSinkMuteStatus(streamType), mixerType);
             if (setVolume(audioSink, currentVolume, mixerType, ramp))
                 notifyGetVolumeSubscribers(streamType, currentVolume);
@@ -163,6 +164,64 @@ void AudioPolicyManager::eventCurrentInputVolume(EVirtualAudioSink audioSink, co
 //Event handling ends
 
 //Utility functions start
+
+void AudioPolicyManager::addSinkInput(const std::string &appName, const int &sinkIndex, const std::string& sink)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager::addSinkInput : appName : %s, sink-index : %d, sink : %s", appName.c_str(), sinkIndex, sink.c_str());
+    auto it = mAppVolumeInfo.find(appName);
+    if (it != mAppVolumeInfo.end())
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "appid found");
+        for(auto elements:it->second)
+        {
+            if (elements.audioSink == getSinkType(sink))
+            {
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "sink found");
+                elements.sinkInputIndex = sinkIndex;
+            }
+        }
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "APPID NOT FOUND");
+        utils::APP_VOLUME_INFO_T stAppVolumeInfo;
+        stAppVolumeInfo.audioSink = getSinkType(sink);
+        stAppVolumeInfo.volume = getCurrentVolume(sink);
+        stAppVolumeInfo.sinkInputIndex = sinkIndex;
+        mAppVolumeInfo[appName].push_back(stAppVolumeInfo);
+    }
+}
+//TODO: fixme
+void AudioPolicyManager::removeSinkInput(const std::string &appName, const int &sinkIndex, const std::string& sink)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+        "AudioPolicyManager::removeSinkInput : appName : %s, sink-index : %d, sink : %s", appName.c_str(), sinkIndex, sink.c_str());
+    auto it = mAppVolumeInfo.find(appName);
+    if (it != mAppVolumeInfo.end())
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "appid found");
+        for(auto elements = it->second.begin();elements < it->second.end();elements++)
+        {
+            if (elements->audioSink == getSinkType(sink) && elements->sinkInputIndex == sinkIndex)
+            {
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "sink found and REMOVED");
+                it->second.erase(elements);
+            }
+        }
+    }
+    else
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+            "APPID NOT FOUND");
+    }
+}
+
 void AudioPolicyManager::readPolicyInfo()
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\

@@ -273,8 +273,8 @@ namespace utils
     typedef struct appVolumeInfo
     {
         EVirtualAudioSink audioSink;
-        int volume;
         int sinkInputIndex;
+        int volume;
         appVolumeInfo()
         {
             audioSink = eVirtualSink_None;

@@ -69,6 +69,9 @@ class AudioPolicyManager : public ModuleInterface
         int getCurrentSinkMuteStatus(const std::string &streamType);
         int getCurrentSourceMuteStatus(const std::string &streamType);
 
+        void addSinkInput(const std::string &appName, const int &sinkIndex, const std::string& sink);
+        void removeSinkInput(const std::string &appName, const int &sinkIndex, const std::string& sink);
+
         void applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
         void applyVolumePolicy(EVirtualSource audioSource, const std::string& streamType, const int& priority);
         void removeVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
