@@ -61,6 +61,8 @@ void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::s
                 currentVolume = elements.currentVolume;
                 ramp = elements.ramp;
                 elements.isStreamActive = (sinkStatus == utils::eSinkOpened) ? true : false;
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "mixertype set %d",elements.mixerType);
                 break;
             }
         }
@@ -174,8 +176,10 @@ void AudioPolicyManager::addSinkInput(const std::string &appName, const int &sin
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
             "appid found");
-        for(auto elements:it->second)
+        for(auto &elements:it->second)
         {
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                "%d audio sink : %d,%d,%s",1,elements.audioSink, getSinkType(sink),sink.c_str());
             if (elements.audioSink == getSinkType(sink))
             {
                 PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -211,7 +215,7 @@ void AudioPolicyManager::removeSinkInput(const std::string &appName, const int &
             {
                 PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                     "sink found and REMOVED");
-                it->second.erase(elements);
+                it->second.front().sinkInputIndex = -1;
             }
         }
     }
@@ -866,8 +870,9 @@ bool AudioPolicyManager::setAppVolume(const std::string& mediaId, const int &vol
                 {
                     if ((elements.audioSink == audioSink) && (elements.sinkInputIndex != -1))
                     {
-                        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager calling programVolume");
-                        if (mObjAudioMixer->programAppVolume(audioSink, elements.sinkInputIndex, volume, ramp))
+                        int effectiveVolume  = (getCurrentVolume(getStreamType(elements.audioSink)) * volume) / 100;
+                        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager calling programVolume effective = %d", effectiveVolume);
+                        if (mObjAudioMixer->programAppVolume(audioSink, elements.sinkInputIndex, effectiveVolume, ramp))
                             returnStatus = true;
                         else
                             PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:programAppVolume failed");
@@ -901,11 +906,17 @@ bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volum
     {
         if (utils::ePulseMixer == mixerType)
         {
-            if (mObjAudioMixer->programVolume(audioSink, volume, ramp))
-                returnStatus = true;
-            else
-                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                    "AudioPolicyManager:programVolume failed");
+            for (const auto& items:mAppVolumeInfo)
+            {
+                for(const auto& elements:items.second)
+                {
+                    if(elements.audioSink == audioSink)
+                    {
+                        int effectiveVolume = (elements.volume * volume)/100;
+                        mObjAudioMixer->programAppVolume(audioSink, elements.sinkInputIndex, effectiveVolume);
+                    }
+                }
+            }
         }
         else if (utils::eUmiMixer == mixerType)
         {
@@ -2302,6 +2313,31 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
     return true;
 }
 
+bool AudioPolicyManager::_registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _registerTrack");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(streamType,string)) REQUIRED_1(streamType)));
+    std::string reply ;
+    if (!msg.parse(__FUNCTION__,lshandle))
+       return true;
+
+    std::string streamType;
+    msg.get("streamType",streamType);
+    pbnjson::JValue resp = pbnjson::JObject();
+    AudioPolicyManager *audioPolicyManagerInstance = AudioPolicyManager::getAudioPolicyManagerInstance();
+    if (audioPolicyManagerInstance)
+    {
+        std::string trackId = GenerateUniqueID()();
+        resp.put("trackId",trackId);
+        resp.put("returnValue",true);
+        utils::APP_VOLUME_INFO_T newTrack;
+        newTrack.audioSink=audioPolicyManagerInstance->getSinkType(streamType);
+        audioPolicyManagerInstance->mAppVolumeInfo[trackId].push_back(newTrack);
+        utils::LSMessageResponse(lshandle, message, resp.stringify().c_str(), utils::eLSRespond, false);
+    }
+    return true;
+}
+
 static LSMethod InputVolumeMethods[] = {
     {"setInputVolume", AudioPolicyManager::_setInputVolume},
     {"getInputVolume", AudioPolicyManager::_getInputVolume},
@@ -2312,6 +2348,7 @@ static LSMethod InputVolumeMethods[] = {
     {"setSourceInputVolume", AudioPolicyManager::_setSourceInputVolume},
     {"getSourceInputVolume", AudioPolicyManager::_getSourceInputVolume},
     {"setAppVolume", AudioPolicyManager::_setAppVolume},
+    {"registerTrack", AudioPolicyManager::_registerTrack},
     { },
 };
 

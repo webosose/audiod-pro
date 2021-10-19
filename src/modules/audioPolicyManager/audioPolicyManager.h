@@ -138,6 +138,7 @@ class AudioPolicyManager : public ModuleInterface
         static bool _muteSource(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _muteSink(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _setAppVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void notifyGetVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetSourceVolumeSubscribers(const std::string& streamType, const int& volume);
@@ -158,5 +159,50 @@ class AudioPolicyManager : public ModuleInterface
         std::string getSourceStatus(const std::string& streamType, bool subscribed);
         std::string getStreamStatus(bool subscribed);
         std::string getSourceStatus(bool subscribed);
+};
+
+#define AUDIOD_UNIQUE_ID_LENGTH 10
+
+class GenerateUniqueID {
+    const std::string           source_;
+    const int                   base_;
+    const std::function<int()>  rand_;
+
+    public:
+    GenerateUniqueID(GenerateUniqueID&) = delete;
+    GenerateUniqueID& operator= (const GenerateUniqueID&) = delete;
+
+    explicit
+    GenerateUniqueID(const std::string& src = "0123456789ABCDEFGIJKLMNOPQRSTUVWXYZabcdefgijklmnopqrstuvwxyz") :
+        source_(src),
+        base_(source_.size()),
+        rand_(std::bind(
+            std::uniform_int_distribution<int>(0, base_ - 1),
+            std::mt19937( std::random_device()() )
+        ))
+    { }
+
+    std::string operator ()()
+    {
+        struct timespec time;
+        std::string s(AUDIOD_UNIQUE_ID_LENGTH, '0');
+
+        clock_gettime(CLOCK_MONOTONIC, &time);
+
+        s[0] = '_'; // Prepend uid with _ to comply with luna requirements
+        for (int i = 1; i < AUDIOD_UNIQUE_ID_LENGTH; ++i) {
+            if (i < 5 && i < AUDIOD_UNIQUE_ID_LENGTH - 6) {
+                s[i] = source_[time.tv_nsec % base_];
+                time.tv_nsec /= base_;
+            } else if (time.tv_sec > 0 && i < AUDIOD_UNIQUE_ID_LENGTH - 3) {
+                s[i] = source_[time.tv_sec % base_];
+                time.tv_sec /= base_;
+            } else {
+                s[i] = source_[rand_()];
+            }
+        }
+
+        return s;
+    }
 };
 #endif //_AUDIO_POLICY_MGR_H_
