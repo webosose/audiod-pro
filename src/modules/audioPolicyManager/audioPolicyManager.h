@@ -139,6 +139,7 @@ class AudioPolicyManager : public ModuleInterface
         static bool _muteSink(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _setAppVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _unregisterTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void notifyGetVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetSourceVolumeSubscribers(const std::string& streamType, const int& volume);
@@ -159,6 +160,8 @@ class AudioPolicyManager : public ModuleInterface
         std::string getSourceStatus(const std::string& streamType, bool subscribed);
         std::string getStreamStatus(bool subscribed);
         std::string getSourceStatus(bool subscribed);
+        bool removeTrackId(const std::string& trackId);
+
 };
 
 #define AUDIOD_UNIQUE_ID_LENGTH 10

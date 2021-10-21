@@ -848,7 +848,7 @@ void AudioPolicyManager::printAppVolumeInfo()
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mAppVolumeInfo: mediaId:%s", it.first.c_str());
         for (const auto& volumeInfo : it.second)
         {
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "audioSink:%d volume:%d", (int)volumeInfo.audioSink, volumeInfo.volume);
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "audioSink:%d volume:%d sinkInputIndex:%d", (int)volumeInfo.audioSink, volumeInfo.volume, volumeInfo.sinkInputIndex);
         }
     }
 }
@@ -2313,6 +2313,27 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
     return true;
 }
 
+bool AudioPolicyManager::removeTrackId(const std::string& trackId)
+{
+    auto it = mAppVolumeInfo.find(trackId);
+    if (it != mAppVolumeInfo.end())
+    {
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "trackId found");
+        for(auto elements = it->second.begin();elements < it->second.end();elements++)
+        {
+                it->second.erase(elements);
+        }
+        it = mAppVolumeInfo.erase(it);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "trackId NOT FOUND");
+        return false;
+    }
+    printAppVolumeInfo();
+    return true;
+}
+
 bool AudioPolicyManager::_registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _registerTrack");
@@ -2338,6 +2359,39 @@ bool AudioPolicyManager::_registerTrack(LSHandle *lshandle, LSMessage *message, 
     return true;
 }
 
+bool AudioPolicyManager::_unregisterTrack(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _unregisterTrack");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(trackId,string)) REQUIRED_1(trackId)));
+    std::string reply;
+    if (!msg.parse(__FUNCTION__,lshandle))
+       return true;
+
+    std::string trackId;
+    msg.get("trackId", trackId);
+    AudioPolicyManager *audioPolicyManagerInstance = AudioPolicyManager::getAudioPolicyManagerInstance();
+    if (audioPolicyManagerInstance)
+    {
+        if (audioPolicyManagerInstance->removeTrackId(trackId))
+        {
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: removeTrackId success");
+            pbnjson::JValue response = pbnjson::JObject();
+            response.put("returnValue", true);
+            response.put("trackId", trackId);
+            reply = response.stringify();
+        }
+        else
+        {
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: removeTrackId failed");
+            reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_TRACKID, "Audiod Unknown trackId");
+        }
+
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+    return true;
+}
+
 static LSMethod InputVolumeMethods[] = {
     {"setInputVolume", AudioPolicyManager::_setInputVolume},
     {"getInputVolume", AudioPolicyManager::_getInputVolume},
@@ -2349,6 +2403,7 @@ static LSMethod InputVolumeMethods[] = {
     {"getSourceInputVolume", AudioPolicyManager::_getSourceInputVolume},
     {"setAppVolume", AudioPolicyManager::_setAppVolume},
     {"registerTrack", AudioPolicyManager::_registerTrack},
+    {"unregisterTrack", AudioPolicyManager::_unregisterTrack},
     { },
 };
 
