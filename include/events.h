@@ -31,7 +31,7 @@ namespace events
         utils::ESINK_STATUS sinkStatus;
         utils::EMIXER_TYPE mixerType;
         int sinkIndex;
-        std::string appName;
+        std::string trackId;
     }EVENT_SINK_STATUS_T;
 
     typedef struct
@@ -47,7 +47,7 @@ namespace events
     typedef struct
     {
         EModuleEventType eventName;
-        std::string appName;
+        std::string trackId;
         int sinkIndex;
         int sinkId;
     }EVENT_SINK_APP_ID;
@@ -137,6 +137,20 @@ namespace events
         std::string address;
         int displayId;
     }EVENT_BT_DEVICE_DISPAY_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        std::string trackId;
+        std::string streamType;
+    }EVENT_REGISTER_TRACK_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        std::string trackId;
+    }EVENT_UNREGISTER_TRACK_T;
+
 
     typedef struct
     {

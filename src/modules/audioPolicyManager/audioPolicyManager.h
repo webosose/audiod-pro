@@ -42,12 +42,11 @@ class AudioPolicyManager : public ModuleInterface
         AudioMixer* mObjAudioMixer;
         std::vector<utils::VOLUME_POLICY_INFO_T> mVolumePolicyInfo;
         std::vector<utils::VOLUME_POLICY_INFO_T> mSourceVolumePolicyInfo;
-        std::vector<utils::APP_VOLUME_INFO_T> mVectAppVolumeInfo;
         utils::mapSinkToStream mSinkToStream;
         utils::mapStreamToSink mStreamToSink;
         utils::mapSourceToStream mSourceToStream;
         utils::mapStreamToSource mStreamToSource;
-        utils::mapAppVolumeInfo mAppVolumeInfo;
+        utils::mapTrackVolumeInfo mTrackVolumeInfo;
         static bool mIsObjRegistered;
         AudioPolicyManager(ModuleConfig* const pConfObj);
         //Register Object to object factory. This is called automatically
@@ -69,8 +68,8 @@ class AudioPolicyManager : public ModuleInterface
         int getCurrentSinkMuteStatus(const std::string &streamType);
         int getCurrentSourceMuteStatus(const std::string &streamType);
 
-        void addSinkInput(const std::string &appName, const int &sinkIndex, const std::string& sink);
-        void removeSinkInput(const std::string &appName, const int &sinkIndex, const std::string& sink);
+        void addSinkInput(const std::string &trackId, const int &sinkIndex, const std::string& sink);
+        void removeSinkInput(const std::string &trackId, const int &sinkIndex, const std::string& sink);
 
         void applyVolumePolicy(EVirtualAudioSink audioSink, const std::string& streamType, const int& priority);
         void applyVolumePolicy(EVirtualSource audioSource, const std::string& streamType, const int& priority);
@@ -80,7 +79,7 @@ class AudioPolicyManager : public ModuleInterface
         void updatePolicyStatusForSource(const std::string& streamType, const bool& status);
         void initStreamVolume();
         bool setVolume(EVirtualAudioSink audioSink, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
-        bool setAppVolume(const std::string& mediaId, const int &volume, EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType, bool ramp = false);
+        bool setTrackVolume(const std::string& mediaId, const int &volume, EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType, bool ramp = false);
         bool setVolume(EVirtualSource audioSource, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
         bool storeAppVolume(const std::string &mediaId, const int &volume, EVirtualAudioSink audioSink);
         bool muteSink(EVirtualAudioSink audioSink, const int &muteStatus, utils::EMIXER_TYPE mixerType);
@@ -137,22 +136,22 @@ class AudioPolicyManager : public ModuleInterface
         static bool _getSourceStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _muteSource(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _muteSink(LSHandle *lshandle, LSMessage *message, void *ctx);
-        static bool _setAppVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
-        static bool _registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
-        static bool _unregisterTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _setTrackVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void notifyGetVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetSourceVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetStreamStatusSubscribers(const std::string& payload) const;
         void notifyGetSourceStatusSubscribers(const std::string& payload) const;
-        void printAppVolumeInfo();
+        void printTrackVolumeInfo();
         static bool _setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
-            utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType,const int& sinkIndex = -1, const std::string& appName="");
+            utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType,const int& sinkIndex = -1, const std::string& trackId="");
         void eventSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
 
+        void eventRegisterTrack(const std::string& trackId, const std::string& streamType);
+        void eventUnregisterTrack(const std::string& trackId);
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
         void eventCurrentInputVolume(EVirtualAudioSink audioSink, const int& volume);
         void notifyInputVolume(EVirtualAudioSink audioSink, const int& volume, const bool& ramp);
@@ -161,51 +160,8 @@ class AudioPolicyManager : public ModuleInterface
         std::string getStreamStatus(bool subscribed);
         std::string getSourceStatus(bool subscribed);
         bool removeTrackId(const std::string& trackId);
+        bool addTrackId(const std::string& trackId, const std::string &streamType);
 
 };
 
-#define AUDIOD_UNIQUE_ID_LENGTH 10
-
-class GenerateUniqueID {
-    const std::string           source_;
-    const int                   base_;
-    const std::function<int()>  rand_;
-
-    public:
-    GenerateUniqueID(GenerateUniqueID&) = delete;
-    GenerateUniqueID& operator= (const GenerateUniqueID&) = delete;
-
-    explicit
-    GenerateUniqueID(const std::string& src = "0123456789ABCDEFGIJKLMNOPQRSTUVWXYZabcdefgijklmnopqrstuvwxyz") :
-        source_(src),
-        base_(source_.size()),
-        rand_(std::bind(
-            std::uniform_int_distribution<int>(0, base_ - 1),
-            std::mt19937( std::random_device()() )
-        ))
-    { }
-
-    std::string operator ()()
-    {
-        struct timespec time;
-        std::string s(AUDIOD_UNIQUE_ID_LENGTH, '0');
-
-        clock_gettime(CLOCK_MONOTONIC, &time);
-
-        s[0] = '_'; // Prepend uid with _ to comply with luna requirements
-        for (int i = 1; i < AUDIOD_UNIQUE_ID_LENGTH; ++i) {
-            if (i < 5 && i < AUDIOD_UNIQUE_ID_LENGTH - 6) {
-                s[i] = source_[time.tv_nsec % base_];
-                time.tv_nsec /= base_;
-            } else if (time.tv_sec > 0 && i < AUDIOD_UNIQUE_ID_LENGTH - 3) {
-                s[i] = source_[time.tv_sec % base_];
-                time.tv_sec /= base_;
-            } else {
-                s[i] = source_[rand_()];
-            }
-        }
-
-        return s;
-    }
-};
 #endif //_AUDIO_POLICY_MGR_H_

@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 LG Electronics, Inc.
+// Copyright (c) 2012-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -153,7 +153,7 @@ extern PmLogContext audiodLogContext;
 #define MSGID_DEVICE_ROUTING_CONFIG_PARSER             "DEVICE_ROUTING_CONFIG_PARSER"      //Device routing config parser
 #define MSGID_SOUNDOUTPUT_LIST_PARSER                   "DEVICE_ROUTING_CONFIG_PARSER"      //Device routing config parser //TODO
 #define MSGID_AUDIOROUTER                              "AUDIO_ROUTER"                      //For Auto class
-
+#define MSGID_TRACKMANAGER                              "TRACK_MANAEGR"                     //For audio track management
 #define MSGID_SYSTEMSOUND_MANAGER                      "SYSTEM_SOUND"                      //For System sound plays
 #define MSGID_CONNECTION_MANAGER                       "CONNECTION_MANAGER"                //Connection manager
 #define MSGID_GINIT_FUNTION                            "INIT_FUNCTIONS"                    //For utils, init and hook functions

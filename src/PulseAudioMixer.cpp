@@ -904,7 +904,7 @@ void PulseAudioMixer::openCloseSource(EVirtualSource source, bool openNotClose)
 }
 
 void
-PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string appName)
+PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string trackId)
 {
     if (!VERIFY(IsValidVirtualSink(sink)))
         return;
@@ -938,7 +938,7 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose, int s
         {
             std::string sourceId = "source";
             std::string sinkId = "sink";
-            mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer, sinkIndex, appName);
+            mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer, sinkIndex, trackId);
         }
         else
             PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -1133,10 +1133,10 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
     }
 }
 
-void PulseAudioMixer::outputStreamOpened (EVirtualAudioSink sink, int sinkIndex, std::string appName)
+void PulseAudioMixer::outputStreamOpened (EVirtualAudioSink sink, int sinkIndex, std::string trackId)
 {
     if (IsValidVirtualSink(sink))
-        openCloseSink (sink, true, sinkIndex, appName);
+        openCloseSink (sink, true, sinkIndex, trackId);
     if (mOutputStreamsCurrentlyOpenedCount == 0)
     {
         //Will be removed or updated once DAP design is updated
@@ -1145,7 +1145,7 @@ void PulseAudioMixer::outputStreamOpened (EVirtualAudioSink sink, int sinkIndex,
     mOutputStreamsCurrentlyOpenedCount++;
 }
 
-void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink, int sinkIndex, std::string appName)
+void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink, int sinkIndex, std::string trackId)
 {
     mOutputStreamsCurrentlyOpenedCount--;
     if (mOutputStreamsCurrentlyOpenedCount <= 0)
@@ -1160,7 +1160,7 @@ void PulseAudioMixer::outputStreamClosed (EVirtualAudioSink sink, int sinkIndex,
         mOutputStreamsCurrentlyOpenedCount = 0;
     }
     if (IsValidVirtualSink(sink))
-        openCloseSink (sink, false, sinkIndex,  appName);
+        openCloseSink (sink, false, sinkIndex,  trackId);
 }
 
 void PulseAudioMixer::inputStreamOpened (EVirtualSource source)

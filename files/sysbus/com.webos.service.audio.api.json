@@ -9,7 +9,7 @@
     "com.webos.service.audio/setInputVolume",
     "com.webos.service.audio/registerTrack",
     "com.webos.service.audio/unregisterTrack",
-    "com.webos.service.audio/setAppVolume",
+    "com.webos.service.audio/setTrackVolume",
     "com.webos.service.audio/UMI/mute",
     "com.webos.service.audio/master/volumeDown",
     "com.webos.service.audio/master/muteVolume",

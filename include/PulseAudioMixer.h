@@ -69,8 +69,8 @@ public:
     VirtualSinkSet getActiveStreams()
         {return mActiveStreams;}
     /// Count how many output streams are opened
-    void outputStreamOpened (EVirtualAudioSink sink, int sinkIndex, std::string appName);
-    void outputStreamClosed (EVirtualAudioSink sink, int sinkIndex, std::string appName);
+    void outputStreamOpened (EVirtualAudioSink sink, int sinkIndex, std::string trackId);
+    void outputStreamClosed (EVirtualAudioSink sink, int sinkIndex, std::string trackId);
     /// Count how many input streams are opened
     void inputStreamOpened (EVirtualSource source);
     void inputStreamClosed (EVirtualSource source);
@@ -111,7 +111,7 @@ public:
     GIOChannel* mChannel;
     bool suspendSink(int sink);
     bool programSource(char cmd, int sink, int value);
-    void openCloseSink(EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string appName);
+    void openCloseSink(EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string trackId);
     void openCloseSource(EVirtualSource source, bool openNotClose);
     void setNREC(bool value);
     bool programLoadBluetooth (const char * address , const char *profile, const int displayID);

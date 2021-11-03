@@ -119,8 +119,8 @@ class AudioMixer : public MixerInterface
         bool setRouting(const ConstString & scenario);
         bool programSource(char cmd, int sink, int value);
 
-        void outputStreamOpened(EVirtualAudioSink sink, int sinkIndex, std::string appName);
-        void outputStreamClosed(EVirtualAudioSink sink, int sinkIndex, std::string appName);
+        void outputStreamOpened(EVirtualAudioSink sink, int sinkIndex, std::string trackId);
+        void outputStreamClosed(EVirtualAudioSink sink, int sinkIndex, std::string trackId);
         void inputStreamOpened(EVirtualSource source);
         void inputStreamClosed(EVirtualSource source);
         void preloadSystemSound(const char * snd);
@@ -132,7 +132,7 @@ class AudioMixer : public MixerInterface
         void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);
         void _timer();
         void setNREC(bool value);
-        void openCloseSink(EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string appName);
+        void openCloseSink(EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string trackId);
         int loopback_set_parameters(const char * value);
 
         //Audio mixer calls
@@ -143,7 +143,7 @@ class AudioMixer : public MixerInterface
 
         //mixer interface implementation
         void callBackSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
-              utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType,const int& sinkIndex = -1, const std::string& appName="");
+              utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType,const int& sinkIndex = -1, const std::string& trackId="");
         void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType);
         void callBackSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);

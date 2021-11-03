@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2021 LG Electronics, Inc.
+# Copyright (c) 2012-2022 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -94,6 +94,7 @@ include_directories(src/modules/systemSoundsManager)
 include_directories(src/modules/deviceManager)
 include_directories(src/modules/lunaEventSubscriber)
 include_directories(src/modules/playbackManager)
+include_directories(src/modules/trackManager)
 include_directories(include/public/)
 
 #Please check these header files again
@@ -132,6 +133,7 @@ SET (modules_files
         src/modules/playbackManager/playbackManager.cpp
         src/modules/audioRouter/deviceRoutingConfigParser.cpp
         src/modules/audioRouter/audioRouter.cpp
+        src/modules/trackManager/trackManager.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")
