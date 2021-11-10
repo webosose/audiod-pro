@@ -81,7 +81,7 @@ class AudioPolicyManager : public ModuleInterface
         bool setVolume(EVirtualAudioSink audioSink, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
         bool setTrackVolume(const std::string& mediaId, const int &volume, EVirtualAudioSink audioSink, utils::EMIXER_TYPE mixerType, bool ramp = false);
         bool setVolume(EVirtualSource audioSource, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
-        bool storeAppVolume(const std::string &mediaId, const int &volume, EVirtualAudioSink audioSink);
+        bool storeTrackVolume(const std::string &mediaId, const int &volume, EVirtualAudioSink audioSink);
         bool muteSink(EVirtualAudioSink audioSink, const int &muteStatus, utils::EMIXER_TYPE mixerType);
         bool initializePolicyInfo(const pbnjson::JValue& policyInfo, bool isSink);
 

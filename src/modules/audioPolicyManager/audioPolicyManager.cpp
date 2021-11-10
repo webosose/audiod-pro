@@ -194,7 +194,7 @@ void AudioPolicyManager::addSinkInput(const std::string &trackId, const int &sin
     if (it != mTrackVolumeInfo.end())
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "appid found");
+            "trackId found, update the sinkinput index");
         for(auto &elements:it->second)
         {
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -213,7 +213,7 @@ void AudioPolicyManager::addSinkInput(const std::string &trackId, const int &sin
     else
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "APPID NOT FOUND");
+            "TrackId NOT FOUND, create new entry");
         utils::TRACK_VOLUME_INFO_T stAppVolumeInfo;
         stAppVolumeInfo.audioSink = getSinkType(sink);
         stAppVolumeInfo.volume = getCurrentVolume(sink);
@@ -822,10 +822,10 @@ bool AudioPolicyManager::setVolume(EVirtualSource audioSource, const int& volume
     return returnStatus;
 }
 
-bool AudioPolicyManager::storeAppVolume(const std::string &trackId, const int &volume, EVirtualAudioSink audioSink)
+bool AudioPolicyManager::storeTrackVolume(const std::string &trackId, const int &volume, EVirtualAudioSink audioSink)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "AudioPolicyManager:storeAppVolume volume%d for trackId:%s, sink = %d", volume, trackId.c_str(), (int)audioSink);
+                "AudioPolicyManager:storeTrackVolume volume%d for trackId:%s, sink = %d", volume, trackId.c_str(), (int)audioSink);
     bool status = false;
     auto it = mTrackVolumeInfo.find(trackId);
     if (it != mTrackVolumeInfo.end())
@@ -834,7 +834,7 @@ bool AudioPolicyManager::storeAppVolume(const std::string &trackId, const int &v
         {
             if (elements.audioSink == audioSink)
             {
-                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeAppVolume Updating volume for existing trackId and sink");
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeTrackVolume Updating volume for existing trackId and sink");
                 elements.volume = volume;
                 status = true;
                 break;
@@ -842,16 +842,21 @@ bool AudioPolicyManager::storeAppVolume(const std::string &trackId, const int &v
         }
         if (!status)
         {
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeAppVolume adding volume for new sink with existing trackId");
-            utils::TRACK_VOLUME_INFO_T stAppVolumeInfo;
-            stAppVolumeInfo.audioSink = audioSink;
-            stAppVolumeInfo.volume = volume;
-            it->second.push_back(stAppVolumeInfo);
+            //will be uncommented if required
+            /*
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeTrackVolume adding volume for new sink with existing trackId");
+            utils::TRACK_VOLUME_INFO_T stTrackVolumeInfo;
+            stTrackVolumeInfo.audioSink = audioSink;
+            stTrackVolumeInfo.volume = volume;
+            it->second.push_back(stTrackVolumeInfo);
+            */
+
         }
     }
     else
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeAppVolume Adding trackId for the first time");
+        return false;
         //check if required or not
     }
     printTrackVolumeInfo();
@@ -1472,7 +1477,7 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
 
 bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setTrackVolumee");
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setTrackVolume");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(streamType, string), PROP(volume, integer),
                                                            PROP(trackId, string)) REQUIRED_3(streamType, volume, trackId)));
 
@@ -1487,6 +1492,7 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
         bool isValidVolume = false;
         bool isValidStream = false;
         bool isStreamActive = false;
+        bool isUnregisterdTrackId = false;
         int volume = 0;
         std::string streamType;
         std::string trackId;
@@ -1515,11 +1521,16 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
 
         if (isValidStream && isValidVolume)
         {
-            if (audioPolicyManagerInstance->storeAppVolume(trackId, volume, sink))
+            if (audioPolicyManagerInstance->storeTrackVolume(trackId, volume, sink))
             {
                 if (!audioPolicyManagerInstance->setTrackVolume(trackId, volume, sink, audioPolicyManagerInstance->getMixerType(streamType), true))
                     PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: failed mixer call");
                 status = true;
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: unregistered trackId");
+                isUnregisterdTrackId = true;
             }
         }
 
@@ -1543,6 +1554,11 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
             {
                 PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume Not in Range");
                 reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
+            }
+            else if (isUnregisterdTrackId)
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "unregistered trackId used");
+                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_TRACKID, "Audiod Unknown trackId");
             }
             else
             {

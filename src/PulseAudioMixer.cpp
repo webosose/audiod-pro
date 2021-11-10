@@ -930,20 +930,20 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose, int s
     else
         mActiveStreams.add(sink);
 
-    if (oldstreamflags != mActiveStreams)
+    //check for oldstreamflags != mActiveStreams removed,
+    //to get event for allsink open/close events
+    utils::ESINK_STATUS eSinkStatus = openNotClose ? utils::eSinkOpened :
+                                        utils::eSinkClosed;
+    if (mObjMixerCallBack)
     {
-        utils::ESINK_STATUS eSinkStatus = openNotClose ? utils::eSinkOpened :
-                                           utils::eSinkClosed;
-        if (mObjMixerCallBack)
-        {
-            std::string sourceId = "source";
-            std::string sinkId = "sink";
-            mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer, sinkIndex, trackId);
-        }
-        else
-            PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-                 "mObjMixerCallBack is null");
+        std::string sourceId = "source";
+        std::string sinkId = "sink";
+        mObjMixerCallBack->callBackSinkStatus(sourceId, sinkId, sink, eSinkStatus, utils::ePulseMixer, sinkIndex, trackId);
     }
+    else
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+                "mObjMixerCallBack is null");
+
 }
 
 void PulseAudioMixer::deviceConnectionStatus (const std::string &deviceName, const bool &connectionStatus)
