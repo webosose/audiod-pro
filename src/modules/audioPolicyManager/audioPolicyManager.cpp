@@ -208,6 +208,12 @@ void AudioPolicyManager::addSinkInput(const std::string &trackId, const int &sin
                 //apply initial volume
                 mObjAudioMixer->programAppVolume(getSinkType(sink), sinkIndex, effectiveVolume);
             }
+            else
+            {
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "Wrong sink opened for trackId, killing the playback");
+                mObjAudioMixer->closeClient(sinkIndex);
+            }
         }
     }
     else

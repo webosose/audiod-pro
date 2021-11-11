@@ -134,6 +134,7 @@ class AudioMixer : public MixerInterface
         void setNREC(bool value);
         void openCloseSink(EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string trackId);
         int loopback_set_parameters(const char * value);
+        bool closeClient(int sinkIndex);
 
         //Audio mixer calls
         utils::vectorVirtualSink getActiveStreams();

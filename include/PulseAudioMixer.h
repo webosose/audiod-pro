@@ -123,6 +123,7 @@ public:
     void deviceConnectionStatus (const std::string &deviceName, const bool &connectionStatus);
     bool loadCombinedSink(const char* sinkname, const char* device1, const char *device2, EVirtualAudioSink startSink,
             EVirtualAudioSink endSink, int display);
+    bool closeClient(int sinkIndex);
 
 private:
     PulseAudioMixer() = delete;

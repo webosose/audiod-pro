@@ -1079,4 +1079,16 @@ int AudioMixer::loopback_set_parameters(const char * value)
         return -1;
     }
 }
+
+bool AudioMixer::closeClient(int sinkIndex)
+{
+    PM_LOG_DEBUG("AudioMixer: closeClient");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->closeClient(sinkIndex);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "closeClient: mObjPulseAudioMixer is null");
+        return -1;
+    }
+}
 //Pulse Mixer Calls End//

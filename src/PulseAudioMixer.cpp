@@ -1255,6 +1255,15 @@ void PulseAudioMixer::stopDtmf() {
     }
 }
 
+bool PulseAudioMixer::closeClient(int sinkIndex)
+{
+    PM_LOG_DEBUG("PulseAudioMixer::closeClient");
+    char buffer[SIZE_MESG_TO_PULSE];
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d", '7', sinkIndex);
+    bool ret = msgToPulse(buffer, __FUNCTION__);
+    return ret;
+}
+
 void PulseAudioMixer::createPulseSocketCommunication()
 {
     PM_LOG_DEBUG("PulseAudioMixer::createPulseSocketCommunication");
