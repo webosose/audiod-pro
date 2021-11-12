@@ -301,10 +301,10 @@ bool PulseAudioMixer::programVolume (EVirtualAudioSink sink, int volume, bool ra
     return programSource ( (ramp ? 'r' : 'v'), sink, volume);
 }
 
-bool PulseAudioMixer::programAppVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp)
+bool PulseAudioMixer::programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp)
 {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "programAppVolume: sink:%d, sinkIndex:%d volume:%d, ramp%d", (int)sink, sinkIndex, volume, ramp);
+        "programTrackVolume: sink:%d, sinkIndex:%d volume:%d, ramp%d", (int)sink, sinkIndex, volume, ramp);
     bool ret = false;
     char buffer[SIZE_MESG_TO_PULSE];
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %d", '6', (int)sink, sinkIndex, volume, ramp);

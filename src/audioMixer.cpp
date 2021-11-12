@@ -488,14 +488,14 @@ bool AudioMixer::programVolume(EVirtualAudioSink sink, int volume, bool ramp)
     }
 }
 
-bool AudioMixer::programAppVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp)
+bool AudioMixer::programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp)
 {
-    PM_LOG_DEBUG("AudioMixer: programAppVolume");
+    PM_LOG_DEBUG("AudioMixer: programTrackVolume");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programAppVolume(sink, sinkIndex, volume, ramp);
+        return mObjPulseAudioMixer->programTrackVolume(sink, sinkIndex, volume, ramp);
     else
     {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programAppVolume: mObjPulseAudioMixer is nullptr");
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programTrackVolume: mObjPulseAudioMixer is nullptr");
         return false;
     }
 }

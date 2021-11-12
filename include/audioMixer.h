@@ -78,7 +78,7 @@ class AudioMixer : public MixerInterface
 
         //pulseAudioMixer calls
         bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
-        bool programAppVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp = false);
+        bool programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp = false);
         bool programVolume(EVirtualSource source, int volume, bool ramp = false);
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);

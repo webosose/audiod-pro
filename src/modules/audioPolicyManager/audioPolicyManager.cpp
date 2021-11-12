@@ -25,6 +25,8 @@
 #define DEFAULT_ONE "default1"
 #define DEFAULT_TWO "default2"
 
+#define DEFAULT_TRACK_ID "_default"
+
 #define AUDIOD_API_SET_INPUT_VOLUME    "/setInputVolume"
 #define AUDIOD_API_GET_SOURCE_INPUT_VOLUME    "/getSourceInputVolume"
 #define AUDIOD_API_GET_INPUT_VOLUME    "/getInputVolume"
@@ -198,7 +200,7 @@ void AudioPolicyManager::addSinkInput(const std::string &trackId, const int &sin
         for(auto &elements:it->second)
         {
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "%d audio sink : %d,%d,%s",1,elements.audioSink, getSinkType(sink),sink.c_str());
+                "audio sink : %d,%d,%s",elements.audioSink, getSinkType(sink),sink.c_str());
             if (elements.audioSink == getSinkType(sink))
             {
                 PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
@@ -206,7 +208,7 @@ void AudioPolicyManager::addSinkInput(const std::string &trackId, const int &sin
                 elements.sinkInputIndex = sinkIndex;
                 int effectiveVolume = (getCurrentVolume(sink)*elements.volume)/100;
                 //apply initial volume
-                mObjAudioMixer->programAppVolume(getSinkType(sink), sinkIndex, effectiveVolume);
+                mObjAudioMixer->programTrackVolume(getSinkType(sink), sinkIndex, effectiveVolume);
             }
             else
             {
@@ -219,13 +221,19 @@ void AudioPolicyManager::addSinkInput(const std::string &trackId, const int &sin
     else
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "TrackId NOT FOUND, create new entry");
+            "TrackId NOT FOUND, create new entry in default list");
+
         utils::TRACK_VOLUME_INFO_T stAppVolumeInfo;
         stAppVolumeInfo.audioSink = getSinkType(sink);
-        stAppVolumeInfo.volume = getCurrentVolume(sink);
+        stAppVolumeInfo.volume = MAX_VOLUME;
         stAppVolumeInfo.sinkInputIndex = sinkIndex;
-        mTrackVolumeInfo[trackId].push_back(stAppVolumeInfo);
+        mTrackVolumeInfo[DEFAULT_TRACK_ID].push_back(stAppVolumeInfo);
+        int effectiveVolume = (getCurrentVolume(sink)*MAX_VOLUME)/100;
+        //apply initial volume
+        mObjAudioMixer->programTrackVolume(getSinkType(sink), sinkIndex, effectiveVolume);
+
     }
+    printTrackVolumeInfo();
 }
 //TODO: fixme
 void AudioPolicyManager::removeSinkInput(const std::string &trackId, const int &sinkIndex, const std::string& sink)
@@ -236,7 +244,7 @@ void AudioPolicyManager::removeSinkInput(const std::string &trackId, const int &
     if (it != mTrackVolumeInfo.end())
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "appid found");
+            "trackId found");
         for(auto elements = it->second.begin();elements < it->second.end();elements++)
         {
             if (elements->audioSink == getSinkType(sink) && elements->sinkInputIndex == sinkIndex)
@@ -251,8 +259,18 @@ void AudioPolicyManager::removeSinkInput(const std::string &trackId, const int &
     else
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "APPID NOT FOUND");
+            "trackId NOT FOUND, checking in default list");
+        for(auto it=mTrackVolumeInfo[DEFAULT_TRACK_ID].begin();it < mTrackVolumeInfo[DEFAULT_TRACK_ID].end();it++)
+        {
+            if (it->sinkInputIndex == sinkIndex)
+            {
+                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                    "sink index found in default list, remove from vector");
+                mTrackVolumeInfo[DEFAULT_TRACK_ID].erase(it);
+            }
+        }
     }
+    printTrackVolumeInfo();
 }
 
 void AudioPolicyManager::readPolicyInfo()
@@ -872,6 +890,7 @@ bool AudioPolicyManager::storeTrackVolume(const std::string &trackId, const int 
 void AudioPolicyManager::printTrackVolumeInfo()
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager::printTrackVolumeInfo");
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "****************************************");
     for (const auto it : mTrackVolumeInfo)
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mTrackVolumeInfo: trackId:%s", it.first.c_str());
@@ -879,7 +898,9 @@ void AudioPolicyManager::printTrackVolumeInfo()
         {
             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "audioSink:%d volume:%d sinkInputIndex:%d", (int)volumeInfo.audioSink, volumeInfo.volume, volumeInfo.sinkInputIndex);
         }
+        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "-----------------------------------------");
     }
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "****************************************");
 }
 
 bool AudioPolicyManager::setTrackVolume(const std::string& trackId, const int &volume, EVirtualAudioSink audioSink, \
@@ -901,10 +922,10 @@ bool AudioPolicyManager::setTrackVolume(const std::string& trackId, const int &v
                     {
                         int effectiveVolume  = (getCurrentVolume(getStreamType(elements.audioSink)) * volume) / 100;
                         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager calling programVolume effective = %d", effectiveVolume);
-                        if (mObjAudioMixer->programAppVolume(audioSink, elements.sinkInputIndex, effectiveVolume, ramp))
+                        if (mObjAudioMixer->programTrackVolume(audioSink, elements.sinkInputIndex, effectiveVolume, ramp))
                             returnStatus = true;
                         else
-                            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:programAppVolume failed");
+                            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:programTrackVolume failed");
                     }
                 }
             }
@@ -941,8 +962,26 @@ bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volum
                 {
                     if(elements.audioSink == audioSink)
                     {
-                        int effectiveVolume = (elements.volume * volume)/100;
-                        mObjAudioMixer->programAppVolume(audioSink, elements.sinkInputIndex, effectiveVolume);
+                        int effectiveVolume;
+                        if (items.first == DEFAULT_TRACK_ID)
+                        {
+                            //setting volume for unregistered tracks
+                            PM_LOG_DEBUG("AudioPolicyManager : programTrackVolume: trackId not set, use default track volume");
+                            effectiveVolume = (MAX_VOLUME * volume)/100;
+                        }
+                        else
+                        {
+                            PM_LOG_DEBUG("AudioPolicyManager : programTrackVolume: trackId found, use actuial track volume");
+                            effectiveVolume = (elements.volume * volume)/100;
+                        }
+                        PM_LOG_DEBUG("AudioPolicyManager : programTrackVolume:  trackId:%s, effective vol : %d, sink : %d, sinkindex:%d",
+                            items.first.c_str(),effectiveVolume, (int)audioSink, elements.sinkInputIndex);
+                        returnStatus = mObjAudioMixer->programTrackVolume(audioSink, elements.sinkInputIndex, effectiveVolume);
+                        if (!returnStatus)
+                        {
+                            return returnStatus;
+                        }
+
                     }
                 }
             }
