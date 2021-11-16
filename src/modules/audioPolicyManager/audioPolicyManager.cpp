@@ -846,23 +846,21 @@ bool AudioPolicyManager::setVolume(EVirtualSource audioSource, const int& volume
     return returnStatus;
 }
 
-bool AudioPolicyManager::storeTrackVolume(const std::string &trackId, const int &volume, EVirtualAudioSink audioSink)
+bool AudioPolicyManager::storeTrackVolume(const std::string &trackId, const int &volume, std::string &streamType)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-                "AudioPolicyManager:storeTrackVolume volume%d for trackId:%s, sink = %d", volume, trackId.c_str(), (int)audioSink);
+                "AudioPolicyManager:storeTrackVolume volume%d for trackId:%s", volume, trackId.c_str());
     bool status = false;
     auto it = mTrackVolumeInfo.find(trackId);
     if (it != mTrackVolumeInfo.end())
     {
         for (auto &elements : it->second)
         {
-            if (elements.audioSink == audioSink)
-            {
-                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeTrackVolume Updating volume for existing trackId and sink");
-                elements.volume = volume;
-                status = true;
-                break;
-            }
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeTrackVolume Updating volume for existing trackId and sink = %d",(int)elements.audioSink);
+            elements.volume = volume;
+            streamType = getStreamType(elements.audioSink);
+            status = true;
+            break;
         }
         if (!status)
         {
@@ -903,46 +901,45 @@ void AudioPolicyManager::printTrackVolumeInfo()
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "****************************************");
 }
 
-bool AudioPolicyManager::setTrackVolume(const std::string& trackId, const int &volume, EVirtualAudioSink audioSink, \
-    utils::EMIXER_TYPE mixerType, bool ramp)
+bool AudioPolicyManager::setTrackVolume(const std::string& trackId, const int &volume, bool ramp)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-        "AudioPolicyManager:setTrackVolume:%d for sink:%d, mixerType = %d, ramp = %d", volume, (int)audioSink, (int)mixerType, (int)ramp);
+        "AudioPolicyManager:setTrackVolume for track = %s volume = %d, ramp = %d", trackId.c_str(), volume, (int)ramp);
     bool returnStatus = false;
     if (mObjAudioMixer)
     {
-        if (utils::ePulseMixer == mixerType)
-        {
             auto it = mTrackVolumeInfo.find(trackId);
             if (it != mTrackVolumeInfo.end())
             {
                 for (auto &elements : it->second)
                 {
-                    if ((elements.audioSink == audioSink) && (elements.sinkInputIndex != -1))
+                    if (utils::ePulseMixer == getMixerType(getStreamType(elements.audioSink)))
                     {
-                        int effectiveVolume  = (getCurrentVolume(getStreamType(elements.audioSink)) * volume) / 100;
-                        PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager calling programVolume effective = %d", effectiveVolume);
-                        if (mObjAudioMixer->programTrackVolume(audioSink, elements.sinkInputIndex, effectiveVolume, ramp))
-                            returnStatus = true;
-                        else
-                            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:programTrackVolume failed");
+                        if (elements.sinkInputIndex != -1)
+                        {
+                            int effectiveVolume  = (getCurrentVolume(getStreamType(elements.audioSink)) * volume) / 100;
+                            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager calling programVolume effective = %d", effectiveVolume);
+                            if (mObjAudioMixer->programTrackVolume(elements.audioSink, elements.sinkInputIndex, effectiveVolume, ramp))
+                                returnStatus = true;
+                            else
+                                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager:programTrackVolume failed");
+                        }
                     }
+                    else if (utils::eUmiMixer == getMixerType( getStreamType(elements.audioSink)))
+                    {
+                        //Will be uncommented when umi mixer is enabled
+                    }
+                    else
+                        PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                            "AudioPolicyManager:Invalid mixer type");
                 }
             }
             else
                 PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: trackId is not present");
-        }
-        else if (utils::eUmiMixer == mixerType)
-        {
-            //Will be uncommented when umi mixer is enabled
-        }
-        else
-            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                "AudioPolicyManager:Invalid mixer type");
     }
     else
         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-            "AudioPolicyManager:applyVolumePolicy mObjAudioMixer is null");
+            "AudioPolicyManager: mObjAudioMixer is null");
     return returnStatus;
 }
 
@@ -1523,8 +1520,8 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
 bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager: _setTrackVolume");
-    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_3(PROP(streamType, string), PROP(volume, integer),
-                                                           PROP(trackId, string)) REQUIRED_3(streamType, volume, trackId)));
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(volume, integer),
+                                                           PROP(trackId, string)) REQUIRED_2(volume, trackId)));
 
     std::string reply;
     if (!msg.parse(__FUNCTION__,lshandle))
@@ -1535,40 +1532,27 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
     {
         bool status = false;
         bool isValidVolume = false;
-        bool isValidStream = false;
         bool isStreamActive = false;
         bool isUnregisterdTrackId = false;
         int volume = 0;
         std::string streamType;
         std::string trackId;
 
-        msg.get("streamType", streamType);
         msg.get("volume", volume);
         msg.get("trackId", trackId);
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
-            "got sink = %s , vol = %d , trackId = %s", streamType.c_str(), volume, trackId.c_str());
-
-        EVirtualAudioSink sink = audioPolicyManagerInstance->getSinkType(streamType);
-        if (sink != eVirtualSink_None)
-        {
-            isValidStream = true;
-        }
+            "got vol = %d , trackId = %s",  volume, trackId.c_str());
 
         if ((volume >= INIT_VOLUME) && (volume <= MAX_VOLUME))
         {
             isValidVolume = true;
         }
 
-        if (audioPolicyManagerInstance->getStreamActiveStatus(streamType))
+        if ( isValidVolume)
         {
-            isStreamActive = true;
-        }
-
-        if (isValidStream && isValidVolume)
-        {
-            if (audioPolicyManagerInstance->storeTrackVolume(trackId, volume, sink))
+            if (audioPolicyManagerInstance->storeTrackVolume(trackId, volume, streamType))
             {
-                if (!audioPolicyManagerInstance->setTrackVolume(trackId, volume, sink, audioPolicyManagerInstance->getMixerType(streamType), true))
+                if (!audioPolicyManagerInstance->setTrackVolume(trackId, volume, true))
                     PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: failed mixer call");
                 status = true;
             }
@@ -1590,12 +1574,7 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
         }
         else
         {
-            if (!isValidStream)
-            {
-                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Audiod Unknown Stream");
-                reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_UNKNOWN_STREAM, "Audiod Unknown Stream");
-            }
-            else if (!isValidVolume)
+            if (!isValidVolume)
             {
                 PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume Not in Range");
                 reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_NOT_SUPPORT_VOLUME_CHANGE, "Volume Not in Range");
