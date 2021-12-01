@@ -577,11 +577,13 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
         case 'i':
         {
             filename = FILENAME+card_no+"D"+device_no+"p";
+            snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %d %s", cmd, cardNumber, deviceNumber, status, isLineOut, deviceName);
             break;
         }
-        case '1':
+        case 'j':
         {
             filename = FILENAME+card_no+"D"+device_no+"c";
+            snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %s", cmd, cardNumber, deviceNumber, status, deviceName);
             break;
         }
         default:
@@ -591,7 +593,6 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     if (false == returnValue)
         return returnValue;
 
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %d %s", cmd, cardNumber, deviceNumber, status, isLineOut, deviceName);
     PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "loadInternalSoundCard sending message %s", buffer);
 

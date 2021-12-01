@@ -82,6 +82,39 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
             fclose(fp);
             fp = NULL;
         }
+        if (WEBOS_SOC_TYPE == "x86")
+        {
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card mic");
+            mObjAudioMixer->loadInternalSoundCard('j', 0, 0, 1, false, "pcm_input");
+        }
+        for (auto items = mDeviceAddedQueue.begin(); items!=mDeviceAddedQueue.end(); items++)
+        {
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found unread udev event for device add");
+            mClientDeviceManagerInstance->onDeviceAdded(&(*items));
+        }
+        mDeviceAddedQueue.clear();
+        for (auto items = mDeviceRemovedQueue.begin(); items!=mDeviceRemovedQueue.end(); items++)
+        {
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found unread udev event for device removed");
+            mClientDeviceManagerInstance->onDeviceRemoved(&(*items));
+        }
+        mDeviceRemovedQueue.clear();
+    }
+}
+
+void DeviceManager::addEventToQueue(bool isAdd, const Device& device)
+{
+    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"DeviceManager: addEventToQueue - isAdd : %d",(int)isAdd);
+    if(isAdd)
+    {
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"mDeviceAddedQueue");
+        mDeviceAddedQueue.push_back(device);
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"mDeviceAddedQueue %d",mDeviceAddedQueue.size());
+    }
+    else
+    {
+        mDeviceRemovedQueue.push_back(device);
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"mDeviceRemovedQueue %d",mDeviceRemovedQueue.size());
     }
 }
 
@@ -115,13 +148,29 @@ bool DeviceManager::_event(LSHandle *lshandle, LSMessage *message, void *ctx)
             device.deviceNumber = device_no;
             if ("headset-inserted" == event || "usb-mic-inserted" == event || "usb-headset-inserted" == event)
             {
-                reply = mClientDeviceManagerInstance->onDeviceAdded(&device);
-                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: device added event call to device manager client object is success");
+                if (!mObjDeviceManager->mObjAudioMixer->getPulseMixerReadyStatus())
+                {
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Pulsemixer not ready, adding to queue");
+                    mObjDeviceManager->addEventToQueue(true, device);
+                }
+                else
+                {
+                    reply = mClientDeviceManagerInstance->onDeviceAdded(&device);
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: device added event call to device manager client object is success");
+                }
             }
             else if ("headset-removed" == event || "usb-mic-removed" == event || "usb-headset-removed" == event)
             {
-                reply = mClientDeviceManagerInstance->onDeviceRemoved(&device);
-                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: device removed event call to device manager client object is success");
+                if (!mObjDeviceManager->mObjAudioMixer->getPulseMixerReadyStatus())
+                {
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Pulsemixer not ready, adding to queue");
+                    mObjDeviceManager->addEventToQueue(false, device);
+                }
+                else
+                {
+                    reply = mClientDeviceManagerInstance->onDeviceRemoved(&device);
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "DeviceManager: device removed event call to device manager client object is success");
+                }
             }
             else
             {

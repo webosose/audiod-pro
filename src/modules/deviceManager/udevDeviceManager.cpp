@@ -276,7 +276,7 @@ std::string UdevDeviceManager::getUSBSpeakerName(const int &cardNumber, const bo
             deviceName = USB_SPEAKER_ZERO_NAME;
         else
             PM_LOG_WARNING(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                "getUSBSpeakerName: Max mic count reached");
+                "getUSBSpeakerName: Max usb speaker  count reached");
     }
     else
     {

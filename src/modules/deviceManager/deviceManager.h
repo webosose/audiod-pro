@@ -33,6 +33,8 @@ class DeviceManager : public ModuleInterface
         AudioMixer *mObjAudioMixer;
         ModuleManager *mObjModuleManager;
         static bool mIsObjRegistered;
+        std::vector<Device> mDeviceAddedQueue;
+        std::vector<Device> mDeviceRemovedQueue;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
         {
@@ -61,5 +63,7 @@ class DeviceManager : public ModuleInterface
         void eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixerType);
         void handleEvent(events::EVENTS_T* ev);
         static bool _event(LSHandle *lshandle, LSMessage *message, void *ctx);
+
+        void addEventToQueue(bool isAdd, const Device& device);
 };
 #endif // _DEVICE_MANAGER_H_
