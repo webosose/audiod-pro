@@ -31,7 +31,14 @@
 
 
 #define AUDIOD_UNIQUE_ID_LENGTH 10
+#define LUNA_COMMAND "com.webos.lunasend"
 
+typedef struct ClientInfo
+{
+        ClientInfo() : serviceName(""), serverCookie(nullptr) {};
+        std::string serviceName;
+        void* serverCookie;
+}CLIENT_INFO_T;
 
 class TrackManager : public ModuleInterface
 {
@@ -47,7 +54,8 @@ class TrackManager : public ModuleInterface
             return (ModuleFactory::getInstance()->Register("load_track_manager", &TrackManager::CreateObject));
         }
 
-        std::map<std::string,std::string> mMapTrackIdList;
+        std::map<std::string, std::string> mMapTrackIdList;
+        std::map<std::string, CLIENT_INFO_T> mMapPipelineTrackId;
     public:
         static TrackManager *getTrackManagerObj();
         static TrackManager *mObjTrackManager;
@@ -113,6 +121,8 @@ class TrackManager : public ModuleInterface
 
         static bool _registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _unregisterTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
+
+        static bool disconnetedCb( LSHandle *sh, const char *serviceName, bool connected, void *ctx);
 };
 
 

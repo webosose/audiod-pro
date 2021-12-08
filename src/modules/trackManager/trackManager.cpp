@@ -26,13 +26,49 @@ TrackManager* TrackManager::getTrackManagerObj()
     return mObjTrackManager;
 }
 
+bool TrackManager::disconnetedCb( LSHandle *sh,
+    const char *serviceName,
+    bool connected,
+    void *ctx)
+{
+    PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "TrackManager: service status %s : %d",\
+        serviceName, connected);
+
+    TrackManager *trackManagerInstance = TrackManager::getTrackManagerObj();
+
+    if (connected == true)
+        return true;
+
+    for (auto items = trackManagerInstance->mMapPipelineTrackId.begin();
+            items != trackManagerInstance->mMapPipelineTrackId.end(); items++)
+    {
+        if (items->second.serviceName == serviceName)
+        {
+            PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "TrackManager: trackid not unregistered %s : %s",\
+                serviceName, items->first.c_str());
+            events::EVENT_UNREGISTER_TRACK_T stUnregisterTrack;
+            stUnregisterTrack.eventName = utils::eEventUnregisterTrack;
+            stUnregisterTrack.trackId = items->first;
+            trackManagerInstance->mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stUnregisterTrack);
+
+            trackManagerInstance->mMapTrackIdList.erase(items->first);
+            LSCancelServerStatus(GetPalmService(), trackManagerInstance->mMapPipelineTrackId[items->first].serverCookie, nullptr);
+            trackManagerInstance->mMapPipelineTrackId.erase(items->first);
+        }
+    }
+
+    return true;
+}
+
 bool TrackManager::_registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
-    PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "TrackManager: _registerTrack");
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(streamType,string)) REQUIRED_1(streamType)));
     std::string reply ;
     if (!msg.parse(__FUNCTION__,lshandle))
        return true;
+
+    PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "****TrackManager: _registerTrack : app name : %s ****", \
+        LSMessageGetSenderServiceName(message));
 
     std::string streamType;
     msg.get("streamType",streamType);
@@ -44,6 +80,15 @@ bool TrackManager::_registerTrack(LSHandle *lshandle, LSMessage *message, void *
         {
             std::string trackId = GenerateUniqueID()();
             trackManagerInstance->mMapTrackIdList[trackId] = streamType;
+            std::string serviceName = LSMessageGetSenderServiceName(message);
+
+            if (serviceName.find(LUNA_COMMAND) == serviceName.npos)
+            {
+                PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "TrackManager: _registerTrack : subscribe for server status");
+                trackManagerInstance->mMapPipelineTrackId[trackId].serviceName = serviceName;
+                LSRegisterServerStatusEx(GetPalmService(), serviceName.c_str(),\
+                    disconnetedCb, nullptr, &(trackManagerInstance->mMapPipelineTrackId[trackId].serverCookie) , nullptr);
+            }
 
             //send event to audiopolicy manager
             events::EVENT_REGISTER_TRACK_T stRegisterTrack;
@@ -80,6 +125,9 @@ bool TrackManager::_unregisterTrack(LSHandle *lshandle, LSMessage *message, void
     if (!msg.parse(__FUNCTION__,lshandle))
        return true;
 
+    PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "****TrackManager: _unregisterTrack : app name : %s ****", \
+        LSMessageGetSenderServiceName(message));
+
     std::string trackId;
     msg.get("trackId", trackId);
     TrackManager *trackManagerInstance = TrackManager::getTrackManagerObj();
@@ -93,8 +141,19 @@ bool TrackManager::_unregisterTrack(LSHandle *lshandle, LSMessage *message, void
             stUnregisterTrack.eventName = utils::eEventUnregisterTrack;
             stUnregisterTrack.trackId = trackId;
             trackManagerInstance->mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stUnregisterTrack);
-            //
+
             trackManagerInstance->mMapTrackIdList.erase(trackId);
+            //cancel server status subscription and delete entry
+            if (trackManagerInstance->mMapPipelineTrackId.find(trackId) != trackManagerInstance->mMapPipelineTrackId.end()) {
+                PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "TrackManager: _unregisterTrack cancel server status subscription");
+                LSCancelServerStatus(GetPalmService(), trackManagerInstance->mMapPipelineTrackId[trackId].serverCookie, nullptr);
+                trackManagerInstance->mMapPipelineTrackId.erase(trackId);
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_TRACKMANAGER, INIT_KVCOUNT, "AudioPolicyManager: removeTrackId cancel failed");
+            }
+
             PM_LOG_ERROR(MSGID_TRACKMANAGER, INIT_KVCOUNT, "AudioPolicyManager: removeTrackId success");
             pbnjson::JValue response = pbnjson::JObject();
             response.put("returnValue", true);
@@ -161,9 +220,8 @@ TrackManager::TrackManager(ModuleConfig* const pConfObj)
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     if (mObjModuleManager)
     {
-
+        //subscribe to module events here
     }
-
 }
 
 TrackManager::~TrackManager()
@@ -175,7 +233,9 @@ void TrackManager::handleEvent(events::EVENTS_T *event)
 {
     switch(event->eventName)
     {
-
+        default:
+            PM_LOG_WARNING(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
+                "handleEvent:Unknown event");
     }
 
 }

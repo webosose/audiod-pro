@@ -2397,8 +2397,6 @@ bool AudioPolicyManager::removeTrackId(const std::string& trackId)
     return true;
 }
 
-
-
 static LSMethod InputVolumeMethods[] = {
     {"setInputVolume", AudioPolicyManager::_setInputVolume},
     {"getInputVolume", AudioPolicyManager::_getInputVolume},
