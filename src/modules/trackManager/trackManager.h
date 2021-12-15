@@ -32,7 +32,7 @@
 
 #define AUDIOD_UNIQUE_ID_LENGTH 10
 #define LUNA_COMMAND "com.webos.lunasend"
-
+#define MAX_TRACK_COUNT 64
 typedef struct ClientInfo
 {
         ClientInfo() : serviceName(""), serverCookie(nullptr) {};

@@ -79,6 +79,13 @@ bool TrackManager::_registerTrack(LSHandle *lshandle, LSMessage *message, void *
         if (getSinkByName(streamType.c_str()) != eVirtualSink_None)
         {
             std::string trackId = GenerateUniqueID()();
+            if (trackManagerInstance->mMapTrackIdList.size() >= MAX_TRACK_COUNT)
+            {
+                PM_LOG_ERROR(MSGID_TRACKMANAGER, INIT_KVCOUNT, "TrackManager: _registerTrack Max track count reached");
+                std::string reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR,"Audiod maximum track count reached");
+                utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+                return true;
+            }
             trackManagerInstance->mMapTrackIdList[trackId] = streamType;
             std::string serviceName = LSMessageGetSenderServiceName(message);
 
