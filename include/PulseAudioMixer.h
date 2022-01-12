@@ -49,7 +49,6 @@ public:
     bool rampVolume(EVirtualAudioSink sink, int endVolume)
         {return programVolume(sink, endVolume, true);}
     /// Program destination of a sink
-    bool moveOutputDeviceRouting(EVirtualAudioSink sink, const char* deviceName);
     bool moveInputDeviceRouting(EVirtualSource source, const char* deviceName);
     bool setSoundOutputOnRange(EVirtualAudioSink startSink,\
         EVirtualAudioSink endSink, const char* deviceName);
@@ -57,10 +56,6 @@ public:
         EVirtualSource endSource, const char* deviceName);
     bool setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtualAudioSink endSink);
     bool setDefaultSourceRouting(EVirtualSource startSource, EVirtualSource endSource);
-    //setSoundInput
-    bool setSourceInputDevice(EVirtualSource source, const char* deviceName);
-    //setSoundOutput
-    bool setSinkOutputDevice(const char* soundOutput, const int& sink);
 
     /// Program a filter
     bool programFilter(int filterTable);

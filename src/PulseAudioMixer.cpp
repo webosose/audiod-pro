@@ -333,17 +333,6 @@ bool PulseAudioMixer::programMute (EVirtualSource source, int mute)
     return programSource ('h', source, mute);
 }
 
-bool PulseAudioMixer::moveOutputDeviceRouting(EVirtualAudioSink sink, const char* deviceName)
-{
-    bool ret = false;
-    char buffer[SIZE_MESG_TO_PULSE];
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "moveOutputDeviceRouting: sink:%d, deviceName:%s", (int)sink, deviceName);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'd', (int)sink, deviceName);
-    ret = msgToPulse(buffer, __FUNCTION__);
-    return ret;
-}
-
 bool PulseAudioMixer::moveInputDeviceRouting(EVirtualSource source, const char* deviceName)
 {
     bool ret = false;
@@ -397,32 +386,6 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "setDefaultSourceRouting: startSource:%d, endSource:%d", (int)startSource, (int)endSource);
     snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '3', (int)startSource, (int)endSource);
-    ret = msgToPulse(buffer, __FUNCTION__);
-    return ret;
-}
-
-bool PulseAudioMixer::setSinkOutputDevice(const char* soundOutput, const int& sink)
-{
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "PulseAudioMixer: setSinkOutputDevice got soundoutput=%s sinkID=%d",soundOutput, sink);
-    char buffer[SIZE_MESG_TO_PULSE];
-    char cmd = 'q';
-    bool ret = false;
-    if (VERIFY(IsValidVirtualSink((EVirtualAudioSink)sink)))
-    {
-      snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", cmd, sink, soundOutput);
-      ret = msgToPulse(buffer, __FUNCTION__);
-    }
-    return ret;
-}
-
-bool PulseAudioMixer::setSourceInputDevice(EVirtualSource source, const char* deviceName)
-{
-    bool ret = false;
-    char buffer[SIZE_MESG_TO_PULSE];
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "setSourceInputDevice: source:%d, deviceName:%s", (int)source, deviceName);
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", 'y', (int)source, deviceName);
     ret = msgToPulse(buffer, __FUNCTION__);
     return ret;
 }

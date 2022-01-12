@@ -83,7 +83,6 @@ class AudioMixer : public MixerInterface
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);
         bool rampVolume(EVirtualAudioSink sink, int endVolume);
-        bool moveOutputDeviceRouting(EVirtualAudioSink sink, const char* deviceName);
         bool moveInputDeviceRouting(EVirtualSource source, const char* deviceName);
         bool setSoundOutputOnRange(EVirtualAudioSink startSink,\
             EVirtualAudioSink endSink, const char* deviceName);
@@ -91,8 +90,6 @@ class AudioMixer : public MixerInterface
             EVirtualSource endSource, const char* deviceName);
         bool setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtualAudioSink endSink);
         bool setDefaultSourceRouting(EVirtualSource startSource, EVirtualSource endSource);
-        bool setSinkOutputDevice(const char* soundOutput, const int& sink);
-        bool setSourceInputDevice(EVirtualSource source, const char* deviceName);
 
         bool programFilter(int filterTable);
         bool muteAll();

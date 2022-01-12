@@ -550,20 +550,6 @@ bool AudioMixer::rampVolume(EVirtualAudioSink sink, int endVolume)
     }
 }
 
-bool AudioMixer::moveOutputDeviceRouting(EVirtualAudioSink sink, const char* deviceName)
-{
-    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-        "AudioMixer: moveOutputDeviceRouting");
-    if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->moveOutputDeviceRouting(sink, deviceName);
-    else
-    {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-            "moveOutputDeviceRouting: mObjPulseAudioMixer is null");
-        return false;
-    }
-}
-
 bool AudioMixer::moveInputDeviceRouting(EVirtualSource source, const char* deviceName)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -631,34 +617,6 @@ bool AudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtualSou
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
             "setDefaultSourceRouting: mObjPulseAudioMixer is null");
-        return false;
-    }
-}
-
-bool AudioMixer::setSinkOutputDevice(const char* soundOutput,const int& sink)
-{
-    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-        "AudioMixer: setSinkOutputDevice got soundoutput = %s sinkID = %d",soundOutput, sink);
-    if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setSinkOutputDevice(soundOutput, sink);
-    else
-    {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-            "setSinkOutputDevice: mObjPulseAudioMixer is null");
-        return false;
-    }
-}
-
-bool AudioMixer::setSourceInputDevice(EVirtualSource source, const char* deviceName)
-{
-    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-        "AudioMixer: setSourceInputDevice got deviceName:%s sourceId:%d", deviceName, (int)source);
-    if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setSourceInputDevice(source, deviceName);
-    else
-    {
-        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-            "setSourceInputDevice: mObjPulseAudioMixer is null");
         return false;
     }
 }

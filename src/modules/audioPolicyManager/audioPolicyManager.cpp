@@ -245,7 +245,7 @@ void AudioPolicyManager::removeSinkInput(const std::string &trackId, const int &
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
             "trackId found");
-        for(auto elements = it->second.begin();elements < it->second.end();elements++)
+        for(auto elements = it->second.begin();elements != it->second.end();elements++)
         {
             if (elements->audioSink == getSinkType(sink) && elements->sinkInputIndex == sinkIndex)
             {
@@ -260,15 +260,9 @@ void AudioPolicyManager::removeSinkInput(const std::string &trackId, const int &
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
             "trackId NOT FOUND, checking in default list");
-        for(auto it=mTrackVolumeInfo[DEFAULT_TRACK_ID].begin();it < mTrackVolumeInfo[DEFAULT_TRACK_ID].end();it++)
-        {
-            if (it->sinkInputIndex == sinkIndex)
-            {
-                PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
-                    "sink index found in default list, remove from vector");
-                mTrackVolumeInfo[DEFAULT_TRACK_ID].erase(it);
-            }
-        }
+
+        std::vector<utils::TRACK_VOLUME_INFO_T> &vec = mTrackVolumeInfo[DEFAULT_TRACK_ID];
+        vec.erase(std::remove_if(vec.begin(), vec.end(), [&](utils::TRACK_VOLUME_INFO_T &temp){ return (sinkIndex == temp.sinkInputIndex);}), vec.end());
     }
     printTrackVolumeInfo();
 }
@@ -860,26 +854,12 @@ bool AudioPolicyManager::storeTrackVolume(const std::string &trackId, const int 
             elements.volume = volume;
             streamType = getStreamType(elements.audioSink);
             status = true;
-            break;
-        }
-        if (!status)
-        {
-            //will be uncommented if required
-            /*
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeTrackVolume adding volume for new sink with existing trackId");
-            utils::TRACK_VOLUME_INFO_T stTrackVolumeInfo;
-            stTrackVolumeInfo.audioSink = audioSink;
-            stTrackVolumeInfo.volume = volume;
-            it->second.push_back(stTrackVolumeInfo);
-            */
-
         }
     }
     else
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "storeAppVolume Adding trackId for the first time");
         return false;
-        //check if required or not
     }
     printTrackVolumeInfo();
     return true;
@@ -2382,10 +2362,6 @@ bool AudioPolicyManager::removeTrackId(const std::string& trackId)
     if (it != mTrackVolumeInfo.end())
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "trackId found");
-        for(auto elements = it->second.begin();elements < it->second.end();elements++)
-        {
-                it->second.erase(elements);
-        }
         it = mTrackVolumeInfo.erase(it);
     }
     else
