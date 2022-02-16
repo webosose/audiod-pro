@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 LG Electronics, Inc.
+// Copyright (c) 2020-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -168,7 +168,8 @@ void AudioRouter::eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo)
         std::list<EVirtualAudioSink> sinkList;
         utils::SINK_ROUTING_INFO_T outputRoutingInfo;
         mMapSinkRoutingInfo["display1"] = outputRoutingInfo;
-        mMapSinkRoutingInfo["display2"] = outputRoutingInfo;
+        if (WEBOS_SOC_TYPE == "RPI4")
+            mMapSinkRoutingInfo["display2"] = outputRoutingInfo;
         utils::itMapSinkRoutingInfo it;
         for (const pbnjson::JValue& elements : sinkPolicyInfo.items())
         {
