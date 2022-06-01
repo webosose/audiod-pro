@@ -427,6 +427,7 @@ std::string AudioRouter::getActualOutputDevice(const std::string &deviceName)
     {
         std::string mappedName = BLUETOOTH_SINK_IDENTIFIER;
         mappedName.append(actualDeviceName);
+        mappedName.append(".a2dp_sink");
         return mappedName;
     }
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
