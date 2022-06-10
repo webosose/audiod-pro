@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 LG Electronics, Inc.
+// Copyright (c) 2012-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -143,7 +143,8 @@ void logFilter(const gchar *log_domain, GLogLevelFlags log_level, const gchar *m
             ::clock_gettime(CLOCK_MONOTONIC, &sLogStartSeconds);
             ::localtime_r(&now, &sLogStartTime);
             char startTime[64];
-            ::asctime_r(&sLogStartTime, startTime);
+            const char *time_format = "%c";    //Current time representation for locale
+            ::strftime(startTime, sizeof(startTime), time_format, &sLogStartTime);
             if (sLogDestination & eLogDestination_PrivateLogFiles)
             {
                 if (sLogFile > 0)
