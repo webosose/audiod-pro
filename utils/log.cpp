@@ -139,12 +139,11 @@ void logFilter(const gchar *log_domain, GLogLevelFlags log_level, const gchar *m
                 sLogFile = ::open(baseName.c_str(), O_CREAT | O_WRONLY | O_TRUNC | O_NONBLOCK, 0644);
             else
                 sLogFile = -1;    // don't log to private log file
-            __time_t now = ::time(0);
+            time_t now = ::time(0);
             ::clock_gettime(CLOCK_MONOTONIC, &sLogStartSeconds);
             ::localtime_r(&now, &sLogStartTime);
             char startTime[64];
-            const char *time_format = "%c" ;
-            ::strftime(startTime, sizeof(startTime), time_format, &sLogStartTime);
+            ::asctime_r(&sLogStartTime, startTime);
             if (sLogDestination & eLogDestination_PrivateLogFiles)
             {
                 if (sLogFile > 0)

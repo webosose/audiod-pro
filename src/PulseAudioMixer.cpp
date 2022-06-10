@@ -125,7 +125,7 @@ PulseAudioMixer::setMute(const char* deviceName, const int& mutestatus)
 bool PulseAudioMixer::setPhysicalSourceMute(const char* source, const int& mutestatus)
 {
     char msgToBuf[SIZE_MESG_TO_PULSE];
-    snprintf(msgToBuf, SIZE_MESG_TO_PULSE, "%c %s %d", '5', source, mutestatus);
+    sprintf(msgToBuf, "%c %s %d", '5', source, mutestatus);
     return msgToPulse(msgToBuf, __FUNCTION__);
 }
 
@@ -990,7 +990,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         {
                             char temp;      //to bypass the scan of cmd from buffer
                             char appname[100],sinkIndex,sinkType;
-                            sscanf(buffer,"%c %i %i %100s",&temp,&sinkType,&sinkIndex,appname);
+                            sscanf(buffer,"%c %i %i %s",&temp,&sinkType,&sinkIndex,appname);
 
                             outputStreamOpened (sink , sinkIndex, appname);
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
