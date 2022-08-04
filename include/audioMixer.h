@@ -101,6 +101,7 @@ class AudioMixer : public MixerInterface
 
         bool setMute(const char* deviceName, const int& mutestatus);
         bool setVolume(const char* deviceName, const int& volume);
+        bool setMicVolume(const char* deviceName, const int& volume);
         bool playSystemSound(const char *snd, EVirtualAudioSink sink);
         bool playSound(const char *snd, EVirtualAudioSink sink, \
             const char *format, int rate, int channels);

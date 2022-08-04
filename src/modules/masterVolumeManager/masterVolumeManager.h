@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 LG Electronics, Inc.
+// Copyright (c) 2020-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,10 +72,12 @@ class MasterVolumeManager : public ModuleInterface
 
         //Internal API for Volume and Mute, will be implemented during dynamic audio policy handling redesign
         bool _setVolume(int volume, bool notifySubscriber = true){return true;}
+        bool _setMicVolume(int volume, bool notifySubscriber = true){return true;}
         bool _muteVolume(bool mute){return true;}
 
         //luna API calls
         static bool _setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _setMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);

@@ -740,6 +740,20 @@ bool AudioMixer::setVolume(const char* deviceName, const int& volume)
     }
 }
 
+bool AudioMixer::setMicVolume(const char* deviceName, const int& volume)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: setMicVolume");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->setMicVolume(deviceName, volume);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "setMicVolume: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
 bool AudioMixer::playSystemSound(const char *snd, EVirtualAudioSink sink)
 {
     PM_LOG_DEBUG("AudioMixer: playSystemSound");

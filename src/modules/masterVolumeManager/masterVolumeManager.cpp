@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 LG Electronics, Inc.
+// Copyright (c) 2020-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,27 @@ bool MasterVolumeManager::_setVolume(LSHandle *lshandle, LSMessage *message, voi
     {
         PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setVolume call to master client object is success");
         mMasterVolumeClientInstance->setVolume(lshandle, message, ctx);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "MasterVolume Instance is nullptr");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        return true;
+    }
+    return true;
+}
+
+bool MasterVolumeManager::_setMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_DEBUG("MasterVolume: setMicVolume");
+    std::string reply = STANDARD_JSON_SUCCESS;
+    if (mMasterVolumeClientInstance)
+    {
+        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: setMicVolume call to master client object is success");
+        mMasterVolumeClientInstance->setMicVolume(lshandle, message, ctx);
     }
     else
     {
@@ -166,6 +187,13 @@ void MasterVolumeManager::eventActiveDeviceInfo(const std::string deviceName,\
             mMasterVolumeClientInstance->setVolume(DEFAULT_TWO_DISPLAY_ID);
         }
     }
+    else
+    {
+        if (isConnected)
+        {
+            mMasterVolumeClientInstance->setDisplaySoundInput(display, deviceName);
+        }
+    }
 }
 /* TODO
 currently these luna API's are not in sync with exsting master volume
@@ -179,6 +207,7 @@ static LSMethod MasterVolumeMethods[] =
     {"volumeUp", MasterVolumeManager::_volumeUp},
     {"getVolume", MasterVolumeManager::_getVolume},
     {"muteVolume", MasterVolumeManager::_muteVolume},
+    {"setMicVolume", MasterVolumeManager::_setMicVolume},
     { },
 };
 

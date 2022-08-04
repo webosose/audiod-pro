@@ -155,6 +155,19 @@ PulseAudioMixer::setVolume(const char* deviceName, const int& volume)
 }
 
 bool
+PulseAudioMixer::setMicVolume(const char* deviceName, const int& volume)
+{
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+        "setMicVolume:deviceName:%s, volume:%d", deviceName, volume);
+    char cmd = '8';
+    bool ret = false;
+    char buffer[SIZE_MESG_TO_PULSE];
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %s", cmd, volume, deviceName);
+    ret = msgToPulse(buffer, __FUNCTION__);
+    return ret;
+}
+
+bool
 PulseAudioMixer::programSource (char cmd, int sink, int value)
 {
     if (NULL == mChannel)

@@ -89,6 +89,7 @@ public:
     /// set volume on a particular display
     bool setVolume(int display, int volume);    //TODO: remove
     bool setVolume(const char* deviceName, const int& volume);
+    bool setMicVolume(const char* deviceName, const int& volume);
     void playOneshotDtmf(const char *snd, EVirtualAudioSink sink) ;
     void playOneshotDtmf(const char *snd, const char* sink) ;
     void playDtmf(const char *snd, EVirtualAudioSink sink) ;

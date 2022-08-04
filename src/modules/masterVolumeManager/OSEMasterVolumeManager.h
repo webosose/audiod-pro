@@ -1,4 +1,4 @@
-// Copyright (c) 2021 LG Electronics, Inc.
+// Copyright (c) 2021-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include "masterVolumeInterface.h"
 #include "audioMixer.h"
 #define AUDIOD_API_GET_VOLUME                          "/master/getVolume"
+#define AUDIOD_API_GET_MIC_VOLUME                      "/master/getMicVolume"
 #define MSGID_CLIENT_MASTER_VOLUME_MANAGER             "OSE_MASTER_VOLUME_MANAGER"         //Client Master Volume Manager
 #define DISPLAY_ONE 0
 #define DISPLAY_TWO 1
@@ -42,7 +43,10 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         int displayTwoMuteStatus;
         std::string displayOneSoundoutput;
         std::string displayTwoSoundoutput;
+        std::string displayOneSoundinput;
+        std::string displayTwoSoundinput;
         std::string getDisplaySoundOutput(const int& display);
+        std::string getDisplaySoundInput(const int& display);
         bool mMuteStatus;
         static bool mIsObjRegistered;
         //Register Object to object factory. This is called automatically
@@ -66,12 +70,17 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         void setCurrentVolume(int iVolume);
         void setCurrentMuteStatus(bool bMuteStatus);
         void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
+        void notifyMicVolumeSubscriber(const int &displayId,const std::string &callerId);
         void setVolume(const int &displayId);
+        void setMicVolume(const int &displayId);
         void setMuteStatus(const int &displayId);
         void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput);
+        void setDisplaySoundInput(const std::string& display, const std::string& soundInput);
         std::string getVolumeInfo(const int &displayId, const std::string &callerId);
+        std::string getMicVolumeInfo(const int &displayId, const std::string &callerId);
 
         void setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        void setMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void getVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);

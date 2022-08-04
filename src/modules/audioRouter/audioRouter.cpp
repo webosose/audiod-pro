@@ -436,6 +436,7 @@ void AudioRouter::resetInputDeviceRouting(const std::string &deviceName, const i
         {
             mObjAudioMixer->setDefaultSourceRouting(sourceInfo.startSource, sourceInfo.endSource);
             notifyGetSoundInput("", display);
+            updateDeviceStatus(display, activeDevice, true, true, false);
         }
     }
 }
@@ -669,7 +670,7 @@ void AudioRouter::updateDeviceStatus(const std::string& display, const std::stri
         {
             notifyGetSoundoutput(deviceName, display);
         }
-        if (mObjModuleManager && isUpdated)
+        if (mObjModuleManager && (isUpdated || deviceName.empty()))
         {
             events::EVENT_ACTIVE_DEVICE_INFO_T stEventActiveDeviceInfo;
             stEventActiveDeviceInfo.eventName = utils::eEventActiveDeviceInfo;
