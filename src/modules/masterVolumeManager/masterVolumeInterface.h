@@ -63,6 +63,7 @@ public:
     virtual void getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput) = 0;
     virtual void setDisplaySoundInput(const std::string& display, const std::string& soundInput) = 0;
+    virtual void muteMic(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
 };
 
 #endif //MASTERVOLUME_INTERFACE_H

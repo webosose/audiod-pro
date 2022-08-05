@@ -74,6 +74,7 @@ class MasterVolumeManager : public ModuleInterface
         bool _setVolume(int volume, bool notifySubscriber = true){return true;}
         bool _setMicVolume(int volume, bool notifySubscriber = true){return true;}
         bool _muteVolume(bool mute){return true;}
+        bool _muteMic(bool mute){return true;}
 
         //luna API calls
         static bool _setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
@@ -82,6 +83,7 @@ class MasterVolumeManager : public ModuleInterface
         static bool _getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         static bool _muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _muteMic(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx);
 };

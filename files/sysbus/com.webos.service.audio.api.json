@@ -12,6 +12,7 @@
     "com.webos.service.audio/setTrackVolume",
     "com.webos.service.audio/UMI/mute",
     "com.webos.service.audio/master/volumeDown",
+    "com.webos.service.audio/master/muteMic",
     "com.webos.service.audio/master/muteVolume",
     "com.webos.service.audio/master/setMicVolume",
     "com.webos.service.audio/master/setVolume",

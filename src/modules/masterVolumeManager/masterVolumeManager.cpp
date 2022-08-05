@@ -134,6 +134,27 @@ bool MasterVolumeManager::_muteVolume(LSHandle *lshandle, LSMessage *message, vo
     return true;
 }
 
+bool MasterVolumeManager::_muteMic(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_DEBUG("MasterVolume: muteMic");
+    std::string reply = STANDARD_JSON_SUCCESS;
+    if (mMasterVolumeClientInstance)
+    {
+        PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: muteMic call to master client object is success");
+        mMasterVolumeClientInstance->muteMic(lshandle, message, ctx);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "MasterVolume Instance is nullptr");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        return true;
+    }
+    return true;
+}
+
 bool MasterVolumeManager::_volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     PM_LOG_DEBUG("MasterVolume: volumeUp");
@@ -230,6 +251,7 @@ static LSMethod MasterVolumeMethods[] =
     {"muteVolume", MasterVolumeManager::_muteVolume},
     {"setMicVolume", MasterVolumeManager::_setMicVolume},
     {"getMicVolume", MasterVolumeManager::_getMicVolume},
+    {"muteMic", MasterVolumeManager::_muteMic},
     { },
 };
 

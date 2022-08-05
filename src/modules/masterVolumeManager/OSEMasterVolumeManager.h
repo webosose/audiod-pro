@@ -84,6 +84,7 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         void getVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        void muteMic(LSHandle *lshandle, LSMessage *message, void *ctx);
         void volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);
         void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx);
 
