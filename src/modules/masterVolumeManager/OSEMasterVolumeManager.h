@@ -70,18 +70,19 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         void setCurrentVolume(int iVolume);
         void setCurrentMuteStatus(bool bMuteStatus);
         void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
-        void notifyMicVolumeSubscriber(const int &displayId,const std::string &callerId);
+        void notifyMicVolumeSubscriber(const int &displayId, bool subscribed);
         void setVolume(const int &displayId);
         void setMicVolume(const int &displayId);
         void setMuteStatus(const int &displayId);
         void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput);
         void setDisplaySoundInput(const std::string& display, const std::string& soundInput);
         std::string getVolumeInfo(const int &displayId, const std::string &callerId);
-        std::string getMicVolumeInfo(const int &displayId, const std::string &callerId);
+        std::string getMicVolumeInfo(const int &displayId, bool subscribed);
 
         void setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void setMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void getVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        void getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);
         void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx);

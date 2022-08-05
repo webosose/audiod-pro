@@ -181,6 +181,7 @@ void OSEMasterVolumeManager::setMicVolume(LSHandle *lshandle, LSMessage *message
     std::string soundInput;
     int display = DISPLAY_ONE;
     bool isValidVolume = false;
+    bool subscribed = false;
     int displayId = -1;
     int volume = MIN_VOLUME;
     std::string reply = STANDARD_JSON_SUCCESS;
@@ -221,7 +222,7 @@ void OSEMasterVolumeManager::setMicVolume(LSHandle *lshandle, LSMessage *message
                 setVolumeResponse.put("returnValue", true);
                 setVolumeResponse.put("volume", volume);
                 setVolumeResponse.put("soundInput", soundInput);
-                notifyMicVolumeSubscriber(displayId, callerId);
+                notifyMicVolumeSubscriber(displayId, subscribed);
                 reply = setVolumeResponse.stringify();
             }
             else
@@ -240,7 +241,7 @@ void OSEMasterVolumeManager::setMicVolume(LSHandle *lshandle, LSMessage *message
 
                 soundInput = activeDevice;
                 std::string callerId = LSMessageGetSenderServiceName(message);
-                notifyMicVolumeSubscriber(displayId, callerId);
+                notifyMicVolumeSubscriber(displayId, true);
                 pbnjson::JValue setVolumeResponse = pbnjson::Object();
                 setVolumeResponse.put("returnValue", true);
                 setVolumeResponse.put("volume", volume);
@@ -271,7 +272,7 @@ void OSEMasterVolumeManager::setMicVolume(LSHandle *lshandle, LSMessage *message
                 setVolumeResponse.put("returnValue", true);
                 setVolumeResponse.put("volume", volume);
                 setVolumeResponse.put("soundInput", soundInput);
-                notifyMicVolumeSubscriber(displayId, callerId);
+                notifyMicVolumeSubscriber(displayId, subscribed);
                 reply = setVolumeResponse.stringify();
             }
             else
@@ -289,7 +290,7 @@ void OSEMasterVolumeManager::setMicVolume(LSHandle *lshandle, LSMessage *message
 
                 soundInput = activeDevice;
                 std::string callerId = LSMessageGetSenderServiceName(message);
-                notifyMicVolumeSubscriber(displayId, callerId);
+                notifyMicVolumeSubscriber(displayId, true);
                 pbnjson::JValue setVolumeResponse = pbnjson::Object();
                 setVolumeResponse.put("returnValue", true);
                 setVolumeResponse.put("volume", volume);
@@ -426,6 +427,53 @@ void OSEMasterVolumeManager::getVolume(LSHandle *lshandle, LSMessage *message, v
 
     if ((DISPLAY_TWO == display) || (DISPLAY_ONE == display))
             reply = getVolumeInfo(displayId, callerId);
+
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s : Reply:%s", __FUNCTION__, reply.c_str());
+    if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        lserror.Print(__FUNCTION__, __LINE__);
+    return;
+}
+
+void OSEMasterVolumeManager::getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "OSEMasterVolumeManager: getMicVolume");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(subscribe, boolean), PROP(displayId, integer))));
+    if (!msg.parse(__FUNCTION__,lshandle))
+        return;
+
+    int display = DISPLAY_ONE;
+    bool subscribed = false;
+    CLSError lserror;
+    std::string reply = STANDARD_JSON_SUCCESS;
+
+    msg.get("displayId", display);
+    msg.get("subscribe", subscribed);
+
+    if (LSMessageIsSubscription(message))
+    {
+        if (!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
+        {
+            lserror.Print(__FUNCTION__, __LINE__);
+            PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "LSSubscriptionProcess failed");
+            return;
+        }
+    }
+
+    int displayId = DEFAULT_ONE_DISPLAY_ID;
+    std::string callerId = LSMessageGetSenderServiceName(message);
+    if (DISPLAY_TWO == display)
+        displayId = DEFAULT_TWO_DISPLAY_ID;
+    else if (DISPLAY_ONE == display)
+        displayId = DEFAULT_ONE_DISPLAY_ID;
+    else
+    {
+        PM_LOG_ERROR (MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+                    "displayId Not in Range");
+        reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SESSIONID, "displayId Not in Range");
+    }
+
+    if ((DISPLAY_TWO == display) || (DISPLAY_ONE == display))
+            reply = getMicVolumeInfo(displayId, subscribed);
 
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s : Reply:%s", __FUNCTION__, reply.c_str());
     if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
@@ -1080,10 +1128,10 @@ void OSEMasterVolumeManager::notifyVolumeSubscriber(const int &displayId, const 
     }
 }
 
-void OSEMasterVolumeManager::notifyMicVolumeSubscriber(const int &displayId, const std::string &callerId)
+void OSEMasterVolumeManager::notifyMicVolumeSubscriber(const int &displayId, bool subscribed)
 {
     CLSError lserror;
-    std::string reply = getMicVolumeInfo(displayId, callerId);
+    std::string reply = getMicVolumeInfo(displayId, subscribed);
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "[%s] reply message to subscriber: %s", __FUNCTION__, reply.c_str());
     if (!LSSubscriptionReply(GetPalmService(), AUDIOD_API_GET_MIC_VOLUME, reply.c_str(), &lserror))
     {
@@ -1162,41 +1210,51 @@ std::string OSEMasterVolumeManager::getVolumeInfo(const int &displayId, const st
     return soundOutInfo.stringify();
 }
 
-std::string OSEMasterVolumeManager::getMicVolumeInfo(const int &displayId, const std::string &callerId)
+std::string OSEMasterVolumeManager::getMicVolumeInfo(const int &displayId, bool subscribed)
 {
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "getMicVolumeInfo");
     pbnjson::JValue soundInInfo = pbnjson::Object();
-    pbnjson::JValue volumeStatus = pbnjson::Object();
     int volume = MIN_VOLUME;
     bool muteStatus = false;
     std::string soundInput;
+    std::string activeDevice;
     int display = DISPLAY_ONE;
 
     if (DEFAULT_ONE_DISPLAY_ID == displayId)
     {
+        activeDevice = getDisplaySoundInput(DISPLAY_ONE);
+        soundInput = activeDevice;
         volume = displayOneVolume;
         muteStatus = displayOneMuteStatus;
-        display = DISPLAY_ONE;
+        pbnjson::JValue soundInInfo = pbnjson::Object();
+
+        soundInInfo.put("returnValue", true);
+        soundInInfo.put("subscribed", subscribed);
+        soundInInfo.put("soundInput", soundInput);
+        soundInInfo.put("volume", volume);
+        soundInInfo.put("muteStatus", muteStatus);
+        return soundInInfo.stringify();
+    }
+    else if(DEFAULT_TWO_DISPLAY_ID == displayId)
+    {
+        activeDevice = getDisplaySoundInput(DISPLAY_TWO);
+        soundInput = activeDevice;
+        volume = displayTwoVolume;
+        muteStatus = displayTwoMuteStatus;
+        pbnjson::JValue soundInInfo = pbnjson::Object();
+        soundInInfo.put("returnValue", true);
+        soundInInfo.put("subscribed", subscribed);
+        soundInInfo.put("soundInput", soundInput);
+        soundInInfo.put("volume", volume);
+        soundInInfo.put("muteStatus", muteStatus);
+        return soundInInfo.stringify();
     }
     else
     {
-        volume = displayTwoVolume;
-        muteStatus = displayTwoMuteStatus;
-        display = DISPLAY_TWO;
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: SetMicMasterVolume displayID is not valid");
+        std::string reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
+        return reply;
     }
-
-    std::string activeDevice = getDisplaySoundInput(DISPLAY_ONE);
-    soundInput = activeDevice;
-
-    volumeStatus = {{"muteStatus", muteStatus},
-                    {"volume", volume},
-                    {"displayId", display}};
-
-    soundInInfo.put("volumeStatus", volumeStatus);
-    soundInInfo.put("returnValue", true);
-    soundInInfo.put("subscribed", true);
-    soundInInfo.put("soundInput", soundInput);
-    return soundInInfo.stringify();
 }
 
 void OSEMasterVolumeManager::setCurrentMuteStatus(bool bMuteStatus)

@@ -29,6 +29,7 @@
     "com.webos.service.audio/getStreamStatus",
     "com.webos.service.audio/getInputVolume",
     "com.webos.service.audio/getSourceInputVolume",
+    "com.webos.service.audio/master/getMicVolume",
     "com.webos.service.audio/master/getVolume",
     "com.webos.service.audio/UMI/getStatus",
     "com.webos.service.audio/getSoundInput",
