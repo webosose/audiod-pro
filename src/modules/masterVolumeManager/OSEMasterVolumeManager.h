@@ -31,6 +31,8 @@
 #define DISPLAY_ONE_NAME "display1"
 #define DISPLAY_TWO_NAME "display2"
 
+#define MUTE_MIC_BOTH_DISPLAY 3
+
 class OSEMasterVolumeManager : public MasterVolumeInterface
 {
     private:
@@ -41,6 +43,10 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         int displayTwoVolume;
         int displayOneMuteStatus;
         int displayTwoMuteStatus;
+        int displayOneMicVolume;
+        int displayTwoMicVolume;
+        int displayOneMicMuteStatus;
+        int displayTwoMicMuteStatus;
         std::string displayOneSoundoutput;
         std::string displayTwoSoundoutput;
         std::string displayOneSoundinput;

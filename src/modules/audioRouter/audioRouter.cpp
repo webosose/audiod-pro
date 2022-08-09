@@ -1095,8 +1095,6 @@ bool AudioRouter::setSoundOutput(const std::string& soundOutput, const int &disp
     return returnStatus;
 }
 
-
-
 bool AudioRouter::setSoundInput(const std::string& soundInput, const int &displayId)
 {
     std::string activeDevice;
@@ -1118,7 +1116,7 @@ bool AudioRouter::setSoundInput(const std::string& soundInput, const int &displa
                     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setSoundInput: sourceid:%d",
                         (int)sourceInfo.startSource);
                     if (mObjAudioMixer->setSoundInputOnRange(sourceInfo.startSource,
-                        sourceInfo.startSource, soundInput.c_str()))
+                        sourceInfo.endSource, soundInput.c_str()))
                     {
                         updateDeviceStatus(display, soundInput, true, true, false);
                         updateDeviceStatus(display, activeDevice, true, false, false);
