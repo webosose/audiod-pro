@@ -1,0 +1,23 @@
+{
+    "DeviceList": [
+        {
+            "Type": "Internal",
+            "shortName": "[I82801AAICH    ]",
+            "detailedName": "ICH - Intel 82801AA-ICH",
+            "sink": [
+                {
+                    "Name": "pcm_output",
+                    "deviceId": 0,
+                    "pre_condition": []
+                }
+            ],
+            "source": [
+                {
+                    "Name": "pcm_input",
+                    "deviceId": 0,
+                    "pre_condition": []
+                }
+            ]
+        }
+    ]
+}

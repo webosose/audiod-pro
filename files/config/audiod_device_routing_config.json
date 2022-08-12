@@ -14,6 +14,7 @@
                     "display":"display1",
                     "priority":4,
                     "multipleSoundOut":false,
+                    "deviceType":"internal",
                     "volumeSync":[
                                  ]
                 },
@@ -27,6 +28,7 @@
                     "display":"display2",
                     "priority":4,
                     "multipleSoundOut":false,
+                    "deviceType":"internal",
                     "volumeSync":[
                                  ]
                 },
@@ -40,6 +42,7 @@
                     "display":"display1",
                     "priority":3,
                     "multipleSoundOut":false,
+                    "deviceType":"internal",
                     "volumeSync":[
                                  ]
                 },
@@ -53,11 +56,12 @@
                     "display":"display1",
                     "priority":1,
                     "multipleSoundOut":false,
+                    "deviceType":"external",
                     "volumeSync":[
                                  ]
                 },
                 {
-                    "soundOutput":"display_usb1",
+                    "soundOutput":"usb_speaker",
                     "volume":100,
                     "activeStatus":false,
                     "adjustVolume":true,
@@ -66,14 +70,30 @@
                     "display":"display1",
                     "priority":2,
                     "multipleSoundOut":false,
+                    "deviceType":"usb",
+                    "maxDeviceCount":2,
                     "volumeSync":[
-                                 ]
+                    ]
                 }
             ]
         },
         {
             "soundInputList":
             [
+                {
+                    "soundInput":"usb_mic",
+                    "volume":100,
+                    "activeStatus":false,
+                    "adjustVolume":false,
+                    "muteStatus":false,
+                    "maxVolume":100,
+                    "display":"display1",
+                    "deviceType":"usb",
+                    "maxDeviceCount":2,
+                    "priority":1,
+                    "volumeSync":[
+                                 ]
+                },
                 {
                     "soundInput":"pcm_input",
                     "volume":100,
@@ -82,7 +102,9 @@
                     "muteStatus":false,
                     "maxVolume":100,
                     "display":"display1",
-                    "priority":1,
+                    "deviceType":"internal",
+                    "maxDeviceCount":2,
+                    "priority":2,
                     "volumeSync":[
                                  ]
                 }

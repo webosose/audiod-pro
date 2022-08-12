@@ -99,6 +99,20 @@
             "category": "display1"
         },
         {
+            "streamType": "voipcall",
+            "policyVolume":50,
+            "priority":0,
+            "group":0,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":true,
+            "category": "display1"
+        },
+        {
             "streamType": "pvoicerecognition",
             "policyVolume":50,
             "priority":1,

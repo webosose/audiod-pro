@@ -117,6 +117,7 @@ namespace events
     {
         EModuleEventType eventName;
         std::string devicename;
+        std::string deviceNameDetail;
         utils::E_DEVICE_STATUS deviceStatus;
         utils::EMIXER_TYPE mixerType;
     }EVENT_DEVICE_CONNECTION_STATUS_T;

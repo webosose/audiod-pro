@@ -1,4 +1,4 @@
-// Copyright (c) 2021 LG Electronics, Inc.
+// Copyright (c) 2021-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,11 @@
 
 #define DEFAULT_DISPLAY "display1"
 
+#define USB_DEVICE_TYPE_NAME "usb"
+#define MULTIPLE_DEVICE_MAX 10
+#define MULTIPLE_DEVICE_MIN 1
+
+
 class AudioRouter : public ModuleInterface
 {
     private:
@@ -77,6 +82,9 @@ class AudioRouter : public ModuleInterface
 
         utils::mapDeviceInfo mSoundOutputInfo;
         utils::mapDeviceInfo mSoundInputInfo;
+
+        utils::mapMultipleDeviceInfo mMutipleOutputInfo;
+        utils::mapMultipleDeviceInfo mMutipleInputInfo;
 
         std::list<std::string> mBTDeviceList;
 
@@ -114,21 +122,26 @@ class AudioRouter : public ModuleInterface
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
-        void eventDeviceConnectionStatus(const std::string &deviceName, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType);
+        void eventDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType);
         void eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo);
         void eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo);
         void eventBTDeviceDisplayInfo(const bool &connectionStatus, const std::string &deviceAddress, const int &displayId);
         bool setSoundOutput(const std::string& soundOutput, const int &displayId);
         bool setSoundInput(const std::string& soundInput, const int &displayId);
         std::string getDisplayName(const int &displayId);
+        std::string getSoundOutputList(bool subscribed);
+        std::string getSoundDeviceList(bool subscribed, const std::string &query);
+
+        void notifyDeviceListSubscribers();
+
         //luna api
         static bool _setSoundOutput(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _setSoundInput(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getSoundInput(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getSoundOutput(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _SetSoundOut(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _listSupportedDevices(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _updateSoundOutStatus(LSHandle *sh, LSMessage *reply, void *ctx);
-
 
         ~AudioRouter();
         static AudioRouter* mAudioRouter ;

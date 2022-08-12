@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2021 LG Electronics Company.
+*      Copyright (c) 2021-2022 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -28,64 +28,25 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
 {
     if (mixerStatus && (mixerType == utils::ePulseMixer))
     {
-        FILE *fp = NULL;
-        int HDMI0CardNumber = 0;
-        int HDMI1CardNumber = -1;
-        int HeadphoneCardNumber = -1;
-        char snd_card_info[500];
-        char *snd_hdmi0_card_info_parse = NULL;
-        char *snd_hdmi1_card_info_parse = NULL;
-        char *snd_headphone_card_info_parse = NULL;
-        int lengthOfHDMI0Card = strlen("b1");
-        int lengthOfHeadphoneCard = strlen("Headphones");
-        if ((fp = fopen("/proc/asound/cards", "r")) == NULL )
-        {
-            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Cannot open /proc/asound/cards file to get sound card info");
-            return;
+        mObjAudioMixer->sendInternalDeviceInfo(true, mSinkInfo.size());
+        mObjAudioMixer->sendInternalDeviceInfo(false, mSourceInfo.size());
+        if (!alsaConfRead) {
+            readAlsaCardFile();
         }
-
-        while (fgets(snd_card_info, sizeof(snd_card_info), fp) != NULL)
+        for (auto items:mSourceInfo)
         {
-            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found card %s", snd_card_info);
-            snd_hdmi0_card_info_parse = strstr(snd_card_info, "b1");
-            snd_hdmi1_card_info_parse = strstr(snd_card_info, "b2");
-            snd_headphone_card_info_parse = strstr(snd_card_info, "Headphones");
-            if (snd_hdmi0_card_info_parse && !strncmp(snd_hdmi0_card_info_parse, "b1", lengthOfHDMI0Card))
+            if (items.second.cardNum != -1)
             {
-                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card b1");
-                char card = snd_card_info[1];
-                HDMI0CardNumber =  card - '0';
-
-            }
-            if (snd_hdmi1_card_info_parse && !strncmp(snd_hdmi1_card_info_parse, "b2", lengthOfHDMI0Card))
-            {
-                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card b1");
-                char card = snd_card_info[1];
-                HDMI1CardNumber =  card - '0';
-            }
-            if (snd_headphone_card_info_parse && !strncmp(snd_headphone_card_info_parse, "Headphones", lengthOfHeadphoneCard) && (-1 == HeadphoneCardNumber))
-            {
-                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card Headphones");
-                char card = snd_card_info[1];
-                HeadphoneCardNumber =  card - '0';
-                mObjAudioMixer->loadInternalSoundCard('i', HeadphoneCardNumber, 0, 1, false, "pcm_headphone");
+                mObjAudioMixer->loadInternalSoundCard('i',items.second.cardNum, items.second.deviceNum, 1, false, items.second.name.c_str());
             }
         }
-        mObjAudioMixer->loadInternalSoundCard('i', HDMI0CardNumber, 0, 1, true, "pcm_output");
-        if (HDMI1CardNumber != -1)
+        for (auto items:mSinkInfo)
         {
-            mObjAudioMixer->loadInternalSoundCard('i', HDMI1CardNumber, 0, 1, true, "pcm_output1");
-        }
-
-        if (fp)
-        {
-            fclose(fp);
-            fp = NULL;
-        }
-        if (WEBOS_SOC_TYPE == "x86")
-        {
-            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"Found internal card mic");
-            mObjAudioMixer->loadInternalSoundCard('j', 0, 0, 1, false, "pcm_input");
+            if (items.second.cardNum != -1)
+            {
+                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"eventmixerstatus cardno : %d", items.second.cardNum);
+                mObjAudioMixer->loadInternalSoundCard('i',items.second.cardNum, items.second.deviceNum, 1, true, items.second.name.c_str());
+            }
         }
         for (auto items = mDeviceAddedQueue.begin(); items!=mDeviceAddedQueue.end(); items++)
         {
@@ -100,6 +61,154 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
         }
         mDeviceRemovedQueue.clear();
     }
+}
+
+bool DeviceManager::setDeviceJsonDetails()
+{
+    PM_LOG_DEBUG("DeviceManager: setDeviceJsonDetails");
+    deviceConfigReader *deviceConfigReaderObj = new (std::nothrow) deviceConfigReader();
+    pbnjson::JValue deviceInfo;
+    if (deviceConfigReaderObj->loadDeviceInfoJson())
+    {
+        deviceInfo = deviceConfigReaderObj->getDeviceInfo();
+        if (!deviceInfo.isArray())
+        {
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "deviceInfo not an array");
+            return false;
+        }
+
+        for (pbnjson::JValue arrItem: deviceInfo.items())
+        {
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"%s",arrItem.stringify().c_str());
+            std::string deviceShortName;
+            std::string sinkName;
+            std::string type;
+            int deviceNum;
+
+            if(arrItem["shortName"].asString(deviceShortName)!= CONV_OK)
+            {
+                PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find device short name");
+                return false;
+            }
+            mCardNames.push_back(deviceShortName);
+
+            if(arrItem["Type"].asString(type)!= CONV_OK)
+            {
+                PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find type");
+                return false;
+            }
+            if (arrItem["sink"].isArray() && arrItem["sink"].arraySize() > 0)
+            {
+                cardDetail newCard;
+                std::string sinkName;
+                int deviceNum;
+
+                pbnjson::JValue sinkDetails =  arrItem["sink"];
+                for (pbnjson::JValue sinkArrItem : sinkDetails.items())
+                {
+                    if(sinkArrItem["Name"].asString(sinkName) != CONV_OK)
+                    {
+                        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find device sinkName");
+                    }
+                    if(sinkArrItem["deviceId"].asNumber(deviceNum) != CONV_OK)
+                    {
+                        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find deviceId");
+                    }
+                    newCard.cardId=deviceShortName;
+                    newCard.cardNum=-1;
+                    newCard.deviceNum=deviceNum;
+                    newCard.name=sinkName;
+                    mSinkInfo[deviceShortName] = newCard;
+                }
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "sink array not found");
+            }
+
+            if (arrItem["source"].isArray() && arrItem["source"].arraySize() > 0)
+            {
+                cardDetail newCard;
+                std::string sourceName;
+                int deviceNum;
+
+                pbnjson::JValue sourceDetails =  arrItem["source"];
+
+                for (pbnjson::JValue sourceArrItem : sourceDetails.items())
+                {
+
+                    if(sourceArrItem["Name"].asString(sourceName) != CONV_OK)
+                    {
+                        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find device sourceName");
+                    }
+                    if(sourceArrItem["deviceId"].asNumber(deviceNum) != CONV_OK)
+                    {
+                        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find deviceId");
+                    }
+                    newCard.cardId=deviceShortName;
+                    newCard.cardNum=-1;
+                    newCard.deviceNum=deviceNum;
+                    newCard.name=sourceName;
+                    mSourceInfo[deviceShortName] = newCard;
+                }
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "source array not found");
+            }
+        }
+        for (const auto &it : mSinkInfo)
+        {
+            PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"details:");
+            PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"cardname:%s",it.first.c_str());
+            PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"second  : %s",it.second.name.c_str());
+        }
+        delete deviceConfigReaderObj;
+    }
+    return true;
+}
+
+bool DeviceManager::readAlsaCardFile()
+{
+    PM_LOG_DEBUG("DeviceManager: readAlsaCardFile");
+
+    std::ifstream ifs("/proc/asound/cards");
+
+    if(!ifs)
+    {
+        PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"/proc/asound/card file not exist");
+        return false;
+    }
+
+    int cardnum;
+    std::string details;
+    while(getline(ifs, details))
+    {
+        for (const auto it : mCardNames)
+        {
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"name:%s",it.c_str());
+            if (details.find(it) != std::string::npos)
+            {
+                std::stringstream ss(details);
+                int cardno;
+                ss>>cardno;
+                PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "cardno : %s:%d",details.c_str(),cardno);
+
+                if (mSinkInfo.find(it) != mSinkInfo.end())
+                {
+                    mSinkInfo[it].cardNum=cardno;
+                }
+                if (mSourceInfo.find(it)!=mSourceInfo.end())
+                {
+                    mSourceInfo[it].cardNum=cardno;
+                }
+                ss.str("");
+                ss.clear();
+            }
+        }
+    }
+    ifs.close();
+    return true;
 }
 
 void DeviceManager::addEventToQueue(bool isAdd, const Device& device)
@@ -203,6 +312,12 @@ DeviceManager::DeviceManager(ModuleConfig* const pConfObj)
         PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "mClientDeviceManagerInstance is nullptr");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
     mObjAudioMixer = AudioMixer::getAudioMixerInstance();
+
+    if (setDeviceJsonDetails())
+    {
+        alsaConfRead = readAlsaCardFile();
+    }
+
     if (mObjModuleManager)
     {
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventMixerStatus);

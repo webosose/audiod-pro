@@ -134,6 +134,7 @@ SET (modules_files
         src/modules/audioRouter/deviceRoutingConfigParser.cpp
         src/modules/audioRouter/audioRouter.cpp
         src/modules/trackManager/trackManager.cpp
+        src/modules/deviceManager/deviceConfigReader.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")
@@ -145,6 +146,12 @@ SET (modules_files
     install(FILES files/config/audiod_module_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_device_routing_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/bluetooth_configuration.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
+IF (${WEBOS_TARGET_MACHINE} STREQUAL qemux86-64)
+    install(FILES files/config/audiod_internal_device_loading_qemux86-64.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod RENAME audiod_internal_device_loading.json)
+ELSE ()
+    install(FILES files/config/audiod_internal_device_loading_open.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod RENAME audiod_internal_device_loading.json)
+ENDIF()
+
 
 if (WEBOS_LTTNG_ENABLED)
 add_executable(audiod     ${utils_1_files}

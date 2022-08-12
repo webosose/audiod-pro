@@ -225,6 +225,7 @@ namespace utils
     typedef struct deviceInfo
     {
         std::string deviceName;
+        std::string deviceNameDetail;
         bool activeStatus;
         bool muteStatus;
         bool adjustVolume;
@@ -235,6 +236,7 @@ namespace utils
         std::string display;
         int priority;
         bool isConnected;
+        std::string deviceType;
         deviceInfo()
         {
             activeStatus = false;
@@ -248,6 +250,17 @@ namespace utils
             isConnected  = false;
         }
     }DEVICE_INFO_T;
+
+    typedef struct multipleDeviceInfo
+    {
+        std::string deviceBaseName;
+        int maxDeviceCount;
+
+        multipleDeviceInfo()
+        {
+            maxDeviceCount = 1;
+        }
+    }MULTIPLE_DEVICE_INFO_T;
 
     typedef struct sinkRoutingInfo
     {
@@ -286,6 +299,17 @@ namespace utils
         }
     }TRACK_VOLUME_INFO_T;
 
+    typedef struct deviceDetails
+    {
+        int cardNumber;
+        std::string deviceName;
+        std::string deviceDetail;
+        deviceDetails()
+        {
+            cardNumber = -1;
+        }
+    }DEVICE_DETAIL;
+
     typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
     typedef std::vector<EVirtualAudioSink>::iterator itVirtualSink;
 
@@ -316,6 +340,10 @@ namespace utils
 
     typedef std::map<std::string, std::vector<DEVICE_INFO_T>> mapDeviceInfo;
     typedef std::map<std::string, std::vector<TRACK_VOLUME_INFO_T>> mapTrackVolumeInfo;
+
+    typedef std::map<std::string, MULTIPLE_DEVICE_INFO_T> mapMultipleDeviceInfo;
+
+    typedef std::list<DEVICE_DETAIL> listDeviceDetail;
 
     void LSMessageResponse(LSHandle* handle, LSMessage * message,\
         const char* reply, utils::EReplyType eType, bool isReferenced);

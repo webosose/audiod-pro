@@ -17,6 +17,9 @@
 
 #include "audioRouter.h"
 
+#define AUDIOD_API_GET_SOUND_DEVICE_LIST   "/listSupportedDevices"
+
+
 bool AudioRouter::mIsObjRegistered = AudioRouter::RegisterObject();
 
 void  AudioRouter::eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
@@ -49,14 +52,39 @@ void AudioRouter::eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerTyp
             }
         }
     }
+    else if (utils::ePulseMixer == mixerType)
+    {
+        if (nullptr != mObjAudioMixer)
+        {
+            for (auto& it : mMutipleOutputInfo)
+            {
+                if (it.first == USB_DEVICE_TYPE_NAME)
+                {
+                    if (!mObjAudioMixer->sendUsbMultipleDeviceInfo(true, it.second.maxDeviceCount, it.second.deviceBaseName))
+                        PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT,"sendUsbMultipleDeviceInfo failed");
+                }
+            }
+            for (auto& it : mMutipleInputInfo)
+            {
+                if (it.first == USB_DEVICE_TYPE_NAME)
+                {
+                    if (!mObjAudioMixer->sendUsbMultipleDeviceInfo(false, it.second.maxDeviceCount, it.second.deviceBaseName))
+                        PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT,"sendUsbMultipleDeviceInfo failed");
+                }
+            }
+        }
+    }
 }
 
-void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName,\
+void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail,\
     utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType)
 {
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
         "eventDeviceConnectionStatus with deviceName:%s deviceStatus:%d mixerType:%d",\
         deviceName.c_str(), (int)deviceStatus, (int)mixerType);
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+        "eventDeviceConnectionStatus deviceNameDetail : %s",deviceNameDetail.c_str());
+
     bool isBTDeviceMapped = false;
     std::string actualDeviceName = deviceName;
     if (deviceName.find(BLUETOOTH_SINK_IDENTIFIER) != std::string::npos)
@@ -84,37 +112,49 @@ void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName,\
     else
         PM_LOG_DEBUG("device other than BT is connected");
 
-    for (const auto& items : mSoundOutputInfo)
+    for (auto& items : mSoundOutputInfo)
     {
-        for (const auto &deviceInfo : items.second)
+        for (auto &deviceInfo : items.second)
         {
             if (actualDeviceName == deviceInfo.deviceName)
             {
-                if (utils::eDeviceConnected == deviceStatus)
+
+                if (utils::eDeviceConnected == deviceStatus) {
+                    deviceInfo.deviceNameDetail = deviceNameDetail;
                     setOutputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority, items.first, mixerType);
-                else if(utils::eDeviceDisconnected == deviceStatus)
+                    notifyDeviceListSubscribers();
+                }
+                else if(utils::eDeviceDisconnected == deviceStatus) {
+                    deviceInfo.deviceNameDetail = actualDeviceName;
                     resetOutputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority,  items.first, mixerType);
+                    notifyDeviceListSubscribers();
+                }
                 return;
             }
         }
     }
 
-    for (const auto& items : mSoundInputInfo)
+    for (auto& items : mSoundInputInfo)
     {
-        for (const auto &deviceInfo : items.second)
+        for (auto &deviceInfo : items.second)
         {
             if (actualDeviceName == deviceInfo.deviceName)
             {
-                if (utils::eDeviceConnected == deviceStatus)
+                if (utils::eDeviceConnected == deviceStatus) {
+                    deviceInfo.deviceNameDetail = deviceNameDetail;
                     setInputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority, items.first, mixerType);
-                else if(utils::eDeviceDisconnected == deviceStatus)
+                    notifyDeviceListSubscribers();
+                }
+                else if(utils::eDeviceDisconnected == deviceStatus) {
+                    deviceInfo.deviceNameDetail = actualDeviceName;
                     resetInputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority, items.first, mixerType);
+                    notifyDeviceListSubscribers();
+                }
                 return;
-
             }
         }
     }
@@ -168,8 +208,9 @@ void AudioRouter::eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo)
         std::list<EVirtualAudioSink> sinkList;
         utils::SINK_ROUTING_INFO_T outputRoutingInfo;
         mMapSinkRoutingInfo["display1"] = outputRoutingInfo;
-        if (WEBOS_SOC_TYPE == "RPI4")
+        if (WEBOS_SOC_TYPE == "RPI4") {
             mMapSinkRoutingInfo["display2"] = outputRoutingInfo;
+        }
         utils::itMapSinkRoutingInfo it;
         for (const pbnjson::JValue& elements : sinkPolicyInfo.items())
         {
@@ -270,6 +311,7 @@ void AudioRouter::setBTDeviceRouting(const std::string &deviceName)
                 deviceConnectionStatus.devicename = items;
                 deviceConnectionStatus.deviceStatus = utils::eDeviceConnected;
                 deviceConnectionStatus.mixerType = utils::ePulseMixer;
+                deviceConnectionStatus.deviceNameDetail = items;
                 mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&deviceConnectionStatus);
             }
             else
@@ -723,8 +765,8 @@ void AudioRouter::printDeviceInfo(const bool& isOutput)
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "mSoundOutputInfo: display:%s", it.first.c_str());
             for (const auto& deviceInfo : it.second)
             {
-                PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "deviceName:%s priority:%d",\
-                    deviceInfo.deviceName.c_str(), deviceInfo.priority);
+                PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "deviceName:%s:%s priority:%d",\
+                    deviceInfo.deviceName.c_str(), deviceInfo.deviceNameDetail.c_str() , deviceInfo.priority);
                 PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "activeStatus:%d isConnected:%d",\
                     (int)deviceInfo.activeStatus, (int)deviceInfo.isConnected);
             }
@@ -737,8 +779,8 @@ void AudioRouter::printDeviceInfo(const bool& isOutput)
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "mSoundInputInfo: display:%s", it.first.c_str());
             for (const auto& deviceInfo : it.second)
             {
-                PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "deviceName:%s priority:%d",\
-                    deviceInfo.deviceName.c_str(), deviceInfo.priority);
+                PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "deviceName:%s : %s priority:%d",\
+                    deviceInfo.deviceName.c_str(), deviceInfo.deviceNameDetail.c_str(), deviceInfo.priority);
                 PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "activeStatus:%d isConnected:%d",\
                     (int)deviceInfo.activeStatus, (int)deviceInfo.isConnected);
             }
@@ -773,7 +815,7 @@ void AudioRouter::readDeviceRoutingInfo()
 
 void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
 {
-    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "AudioRouter::eventSoundOutputInfo");
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "AudioRouter::setDeviceRoutingInfo");
     if (!deviceRoutingInfo.isArray())
     {
         PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT, "AudioRouter::deviceRoutingInfo is not an array");
@@ -799,6 +841,9 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
             utils::DEVICE_INFO_T deviceInfo;
             std::string soundoutput;
             std::string display;
+            std::string deviceType = "";
+            int maxDeviceCount = 1;
+            bool multipleDevice = false;
             bool adjustVolume = true;
             bool activeStatus = false;
             bool muteStatus = false;
@@ -818,24 +863,67 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                     deviceInfo.adjustVolume = adjustVolume;
                 else
                     deviceInfo.adjustVolume = true;
+
+                //For USb mutiple device info
+
+                if (arrItem["deviceType"].asString(deviceType) == CONV_OK)
+                {
+                    // check device type that supports multiple devices
+                    if (deviceType == USB_DEVICE_TYPE_NAME)
+                    {
+                        if (arrItem["maxDeviceCount"].asNumber(maxDeviceCount) == CONV_OK)
+                        {
+                            if (maxDeviceCount < MULTIPLE_DEVICE_MIN || maxDeviceCount > MULTIPLE_DEVICE_MAX)
+                            {
+                                PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                                        "Invalid maxDeviceCount");
+                                continue;
+                            }
+
+                            utils::MULTIPLE_DEVICE_INFO_T multipleDeviceInfo;
+                            multipleDeviceInfo.deviceBaseName = soundoutput;
+                            multipleDeviceInfo.maxDeviceCount = maxDeviceCount;
+                            mMutipleOutputInfo.emplace(deviceType, multipleDeviceInfo);
+
+                            multipleDevice = true;
+                        }
+                    }
+                    deviceInfo.deviceType = deviceType;
+                }
+                //End
+
                 deviceInfo.priority = arrItem["priority"].asNumber<int>();
                 deviceInfo.deviceName = soundoutput;
+                deviceInfo.deviceNameDetail = soundoutput;
 
-                if (arrItem["display"].asString(display) == CONV_OK)
+                if (!multipleDevice) maxDeviceCount = 1;
+
+                if (arrItem["display"].asString(display) != CONV_OK)
                 {
+                    PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                                        "Invalid displayID");
+                }
+
+                for (int i = 0; i < maxDeviceCount; i++)
+                {
+                    utils::DEVICE_INFO_T tempDeviceInfo = deviceInfo;
+                    if (multipleDevice)
+                    {
+                        tempDeviceInfo.deviceName += std::to_string(i+1);
+                        tempDeviceInfo.deviceNameDetail = tempDeviceInfo.deviceName;
+                    }
+
+                    //sound output info table
                     auto it = mSoundOutputInfo.find(display);
                     if (it != mSoundOutputInfo.end())
-                        it->second.push_back(deviceInfo);
+                        it->second.push_back(tempDeviceInfo);
                     else
                     {
-                        std::vector<utils::DEVICE_INFO_T> tmpDeviceInfo;
-                        tmpDeviceInfo.push_back(deviceInfo);
-                        mSoundOutputInfo[display] = tmpDeviceInfo;
+                        std::vector<utils::DEVICE_INFO_T> newDeviceInfo;
+                        newDeviceInfo.push_back(tempDeviceInfo);
+                        mSoundOutputInfo[display] = newDeviceInfo;
                     }
                 }
-                else
-                    PM_LOG_WARNING(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
-                        "eventSoundOutputInfo::Unable to read display parameter");
             }
         }
         for (const auto it : mSoundOutputInfo)
@@ -843,8 +931,8 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "mSoundOutputInfo: display:%s", it.first.c_str());
             for (const auto& deviceInfo : it.second)
             {
-                PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "deviceName:%s priority:%d",\
-                    deviceInfo.deviceName.c_str(), deviceInfo.priority);
+                PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "deviceName:%s:%s priority:%d",\
+                    deviceInfo.deviceName.c_str(), deviceInfo.deviceNameDetail.c_str(), deviceInfo.priority);
                 PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "activeStatus:%d isConnected:%d",\
                     (int)deviceInfo.activeStatus, (int)deviceInfo.isConnected);
             }
@@ -861,6 +949,9 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
             utils::DEVICE_INFO_T deviceInfo;
             std::string soundinput;
             std::string display;
+            std::string deviceType = "";
+            int maxDeviceCount = 1;
+            bool multipleDevice = false;
             bool adjustVolume = true;
             bool activeStatus = false;
             bool muteStatus = false;
@@ -880,23 +971,69 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                     deviceInfo.adjustVolume = adjustVolume;
                 else
                     deviceInfo.adjustVolume = true;
+
+                if (arrItem["deviceType"].asString(deviceType) == CONV_OK)
+                {
+                    // check device type that supports multiple devices
+                    if (deviceType == USB_DEVICE_TYPE_NAME)
+                    {
+                        if (arrItem["maxDeviceCount"].asNumber(maxDeviceCount) == CONV_OK)
+                        {
+                            if (maxDeviceCount < MULTIPLE_DEVICE_MIN || maxDeviceCount > MULTIPLE_DEVICE_MAX)
+                            {
+                                PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                                        "Invalid maxDeviceCount");
+                                continue;
+                            }
+
+                            utils::MULTIPLE_DEVICE_INFO_T multipleDeviceInfo;
+                            multipleDeviceInfo.deviceBaseName = soundinput;
+                            multipleDeviceInfo.maxDeviceCount = maxDeviceCount;
+                            mMutipleInputInfo.emplace(deviceType, multipleDeviceInfo);
+
+                            multipleDevice = true;
+                        }
+                        else
+                        {
+                            maxDeviceCount = 1;
+                        }
+                    }
+                    deviceInfo.deviceType = deviceType;
+                }
+
                 deviceInfo.priority = arrItem["priority"].asNumber<int>();
                 deviceInfo.deviceName = soundinput;
-                if (arrItem["display"].asString(display) == CONV_OK)
+                deviceInfo.deviceNameDetail = soundinput;
+
+                if (arrItem["display"].asString(display) != CONV_OK)
                 {
+                    PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                                        "Invalid displayID");
+                }
+
+
+                if (!multipleDevice) maxDeviceCount = 1;
+
+                for (int i = 0; i < maxDeviceCount; i++)
+                {
+                    utils::DEVICE_INFO_T tempDeviceInfo = deviceInfo;
+                    if (multipleDevice)
+                    {
+                        tempDeviceInfo.deviceName += std::to_string(i+1);
+                        tempDeviceInfo.deviceNameDetail = tempDeviceInfo.deviceName;
+                    }
+
+                    //sound output info table
                     auto it = mSoundInputInfo.find(display);
                     if (it != mSoundInputInfo.end())
-                        it->second.push_back(deviceInfo);
+                        it->second.push_back(tempDeviceInfo);
                     else
                     {
-                        std::vector<utils::DEVICE_INFO_T> tmpDeviceInfo;
-                        tmpDeviceInfo.push_back(deviceInfo);
-                        mSoundInputInfo[display] = tmpDeviceInfo;
+                        std::vector<utils::DEVICE_INFO_T> newDeviceInfo;
+                        newDeviceInfo.push_back(tempDeviceInfo);
+                        mSoundInputInfo[display] = newDeviceInfo;
                     }
                 }
-                else
-                    PM_LOG_WARNING(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
-                        "eventSoundOutputInfo::Unable to read display parameter");
             }
         }
         for (const auto it : mSoundInputInfo)
@@ -1061,6 +1198,7 @@ std::string AudioRouter::getDisplayName(const int &displayId)
     return displayName;
 
 }
+
 int AudioRouter::getNotificationSessionId(const std::string &displayId)
 {
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "getNotificationSessionId:%s", displayId.c_str());
@@ -1073,6 +1211,76 @@ int AudioRouter::getNotificationSessionId(const std::string &displayId)
 
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "returning sessionId:%d", sessionId);
     return sessionId;
+}
+
+std::string AudioRouter::getSoundDeviceList(bool subscribed, const std::string &query)
+{
+    PM_LOG_DEBUG("%s query = %s, subscribed %d", __FUNCTION__, query.c_str(), (int)subscribed);
+    pbnjson::JValue returnPayload = pbnjson::Object();
+    pbnjson::JValue deviceListArray = pbnjson::Array();
+    if (query == "input" || query == "all")
+    {
+        for (auto& it : mSoundInputInfo)
+        {
+            auto& displays = it.second;
+            for (const auto &deviceInfo:displays)
+            {
+                pbnjson::JObject deviceObject = pbnjson::JObject();
+                if (deviceInfo.deviceType == "internal")
+                    deviceObject.put("deviceType", deviceInfo.deviceType);
+                else
+                    deviceObject.put("deviceType", "external");
+                deviceObject.put("type", "input");
+                deviceObject.put("deviceName", deviceInfo.deviceName);
+                deviceObject.put("deviceNameDetail",deviceInfo.deviceNameDetail);
+                deviceObject.put("connected", deviceInfo.isConnected);
+                deviceObject.put("display",it.first);
+                deviceListArray.append(deviceObject);
+            }
+        }
+    }
+    if (query == "output" || query == "all")
+    {
+        for (auto& it : mSoundOutputInfo)
+        {
+            auto& displays = it.second;
+            for (const auto &deviceInfo:displays)
+            {
+                pbnjson::JObject deviceObject = pbnjson::JObject();
+                if (deviceInfo.deviceType == "internal")
+                    deviceObject.put("deviceType", deviceInfo.deviceType);
+                else
+                    deviceObject.put("deviceType", "external");
+                deviceObject.put("type", "output");
+                deviceObject.put("deviceName", deviceInfo.deviceName);
+                deviceObject.put("deviceNameDetail",deviceInfo.deviceNameDetail);
+                deviceObject.put("connected", deviceInfo.isConnected);
+                deviceObject.put("display",it.first);
+                deviceListArray.append(deviceObject);
+            }
+        }
+    }
+    returnPayload.put("deviceList", deviceListArray);
+    returnPayload.put("subscribed", subscribed);
+    returnPayload.put("returnValue", true);
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, \
+                    "%s returning payload = %s", __FUNCTION__, returnPayload.stringify().c_str());
+    return returnPayload.stringify();
+}
+
+void AudioRouter::notifyDeviceListSubscribers()
+{
+    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "%s", __FUNCTION__);
+    CLSError lserror;
+    LSHandle *lsHandle = GetPalmService();
+
+    std::string reply = getSoundDeviceList(true, "all");
+
+    if (!LSSubscriptionReply(lsHandle, AUDIOD_API_GET_SOUND_DEVICE_LIST, reply.c_str(), &lserror))
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+        PM_LOG_CRITICAL(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Notify error");
+    }
 }
 
 bool AudioRouter::_setSoundOutput(LSHandle *lshandle, LSMessage *message, void *ctx)
@@ -1357,6 +1565,58 @@ bool AudioRouter::_updateSoundOutStatus(LSHandle *sh, LSMessage *reply, void *ct
     return returnValue;
 }
 
+bool AudioRouter::_listSupportedDevices(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(subscribe, boolean),PROP(query,string))));
+    if (!msg.parse(__FUNCTION__,lshandle))
+    {
+        PM_LOG_CRITICAL(MSGID_JSON_PARSE_ERROR, INIT_KVCOUNT, "msg.parse failed");
+        return true;
+    }
+
+    std::string reply = STANDARD_JSON_SUCCESS;
+    bool subscribed;
+    std::string query;
+    CLSError lserror;
+
+    if(!msg.get("subscribe", subscribed))
+        subscribed=false;
+
+    if(!msg.get("query", query))
+        query = "all";
+
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "%s query = %s, subscribed = %d", __FUNCTION__, query.c_str(), subscribed);
+    AudioRouter *audioRouterInstance = AudioRouter::getAudioRouterInstance();
+
+    std::list<std::string> supportedQueries({"all","input","output"});
+    if(std::find(supportedQueries.begin(),supportedQueries.end(),query) == supportedQueries.end())
+    {
+        PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT, "AudioRouter: invalid query provided");
+        reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid Parameter");
+    }
+    else if (audioRouterInstance)
+    {
+        if (LSMessageIsSubscription (message))
+        {
+            if(!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
+            {
+                lserror.Print(__FUNCTION__, __LINE__);
+                PM_LOG_CRITICAL(MSGID_AUDIOROUTER, INIT_KVCOUNT, "LSSubscriptionProcess failed");
+                return true;
+            }
+        }
+
+        reply = audioRouterInstance->getSoundDeviceList(subscribed,query);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT, "AudioRouter: audioRouterInstance is null");
+        reply =  STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod Internal Error");
+    }
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+    return true;
+}
+
 //Soundoutput API end
 
 //Class init start
@@ -1410,7 +1670,7 @@ static LSMethod SoundOutputMethods[] = {
     {"setSoundInput", AudioRouter::_setSoundInput},
     {"getSoundInput", AudioRouter::_getSoundInput},
     {"getSoundOutput", AudioRouter::_getSoundOutput},
-
+    {"listSupportedDevices", AudioRouter::_listSupportedDevices},
     { },
 };
 
@@ -1484,7 +1744,7 @@ void AudioRouter::handleEvent(events::EVENTS_T *event)
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
                 "handleEvent : eEventDeviceConnectionStatus");
             events::EVENT_DEVICE_CONNECTION_STATUS_T * stDeviceConnectionStatus = (events::EVENT_DEVICE_CONNECTION_STATUS_T*)event;
-            eventDeviceConnectionStatus(stDeviceConnectionStatus->devicename, stDeviceConnectionStatus->deviceStatus, stDeviceConnectionStatus->mixerType);
+            eventDeviceConnectionStatus(stDeviceConnectionStatus->devicename, stDeviceConnectionStatus->deviceNameDetail, stDeviceConnectionStatus->deviceStatus, stDeviceConnectionStatus->mixerType);
         }
         break;
         case utils::eEventSinkPolicyInfo:

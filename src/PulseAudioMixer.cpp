@@ -282,7 +282,7 @@ bool PulseAudioMixer::msgToPulse(const char *buffer, const std::string& fname)
     if (bytes != SIZE_MESG_TO_PULSE)
     {
         PM_LOG_WARNING(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-            "msgToPulse: Error sending msg from %s:%d", fname, (int)bytes);
+            "msgToPulse: Error sending msg from %s:%d", fname.c_str(), (int)bytes);
     }
     else
     {
@@ -519,7 +519,7 @@ bool PulseAudioMixer::externalSoundcardPathCheck (std::string filename, int stat
     return true;
 }
 
-bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int deviceNumber, int status, bool isLineOut, const char* deviceName)
+bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int deviceNumber, int status, bool isOutput, const char* deviceName)
 {
     char buffer[SIZE_MESG_TO_PULSE];
     bool returnValue  = false;
@@ -545,26 +545,29 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
         return returnValue;
     }
 
-    switch (cmd)
+    switch (isOutput)
     {
-        case 'i':
-        {
-            filename = FILENAME+card_no+"D"+device_no+"p";
-            snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %d %s", cmd, cardNumber, deviceNumber, status, isLineOut, deviceName);
-            break;
-        }
-        case 'j':
+        case 0:
         {
             filename = FILENAME+card_no+"D"+device_no+"c";
-            snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %s", cmd, cardNumber, deviceNumber, status, deviceName);
+            break;
+        }
+        case 1:
+        {
+            filename = FILENAME+card_no+"D"+device_no+"p";
             break;
         }
         default:
             return returnValue;
     }
     returnValue = externalSoundcardPathCheck(filename, status);
-    if (false == returnValue)
+    if (false == returnValue){
+        PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+        "externalSoundcardPathCheck file %s",filename.c_str());
         return returnValue;
+    }
+
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %d %s", cmd, cardNumber, deviceNumber, status, isOutput, deviceName);
 
     PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "loadInternalSoundCard sending message %s", buffer);
@@ -573,7 +576,47 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     return returnValue;
 }
 
-bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, const char* deviceName)
+bool PulseAudioMixer::sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName)
+{
+    char buffer[SIZE_MESG_TO_PULSE];
+    bool returnValue  = false;
+
+    if (!mChannel) {
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "There is no socket connection to pulseaudio");
+        return returnValue;
+    }
+
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %s", 'Z', isOutput, maxDeviceCount, deviceBaseName.c_str());
+
+    PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+        "sendUsbMultipleDeviceInfo sending message %s", buffer);
+
+    returnValue=msgToPulse(buffer, __FUNCTION__);
+    return returnValue;
+}
+
+bool PulseAudioMixer::sendInternalDeviceInfo(int isOutput, int maxDeviceCount)
+{
+    char buffer[SIZE_MESG_TO_PULSE];
+    bool returnValue  = false;
+
+    if (!mChannel) {
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+            "There is no socket connection to pulseaudio");
+        return returnValue;
+    }
+
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", 'I', isOutput, maxDeviceCount);
+
+    PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+        "sendInternalDeviceInfo sending message %s", buffer);
+
+    returnValue=msgToPulse(buffer, __FUNCTION__);
+    return returnValue;
+}
+
+bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status)
 {
     char buffer[SIZE_MESG_TO_PULSE] = "";
     bool ret  = false;
@@ -606,7 +649,7 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
         return ret;
 
     PM_LOG_DEBUG("loadUSBSinkSource sending message");
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d %s", cmd, cardno, deviceno, status, deviceName);
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d %d", cmd, cardno, deviceno, status);
     ret = msgToPulse(buffer, __FUNCTION__);
     if (mObjMixerCallBack)
         mObjMixerCallBack->callBackMasterVolumeStatus();
@@ -909,17 +952,17 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose, int s
 
 }
 
-void PulseAudioMixer::deviceConnectionStatus (const std::string &deviceName, const bool &connectionStatus)
+void PulseAudioMixer::deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus)
 {
-    PM_LOG_DEBUG("deviceConnectionStatus:%s status:%d", deviceName.c_str(), (int)connectionStatus);
+    PM_LOG_DEBUG("deviceName:%s %s status:%d", deviceName.c_str(),deviceNameDetail.c_str(), (int)connectionStatus);
     if (mObjMixerCallBack)
     {
         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
             "notifiying status to audio mixer");
         if (connectionStatus)   //TODO
-            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, utils::eDeviceConnected, utils::ePulseMixer);
+            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, deviceNameDetail, utils::eDeviceConnected, utils::ePulseMixer);
         else
-            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, utils::eDeviceDisconnected, utils::ePulseMixer);
+            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, deviceNameDetail, utils::eDeviceDisconnected, utils::ePulseMixer);
     }
     else
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
@@ -947,23 +990,24 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
         int info;
         char ip[28];
         int port;
-         char deviceName[50];
+        char deviceName[SIZE_MESG_TO_AUDIOD];
+        char deviceNameDetail[SIZE_MESG_TO_AUDIOD];
 
         if (bytes > 0 && EOF != sscanf (buffer, "%c %i %i", &cmd, &isink, &info))
         {
             if ('i' == cmd)
             {
-                sscanf (buffer, "%c %50s", &cmd, deviceName);
+                sscanf (buffer, "%c %s %[^\n]", &cmd, deviceName, deviceNameDetail);
                 PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                    "PulseAudioMixer::_pulseStatus: received command for device loading:%s", deviceName);
-                deviceConnectionStatus(deviceName, true);
+                    "PulseAudioMixer::_pulseStatus: received command for device loading:%s, %s", deviceName, deviceNameDetail);
+                deviceConnectionStatus(deviceName, deviceNameDetail, true);
             }
             else if ('3' == cmd)
             {
-                sscanf (buffer, "%c %50s", &cmd, deviceName);
+                sscanf (buffer, "%c %s %[^\n]", &cmd, deviceName, deviceNameDetail);
                 PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                    "PulseAudioMixer::_pulseStatus: received command for device unloading:%s", deviceName);
-                deviceConnectionStatus(deviceName, false);
+                    "PulseAudioMixer::_pulseStatus: received command for device unloading:%s, %s", deviceName, deviceNameDetail);
+                deviceConnectionStatus(deviceName, deviceNameDetail, false);
             }
             else
             {

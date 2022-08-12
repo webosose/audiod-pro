@@ -34,6 +34,6 @@ class MixerInterface
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType) = 0;
         virtual void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType) = 0;
         virtual void callBackMasterVolumeStatus() = 0;
-        virtual void callBackDeviceConnectionStatus(const std::string &deviceName, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType) = 0;
+        virtual void callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType) = 0;
 };
 #endif

@@ -301,11 +301,11 @@ void AudioMixer::callBackSourceStatus(const std::string& source, const std::stri
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
 }
 
-void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType)
+void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
-        "callBackDeviceConnectionStatus::deviceName:%s deviceStatus:%d mixerType:%d",\
-        deviceName.c_str(), (int)deviceStatus, (int)mixerType);
+        "callBackDeviceConnectionStatus::deviceName:%s : %s deviceStatus:%d mixerType:%d",\
+        deviceName.c_str(), deviceNameDetail.c_str(), (int)deviceStatus, (int)mixerType);
     if (deviceName == "pcm_headphone")
     {
         PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -317,6 +317,7 @@ void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, u
         events::EVENT_DEVICE_CONNECTION_STATUS_T  stEventDeviceConnectionStatus;
         stEventDeviceConnectionStatus.eventName = utils::eEventDeviceConnectionStatus;
         stEventDeviceConnectionStatus.devicename = deviceName;
+        stEventDeviceConnectionStatus.deviceNameDetail = deviceNameDetail;
         stEventDeviceConnectionStatus.deviceStatus = deviceStatus;
         stEventDeviceConnectionStatus.mixerType = mixerType;
         mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventDeviceConnectionStatus);
@@ -789,12 +790,12 @@ bool AudioMixer::externalSoundcardPathCheck(std::string filename,  int status)
     }
 }
 
-bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isLineOut, const char* deviceName)
+bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isOutput, const char* deviceName)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: loadInternalSoundCard");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->loadInternalSoundCard(cmd, cardno, deviceno, status, isLineOut, deviceName);
+        return mObjPulseAudioMixer->loadInternalSoundCard(cmd, cardno, deviceno, status, isOutput, deviceName);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -803,14 +804,42 @@ bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int s
     }
 }
 
-bool AudioMixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status, const char* deviceName)
+bool AudioMixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status)
 {
     PM_LOG_DEBUG("AudioMixer: loadUSBSinkSource");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->loadUSBSinkSource(cmd, cardno, deviceno, status, deviceName);
+        return mObjPulseAudioMixer->loadUSBSinkSource(cmd, cardno, deviceno, status);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "loadUSBSinkSource: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::sendInternalDeviceInfo(int isOutput, int maxDeviceCount)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: sendInternalDeviceInfo");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->sendInternalDeviceInfo(isOutput, maxDeviceCount);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "sendInternalDeviceInfo: mObjPulseAudioMixer is null");
+        return false;
+    }
+}
+
+bool AudioMixer::sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName)
+{
+    PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+        "AudioMixer: sendUsbMultipleDeviceInfo");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->sendUsbMultipleDeviceInfo(isOutput, maxDeviceCount, deviceBaseName);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "sendUsbMultipleDeviceInfo: mObjPulseAudioMixer is null");
         return false;
     }
 }

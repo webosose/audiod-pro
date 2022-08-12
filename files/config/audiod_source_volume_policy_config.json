@@ -45,7 +45,7 @@
         {
             "streamType": "webcall",
             "policyVolume":50,
-            "priority":4,
+            "priority":1,
             "group":0,
             "defaultVolume":100,
             "maxVolume":100,

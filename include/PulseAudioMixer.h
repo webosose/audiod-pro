@@ -96,8 +96,10 @@ public:
     void stopDtmf();
     bool programHeadsetRoute (EHeadsetState route);
     bool externalSoundcardPathCheck (std::string filename,  int status);
-    bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, const char* deviceName);
-    bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isLineOut, const char* deviceName);
+    bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+    bool sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName);
+    bool sendInternalDeviceInfo(int isOutput, int maxDeviceCount);
+    bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isOutput, const char* deviceName);
     /// These should really be private, but they're needed for global callbacks...
     bool _connectSocket();
     void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);
@@ -115,7 +117,7 @@ public:
     bool setRouting(const ConstString & scenario);
     int loopback_set_parameters(const char * value);
     void init(GMainLoop * loop, LSHandle * handle);
-    void deviceConnectionStatus (const std::string &deviceName, const bool &connectionStatus);
+    void deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus);
     bool loadCombinedSink(const char* sinkname, const char* device1, const char *device2, EVirtualAudioSink startSink,
             EVirtualAudioSink endSink, int display);
     bool closeClient(int sinkIndex);

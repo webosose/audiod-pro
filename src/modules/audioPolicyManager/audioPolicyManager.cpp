@@ -1227,7 +1227,7 @@ void AudioPolicyManager::updateMuteStatusForSource(const std::string& streamType
     {
         if (elements.streamType == streamType)
         {
-            elements.currentVolume = mute;
+            elements.muteStatus = mute;
             return;
         }
     }
@@ -1355,13 +1355,10 @@ bool AudioPolicyManager::_muteSink(LSHandle *lshandle, LSMessage *message, void 
                 {
                     PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "_muteSink: failed mixer call");
                 }
-                else
-                {
-                    audioPolicyManagerInstance->updateMuteStatus(streamType, mute);
-                    status = true;
-                    PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Mute status updated successfully");
-                }
             }
+            audioPolicyManagerInstance->updateMuteStatus(streamType, mute);
+            status = true;
+            PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Mute status updated successfully");
         }
         if (status)
         {
@@ -2130,13 +2127,23 @@ bool AudioPolicyManager::_muteSource(LSHandle *lshandle, LSMessage *message, voi
         {
             isValidStream = true;
         }
-        if (isValidStream && AudioPolicyManagerObj->getSourceActiveStatus(streamType))
+        if (AudioPolicyManagerObj->getSourceActiveStatus(streamType))
         {
-            retVal = AudioPolicyManagerObj->mObjAudioMixer->setVirtualSourceMute(sourceId, mute);
+            isStreamActive = true;
+        }
+        if (isValidStream)
+        {
+            if (isStreamActive)
+            {
+                if (!AudioPolicyManagerObj->mObjAudioMixer->setVirtualSourceMute(sourceId, mute))
+                    PM_LOG_ERROR (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
+                        "_muteSource: failed mixer call");
+            }
+            retVal = true;
+            AudioPolicyManagerObj->updateMuteStatusForSource(streamType, mute);
         }
         if (retVal)
         {
-            AudioPolicyManagerObj->updateMuteStatusForSource(streamType, mute);
             //Mute status change is notified via getStatus subscription
             std::string payload = AudioPolicyManagerObj->getSourceStatus(streamType, true);
             AudioPolicyManagerObj->notifyGetSourceStatusSubscribers(payload);

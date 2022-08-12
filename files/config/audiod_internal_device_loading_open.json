@@ -1,0 +1,43 @@
+{
+    "DeviceList": [
+        {
+            "Type": "Internal",
+            "shortName": "[b1             ]",
+            "detailedName": "bcm2835_hdmi - bcm2835 HDMI 1",
+            "sink": [
+                {
+                    "Name": "pcm_output",
+                    "deviceId": 0,
+                    "pre_condition": []
+                }
+            ],
+            "source": []
+        },
+        {
+            "Type": "Internal",
+            "shortName": "[b2             ]",
+            "detailedName": "bcm2835_hdmi - bcm2835 HDMI 2",
+            "sink": [
+                {
+                    "Name": "pcm_output1",
+                    "deviceId": 0,
+                    "pre_condition": []
+                }
+            ],
+            "source": []
+        },
+        {
+            "Type": "Internal",
+            "shortName": "[Headphones     ]",
+            "detailedName": "bcm2835_headphonbcm2835 Headphones - bcm2835 Headphones",
+            "sink": [
+                {
+                    "Name": "pcm_headphones",
+                    "deviceId": 0,
+                    "pre_condition": []
+                }
+            ],
+            "source": []
+        }
+    ]
+}

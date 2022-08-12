@@ -32,6 +32,7 @@
     "com.webos.service.audio/UMI/getStatus",
     "com.webos.service.audio/getSoundInput",
     "com.webos.service.audio/getSoundOutput",
-    "com.webos.service.audio/getSourceStatus"
+    "com.webos.service.audio/getSourceStatus",
+    "com.webos.service.audio/listSupportedDevices"
  ]
 }

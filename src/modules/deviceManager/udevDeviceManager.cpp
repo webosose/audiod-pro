@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2022 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -35,39 +35,14 @@ std::string UdevDeviceManager::onDeviceAdded(Device *device)
         }
         else if (device->event == "usb-mic-inserted") {
             printMicInfo();
-            if (getUSBMicStatus(device->soundCardNumber, true))
-            {
-                PM_LOG_WARNING(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                    "onDeviceAdded: Mic is already loaded");
-            }
-            else
-            {
-                deviceName = getUSBMicName(device->soundCardNumber, true);
-                if (!deviceName.empty())
-                {
-                    if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected, deviceName.c_str()))
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                    else
-                        setUSBMicStatus(deviceName, device->soundCardNumber, true);
-                }
+
+            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected)) {
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
         else if (device->event == "usb-headset-inserted") {
-            if (getUSBSpeakerStatus(device->soundCardNumber, true))
-            {
-                PM_LOG_WARNING(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                    "onDeviceAdded: Speaker is already loaded");
-            }
-            else
-            {
-                deviceName = getUSBSpeakerName(device->soundCardNumber, true);
-                if (!deviceName.empty())
-                {
-                    if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, 1, deviceName.c_str()))
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                    else
-                        setUSBSpeakerStatus(deviceName, device->soundCardNumber, true);
-                }
+            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected)) {
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
         else
@@ -95,40 +70,15 @@ std::string UdevDeviceManager::onDeviceRemoved(Device *device)
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
         }
         else if (device->event == "usb-mic-removed") {
-            printMicInfo();
-            if (!getUSBMicStatus(device->soundCardNumber, false))
-            {
-                PM_LOG_WARNING(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                    "onDeviceRemoved: Mic is already unloaded");
-            }
-            else
-            {
-                deviceName = getUSBMicName(device->soundCardNumber, false);
-                if (!deviceName.empty())
-                {
-                    if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, 0, deviceName.c_str()))
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                    else
-                        setUSBMicStatus(deviceName, device->soundCardNumber, false);
-                }
+
+            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected)) {
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
         else if (device->event == "usb-headset-removed") {
-            if (!getUSBSpeakerStatus(device->soundCardNumber, false))
-            {
-                PM_LOG_WARNING(MSGID_UDEV_MANAGER, INIT_KVCOUNT, \
-                    "onDeviceRemoved: Speaker is already unloaded");
-            }
-            else
-            {
-                deviceName = getUSBSpeakerName(device->soundCardNumber, false);
-                if (!deviceName.empty())
-                {
-                    if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, 0, deviceName.c_str()))
-                        reply = INVALID_PARAMETER_ERROR(soundcard_no, integer);
-                    else
-                        setUSBSpeakerStatus(deviceName, device->soundCardNumber, false);
-                }
+
+            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected)) {
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
         else
@@ -150,6 +100,7 @@ bool UdevDeviceManager::setHeadphoneSoundOut(const bool& connected)
     events::EVENT_DEVICE_CONNECTION_STATUS_T  stEventDeviceConnectionStatus;
     stEventDeviceConnectionStatus.eventName = utils::eEventDeviceConnectionStatus;
     stEventDeviceConnectionStatus.devicename = "pcm_headphone";
+    stEventDeviceConnectionStatus.deviceNameDetail = "pcm_headphone";
     if (connected)
     {
         stEventDeviceConnectionStatus.deviceStatus = utils::eDeviceConnected;

@@ -1,4 +1,4 @@
-// Copyright (c) 2021 LG Electronics, Inc.
+// Copyright (c) 2021-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,20 @@
 #include "audioMixer.h"
 #include "moduleFactory.h"
 #include "deviceManagerInterface.h"
+#include "deviceConfigReader.h"
+
+struct cardDetail
+{
+    std::string name;
+    int cardNum;
+    int deviceNum;
+    std::string cardId;
+    cardDetail()
+    {
+        cardNum = -1;
+        deviceNum = -1;
+    }
+};
 
 class DeviceManager : public ModuleInterface
 {
@@ -35,6 +49,10 @@ class DeviceManager : public ModuleInterface
         static bool mIsObjRegistered;
         std::vector<Device> mDeviceAddedQueue;
         std::vector<Device> mDeviceRemovedQueue;
+        std::list<std::string> mCardNames;
+        std::map<std::string, cardDetail> mSinkInfo;
+        std::map<std::string, cardDetail> mSourceInfo;
+        bool alsaConfRead;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
         {
@@ -65,5 +83,7 @@ class DeviceManager : public ModuleInterface
         static bool _event(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void addEventToQueue(bool isAdd, const Device& device);
+        bool setDeviceJsonDetails();
+        bool readAlsaCardFile();
 };
 #endif // _DEVICE_MANAGER_H_

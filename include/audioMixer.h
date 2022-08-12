@@ -106,8 +106,10 @@ class AudioMixer : public MixerInterface
             const char *format, int rate, int channels);
         bool programHeadsetRoute(EHeadsetState route);
         bool externalSoundcardPathCheck(std::string filename,  int status);
-        bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, const char* deviceName);
-        bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status,bool isLineOut, const char* deviceName);
+        bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+        bool sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName);
+        bool sendInternalDeviceInfo(int isOutput, int maxDeviceCount);
+        bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status,bool isOutput, const char* deviceName);
         bool _connectSocket();
         bool suspendSink(int sink);
         bool programLoadBluetooth(const char * address , const char *profile, const int displayID);
@@ -145,7 +147,7 @@ class AudioMixer : public MixerInterface
         void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType);
         void callBackSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
-        void callBackDeviceConnectionStatus(const std::string &deviceName, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType);
+        void callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType);
         void callBackMasterVolumeStatus();
 
 };
