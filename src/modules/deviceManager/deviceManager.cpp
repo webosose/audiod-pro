@@ -66,7 +66,7 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
 bool DeviceManager::setDeviceJsonDetails()
 {
     PM_LOG_DEBUG("DeviceManager: setDeviceJsonDetails");
-    deviceConfigReader *deviceConfigReaderObj = new (std::nothrow) deviceConfigReader();
+    std::unique_ptr<deviceConfigReader> deviceConfigReaderObj ( new (std::nothrow) deviceConfigReader());
     pbnjson::JValue deviceInfo;
     if (deviceConfigReaderObj->loadDeviceInfoJson())
     {
@@ -163,7 +163,6 @@ bool DeviceManager::setDeviceJsonDetails()
             PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"cardname:%s",it.first.c_str());
             PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"second  : %s",it.second.name.c_str());
         }
-        delete deviceConfigReaderObj;
     }
     return true;
 }
