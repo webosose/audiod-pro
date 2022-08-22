@@ -306,6 +306,7 @@ DeviceManager* DeviceManager::getDeviceManagerInstance()
 DeviceManager::DeviceManager(ModuleConfig* const pConfObj)
 {
     PM_LOG_DEBUG("DeviceManager constructor");
+    alsaConfRead = false;
     mClientDeviceManagerInstance = DeviceManagerInterface::getClientInstance();
     if (!mClientDeviceManagerInstance)
         PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "mClientDeviceManagerInstance is nullptr");

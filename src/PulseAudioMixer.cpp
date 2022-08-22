@@ -1010,14 +1010,14 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
         {
             if ('i' == cmd)
             {
-                sscanf (buffer, "%c %s %[^\n]", &cmd, deviceName, deviceNameDetail);
+                sscanf (buffer, "%c %50s %[^\n]", &cmd, deviceName, deviceNameDetail);
                 PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
                     "PulseAudioMixer::_pulseStatus: received command for device loading:%s, %s", deviceName, deviceNameDetail);
                 deviceConnectionStatus(deviceName, deviceNameDetail, true);
             }
             else if ('3' == cmd)
             {
-                sscanf (buffer, "%c %s %[^\n]", &cmd, deviceName, deviceNameDetail);
+                sscanf (buffer, "%c %50s %[^\n]", &cmd, deviceName, deviceNameDetail);
                 PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
                     "PulseAudioMixer::_pulseStatus: received command for device unloading:%s, %s", deviceName, deviceNameDetail);
                 deviceConnectionStatus(deviceName, deviceNameDetail, false);
