@@ -910,7 +910,7 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                     utils::DEVICE_INFO_T tempDeviceInfo = deviceInfo;
                     if (multipleDevice)
                     {
-                        tempDeviceInfo.deviceName += std::to_string(i+1);
+                        tempDeviceInfo.deviceName += std::to_string(i);
                         tempDeviceInfo.deviceNameDetail = tempDeviceInfo.deviceName;
                     }
 
@@ -1020,7 +1020,7 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                     utils::DEVICE_INFO_T tempDeviceInfo = deviceInfo;
                     if (multipleDevice)
                     {
-                        tempDeviceInfo.deviceName += std::to_string(i+1);
+                        tempDeviceInfo.deviceName += std::to_string(i);
                         tempDeviceInfo.deviceNameDetail = tempDeviceInfo.deviceName;
                     }
 
