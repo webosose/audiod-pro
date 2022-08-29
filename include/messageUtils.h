@@ -39,6 +39,9 @@ struct CLSError : public LSError
     }
 };
 
+//To store callback information for pulseaudio calls
+typedef bool (*PulseCallBackFunc)(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+
 typedef struct envelope
 {
   LSMessage *message;

@@ -59,7 +59,7 @@ public:
     virtual void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void setMuteStatus(const int &displayId) = 0;
     virtual void setVolume(const int &displayId) = 0;
-    virtual void setMicVolume(const int &displayId) = 0;
+    virtual void setMicVolume(const int &displayId, LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput) = 0;
     virtual void setDisplaySoundInput(const std::string& display, const std::string& soundInput) = 0;

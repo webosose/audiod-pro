@@ -78,8 +78,8 @@ class AudioMixer : public MixerInterface
 
         //pulseAudioMixer calls
         bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
-        bool programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp = false);
-        bool programVolume(EVirtualSource source, int volume, bool ramp = false);
+        bool programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
+        bool programVolume(EVirtualSource source, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
         bool programCallVoiceOrMICVolume(char cmd, int volume);
         bool programMute(EVirtualSource source, int mute);
         bool rampVolume(EVirtualAudioSink sink, int endVolume);
@@ -95,13 +95,13 @@ class AudioMixer : public MixerInterface
         bool muteAll();
         bool suspendAll();
         bool updateRate(int rate);
-        bool setPhysicalSourceMute(const char* source, const int& mutestatus);
-        bool muteSink(const int& sink, const int& mutestatus);
-        bool setVirtualSourceMute(int sink, int mutestatus);
+        bool setPhysicalSourceMute(const char* source, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
+        bool muteSink(const int& sink, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
+        bool setVirtualSourceMute(int sink, int mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
 
-        bool setMute(const char* deviceName, const int& mutestatus);
-        bool setVolume(const char* deviceName, const int& volume);
-        bool setMicVolume(const char* deviceName, const int& volume);
+        bool setMute(const char* deviceName, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
+        bool setVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
+        bool setMicVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
         bool playSystemSound(const char *snd, EVirtualAudioSink sink);
         bool playSound(const char *snd, EVirtualAudioSink sink, \
             const char *format, int rate, int channels);

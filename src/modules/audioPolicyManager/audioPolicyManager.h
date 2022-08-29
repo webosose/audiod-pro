@@ -78,11 +78,11 @@ class AudioPolicyManager : public ModuleInterface
         void updatePolicyStatus(const std::string& streamType, const bool& status);
         void updatePolicyStatusForSource(const std::string& streamType, const bool& status);
         void initStreamVolume();
-        bool setVolume(EVirtualAudioSink audioSink, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
-        bool setTrackVolume(const std::string& trackId, const int &volume, bool ramp = false);
-        bool setVolume(EVirtualSource audioSource, const int &volume, utils::EMIXER_TYPE mixerType, bool ramp = false);
+        bool setVolume(EVirtualAudioSink audioSink, const int &volume, utils::EMIXER_TYPE mixerType, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
+        bool setTrackVolume(const std::string& trackId, const int &volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
+        bool setVolume(EVirtualSource audioSource, const int &volume, utils::EMIXER_TYPE mixerType, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
         bool storeTrackVolume(const std::string &trackId, const int &volume, std::string &streamType);
-        bool muteSink(EVirtualAudioSink audioSink, const int &muteStatus, utils::EMIXER_TYPE mixerType);
+        bool muteSink(EVirtualAudioSink audioSink, const int &muteStatus, utils::EMIXER_TYPE mixerType, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
         bool initializePolicyInfo(const pbnjson::JValue& policyInfo, bool isSink);
 
         bool getPolicyStatus(const std::string& streamType);
@@ -137,13 +137,13 @@ class AudioPolicyManager : public ModuleInterface
         static bool _muteSource(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _muteSink(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _setTrackVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void notifyGetVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetSourceVolumeSubscribers(const std::string& streamType, const int& volume);
         void notifyGetStreamStatusSubscribers(const std::string& payload) const;
         void notifyGetSourceStatusSubscribers(const std::string& payload) const;
         void printTrackVolumeInfo();
-        static bool _setMediaInputVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
 
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType,const int& sinkIndex = -1, const std::string& trackId="");
@@ -162,6 +162,13 @@ class AudioPolicyManager : public ModuleInterface
         bool removeTrackId(const std::string& trackId);
         bool addTrackId(const std::string& trackId, const std::string &streamType);
 
+        //Luna API callbacks for pulseaudio calls
+        static bool _setInputVolumeCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+        static bool _setSourceInputVolumeCallBackPA(LSHandle *lshandle, LSMessage *message, void *ctx, bool status);
+        static bool _muteSourceCallBackPA(LSHandle *lshandle, LSMessage *message, void *ctx, bool status);
+        static bool _muteSinkCallBackPA(LSHandle *lshandle, LSMessage *message, void *ctx, bool status);
+        static bool _setTrackVolumeCallBackPA(LSHandle *lshandle, LSMessage *message, void *ctx, bool status);
+        static bool _setMediaInputVolumePA(LSHandle *lshandle, LSMessage *message, void *ctx, bool status);
 };
 
 #endif //_AUDIO_POLICY_MGR_H_

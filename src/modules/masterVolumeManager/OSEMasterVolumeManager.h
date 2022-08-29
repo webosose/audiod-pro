@@ -78,7 +78,7 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
         void notifyMicVolumeSubscriber(const int &displayId, bool subscribed);
         void setVolume(const int &displayId);
-        void setMicVolume(const int &displayId);
+        void setMicVolume(const int &displayId, LSHandle *lshandle, LSMessage *message, void *ctx);
         void setMuteStatus(const int &displayId);
         void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput);
         void setDisplaySoundInput(const std::string& display, const std::string& soundInput);
@@ -94,10 +94,12 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         void volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx);
         void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx);
 
-        //Luna API callbacks
-        static bool _setVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
-        static bool _muteVolumeCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
-        static bool _volumeUpCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
-        static bool _volumeDownCallBack(LSHandle *sh, LSMessage *reply, void *ctx);
+        //Luna API callbacks for pulseaudio calls
+        static bool _setMicVolumeCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+        static bool _muteVolumeCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+        static bool _setVolumeCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+        static bool _volumeUpCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+        static bool _volumeDownCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+        static bool _muteMicCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
 };
 #endif

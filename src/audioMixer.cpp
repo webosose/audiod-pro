@@ -489,11 +489,11 @@ bool AudioMixer::programVolume(EVirtualAudioSink sink, int volume, bool ramp)
     }
 }
 
-bool AudioMixer::programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp)
+bool AudioMixer::programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp)
 {
     PM_LOG_DEBUG("AudioMixer: programTrackVolume");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programTrackVolume(sink, sinkIndex, volume, ramp);
+        return mObjPulseAudioMixer->programTrackVolume(sink, sinkIndex, volume, lshandle, message, ctx, cb, ramp);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "programTrackVolume: mObjPulseAudioMixer is nullptr");
@@ -501,12 +501,12 @@ bool AudioMixer::programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int v
     }
 }
 
-bool AudioMixer::programVolume(EVirtualSource source, int volume, bool ramp)
+bool AudioMixer::programVolume(EVirtualSource source, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: programVolume");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->programVolume(source, volume, ramp);
+        return mObjPulseAudioMixer->programVolume(source, volume, lshandle, message, ctx, cb, ramp);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -669,12 +669,12 @@ bool AudioMixer::updateRate(int rate)
     }
 }
 
-bool AudioMixer::setMute(const char* deviceName, const int& mutestatus)
+bool AudioMixer::setMute(const char* deviceName, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: setMute");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setMute(deviceName, mutestatus);
+        return mObjPulseAudioMixer->setMute(deviceName, mutestatus, lshandle, message, ctx, cb);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -683,11 +683,11 @@ bool AudioMixer::setMute(const char* deviceName, const int& mutestatus)
     }
 }
 
-bool AudioMixer::muteSink(const int& sink, const int& mutestatus)
+bool AudioMixer::muteSink(const int& sink, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "AudioMixer: muteSink");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->muteSink(sink, mutestatus);
+        return mObjPulseAudioMixer->muteSink(sink, mutestatus, lshandle, message, ctx, cb);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "\
@@ -696,13 +696,13 @@ bool AudioMixer::muteSink(const int& sink, const int& mutestatus)
     }
 }
 
-bool AudioMixer::setPhysicalSourceMute(const char* source, const int& mutestatus)
+bool AudioMixer::setPhysicalSourceMute(const char* source, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: setPhysicalSourceMute %s mute = %d", source, mutestatus);
     if (mObjPulseAudioMixer)
     {
-        return mObjPulseAudioMixer->setPhysicalSourceMute(source, mutestatus);
+        return mObjPulseAudioMixer->setPhysicalSourceMute(source, mutestatus, lshandle, message, ctx, cb);
     }
     else
     {
@@ -712,12 +712,12 @@ bool AudioMixer::setPhysicalSourceMute(const char* source, const int& mutestatus
     }
 }
 
-bool AudioMixer::setVirtualSourceMute(int source, int mutestatus)
+bool AudioMixer::setVirtualSourceMute(int source, int mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: setVirtualSourceMute mute = %d", mutestatus);
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setVirtualSourceMute(source, mutestatus);
+        return mObjPulseAudioMixer->setVirtualSourceMute(source, mutestatus, lshandle, message, ctx, cb);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -726,12 +726,12 @@ bool AudioMixer::setVirtualSourceMute(int source, int mutestatus)
     }
 }
 
-bool AudioMixer::setVolume(const char* deviceName, const int& volume)
+bool AudioMixer::setVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: setVolume");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setVolume(deviceName, volume);
+        return mObjPulseAudioMixer->setVolume(deviceName, volume, lshandle, message, ctx, cb);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -740,12 +740,12 @@ bool AudioMixer::setVolume(const char* deviceName, const int& volume)
     }
 }
 
-bool AudioMixer::setMicVolume(const char* deviceName, const int& volume)
+bool AudioMixer::setMicVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: setMicVolume");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->setMicVolume(deviceName, volume);
+        return mObjPulseAudioMixer->setMicVolume(deviceName, volume, lshandle, message, ctx, cb);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\

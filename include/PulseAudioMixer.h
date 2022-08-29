@@ -38,10 +38,13 @@ public:
     PulseAudioMixer(MixerInterface* mixerCallBack);
     ~PulseAudioMixer();
 
+    //To add audio header details to be sent to pulseaudio
+    paudiodMsgHdr addAudioMsgHeader(uint8_t msgType, uint8_t msgID);
+
     //Will ignore volume of high latency sinks not playing and mute them.
     bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
-    bool programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, bool ramp = false);
-    bool programVolume(EVirtualSource source, int volume, bool ramp = false);
+    bool programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
+    bool programVolume(EVirtualSource source, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
     bool programCallVoiceOrMICVolume(char cmd, int volume);
     bool programMute(EVirtualSource source, int mute);
     bool msgToPulse(const char *buffer, const std::string& fname);
@@ -73,23 +76,23 @@ public:
     bool suspendAll();
     /// Suspend sampling rate on sinks/sources
     bool updateRate(int rate);
-    bool setPhysicalSourceMute(const char* source, const int& mutestatus);
+    bool setPhysicalSourceMute(const char* source, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
     /// Play a system sound using Pulse's API
     bool playSystemSound(const char *snd, EVirtualAudioSink sink);
     bool playSound(const char *snd, EVirtualAudioSink sink, \
         const char *format, int rate, int channels);
     /// Pre-load system sound in Pulse, if necessary
     void preloadSystemSound(const char * snd);
-    bool muteSink(const int& sink, const int& mutestatus);  //TODO : remove
-    bool setMute(const char* deviceName, const int& mutestatus);
+    bool muteSink(const int& sink, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);  //TODO : remove
+    bool setMute(const char* deviceName, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
     //mute virtual source
-    bool setVirtualSourceMute(int sink, int mutestatus);
+    bool setVirtualSourceMute(int sink, int mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
     /// mute/unmute the Physical sink
     bool setMute(int sink, int mutestatus);
     /// set volume on a particular display
     bool setVolume(int display, int volume);    //TODO: remove
-    bool setVolume(const char* deviceName, const int& volume);
-    bool setMicVolume(const char* deviceName, const int& volume);
+    bool setVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
+    bool setMicVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
     void playOneshotDtmf(const char *snd, EVirtualAudioSink sink) ;
     void playOneshotDtmf(const char *snd, const char* sink) ;
     void playDtmf(const char *snd, EVirtualAudioSink sink) ;
@@ -162,6 +165,21 @@ private:
 
     //To start the pulse socket connect timer
     void createPulseSocketCommunication();
+
+    //Structure to store pulseauio callback information
+    struct pulseCallBackInfo
+    {
+        LSHandle *lshandle;
+        LSMessage *message;
+        void *ctx;
+        PulseCallBackFunc cb;
+    };
+
+    //Map to store pulseaudio callback information along with operation id
+    std::map<int, pulseCallBackInfo> mPulseCallBackInfo;
+
+    // Function to send message to pulseaudio
+    bool sendHeaderToPA(char *data, paudiodMsgHdr audioMsgHdr);
 };
 
 #endif //PULSEAUDIOMIXER_H_
