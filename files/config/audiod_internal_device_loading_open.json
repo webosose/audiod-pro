@@ -32,7 +32,7 @@
             "detailedName": "bcm2835_headphonbcm2835 Headphones - bcm2835 Headphones",
             "sink": [
                 {
-                    "Name": "pcm_headphones",
+                    "Name": "pcm_headphone",
                     "deviceId": 0,
                     "pre_condition": []
                 }
