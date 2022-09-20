@@ -13,6 +13,8 @@
                       "load_playback_manager",
                       "load_master_volume_manager",
                       "load_device_manager",
-                      "load_connection_manager"
+                      "load_connection_manager",
+                      "load_audio_effect_manager"
+                      
     ]
 }

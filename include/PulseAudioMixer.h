@@ -123,6 +123,9 @@ public:
             EVirtualAudioSink endSink, int display);
     bool closeClient(int sinkIndex);
 
+    bool setAudioEffect(int effectId, bool enabled);
+    bool checkAudioEffectStatus(int effectId);
+
 private:
     PulseAudioMixer() = delete;
     PulseAudioMixer(const PulseAudioMixer &) = delete;
@@ -154,6 +157,8 @@ private:
     int mPreviousVolume;
     bool NRECvalue;
     bool BTvolumeSupport;
+
+    bool mEffectSpeechEnhancementEnabled;
 
     //To start the pulse socket connect timer
     void createPulseSocketCommunication();

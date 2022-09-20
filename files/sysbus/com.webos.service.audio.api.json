@@ -18,7 +18,8 @@
     "com.webos.service.audio/master/setVolume",
     "com.webos.service.audio/master/volumeUp",
     "com.webos.service.audio/UMI/connect",
-    "com.webos.service.audio/UMI/disconnect"
+    "com.webos.service.audio/UMI/disconnect",
+    "com.webos.service.audio/setAudioEffect"
  ],
  "audio.management": [
     "com.webos.service.audio/systemsounds/playFeedback",
@@ -36,6 +37,8 @@
     "com.webos.service.audio/getSoundInput",
     "com.webos.service.audio/getSoundOutput",
     "com.webos.service.audio/getSourceStatus",
-    "com.webos.service.audio/listSupportedDevices"
+    "com.webos.service.audio/listSupportedDevices",
+    "com.webos.service.audio/getAudioEffectList",
+    "com.webos.service.audio/checkAudioEffectStatus"
  ]
 }

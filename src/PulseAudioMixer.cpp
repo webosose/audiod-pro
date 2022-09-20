@@ -48,6 +48,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
                                      BTDeviceType(eBTDevice_NarrowBand),
                                      mPreviousVolume(0),
                                      BTvolumeSupport(false),
+                                     mEffectSpeechEnhancementEnabled(false),
                                      mObjMixerCallBack(mixerCallBack)
 {
     // initialize table for the pulse state lookup table
@@ -408,6 +409,34 @@ void PulseAudioMixer::setNREC(bool value)
 
     if (NRECvalue != value) {
         NRECvalue = value;
+    }
+}
+
+bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
+    char buffer[SIZE_MESG_TO_PULSE];
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: effectId: %d, enabled:%d", effectId, enabled);
+
+    //  command, effectId, parameter1, ...
+    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '4', effectId, enabled);
+    switch (effectId) {
+        case 0:
+            mEffectSpeechEnhancementEnabled = enabled;
+            break;
+        default:
+            break;
+    }
+    return msgToPulse(buffer, __FUNCTION__);
+}
+bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
+    char buffer[SIZE_MESG_TO_PULSE];
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "checkAudioEffectStatus: effectId: %d", effectId);
+
+    //  return value
+    switch (effectId) {
+        case 0:
+            return mEffectSpeechEnhancementEnabled;
+        default:
+            return false;
     }
 }
 
@@ -1128,6 +1157,19 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     case 't':
                         if (5 == sscanf (buffer, "%c %i %i %28s %d", &cmd, &isink, &info, ip, &port))
                             //Will be updated once DAP design is updated
+                        break;
+                    case '4':
+                        int effectId;
+                        sscanf(buffer, "%c %d", &cmd, &effectId);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "effect module unloaded Id: %d", effectId);
+                        switch (effectId) {
+                            case 0:     //  SpeechEnhancement module
+                                mEffectSpeechEnhancementEnabled = false;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
                     default:
                         break;
                 }

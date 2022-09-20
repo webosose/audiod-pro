@@ -136,6 +136,9 @@ class AudioMixer : public MixerInterface
         int loopback_set_parameters(const char * value);
         bool closeClient(int sinkIndex);
 
+        bool setAudioEffect(int effectId, bool enabled);
+        bool checkAudioEffectStatus(int effectId);
+
         //Audio mixer calls
         utils::vectorVirtualSink getActiveStreams();
         bool isStreamActive(EVirtualAudioSink sink);

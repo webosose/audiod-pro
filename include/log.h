@@ -157,6 +157,7 @@ extern PmLogContext audiodLogContext;
 #define MSGID_SYSTEMSOUND_MANAGER                      "SYSTEM_SOUND"                      //For System sound plays
 #define MSGID_CONNECTION_MANAGER                       "CONNECTION_MANAGER"                //Connection manager
 #define MSGID_GINIT_FUNTION                            "INIT_FUNCTIONS"                    //For utils, init and hook functions
+#define MSGID_AUDIO_EFFECT_MANAGER                    "AUDIO_EFFECT_MANAGER"             //For audio effect manager
 
 /// Test macro that will make a critical log entry if the test fails
 #define VERIFY(t) (G_LIKELY(t) || (PM_LOG_ERROR(MSGID_VERIFY_FAILED, INIT_KVCOUNT,\

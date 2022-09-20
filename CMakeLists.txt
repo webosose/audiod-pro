@@ -95,6 +95,7 @@ include_directories(src/modules/deviceManager)
 include_directories(src/modules/lunaEventSubscriber)
 include_directories(src/modules/playbackManager)
 include_directories(src/modules/trackManager)
+include_directories(src/modules/audioEffectManager)
 include_directories(include/public/)
 
 #Please check these header files again
@@ -135,6 +136,7 @@ SET (modules_files
         src/modules/audioRouter/audioRouter.cpp
         src/modules/trackManager/trackManager.cpp
         src/modules/deviceManager/deviceConfigReader.cpp
+        src/modules/audioEffectManager/audioEffectManager.cpp
     )
 
     add_definitions(-DDEVICE_NAME="Unknown")
