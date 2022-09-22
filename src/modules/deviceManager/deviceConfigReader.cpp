@@ -40,7 +40,7 @@ pbnjson::JValue deviceConfigReader::getDeviceInfo()
 {
     PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"%s",__FUNCTION__);
     pbnjson::JValue deviceInfo = pbnjson::Object();
-    deviceInfo = mFileJsonDeviceConfg["DeviceList"];
+    deviceInfo = mFileJsonDeviceConfg["deviceList"];
     PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "getDeviceInfo json value is %s",\
         deviceInfo.stringify().c_str());
     return deviceInfo;

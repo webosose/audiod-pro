@@ -24,6 +24,7 @@ serverNameMap statusSubscriptionMap =
     { "com.webos.service.bluetooth2", eBluetoothService2},
     { "com.webos.service.audiooutput", eAudiooutputdService},
     { "com.webos.settingsservice", eSettingsService},
+    { "com.webos.service.pdm", ePdmService}
 };
 
 lunaEventSubscriber * lunaEventSubscriber::mLunaEventSubscriber = nullptr;

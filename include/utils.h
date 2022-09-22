@@ -70,6 +70,7 @@ typedef enum serverType{
     eBluetoothService2,
     eAudiooutputdService,
     eSettingsService,
+    ePdmService,
     eServiceCount,        //Last element should be eServiceCount
     eServiceFirst = eBluetoothService,
 }SERVER_TYPE_E;
@@ -310,6 +311,30 @@ namespace utils
         }
     }DEVICE_DETAIL;
 
+    typedef struct cardDetail
+    {
+        std::string cardId;
+        std::string cardName;
+        std::string name;
+        std::string type;
+        std::string deviceType;
+        std::string devPath;
+        int cardNumber;
+        int mmap;
+        int tsched;
+        int fragmentSize;
+        int deviceID;
+        bool isOutput;
+        bool isConnected;
+        std::list<std::string> preConditionList;
+        cardDetail()
+        {
+            cardNumber = -1;
+            deviceID = -1;
+            isConnected = false;
+        }
+    }CARD_INFO_T;
+
     typedef std::vector<EVirtualAudioSink> vectorVirtualSink;
     typedef std::vector<EVirtualAudioSink>::iterator itVirtualSink;
 
@@ -345,6 +370,8 @@ namespace utils
 
     typedef std::list<DEVICE_DETAIL> listDeviceDetail;
 
+    typedef std::map<std::string, std::vector<CARD_INFO_T>> mapPhysicalInfo;
+
     void LSMessageResponse(LSHandle* handle, LSMessage * message,\
         const char* reply, utils::EReplyType eType, bool isReferenced);
 }
@@ -358,6 +385,7 @@ typedef enum LunaKeyType {
     eEventBTDeviceStatus,
     eEventA2DPDeviceStatus,
     eEventA2DPSourceStatus,
+    eEventPdmDeviceStatus,
     eLunaEventCount,     //Last element should be eLunaEventCount
     eLunaEventKeyFirst = eLunaEventBTDeviceStatus,
     eLunaEventKeyLast = eEventA2DPSourceStatus

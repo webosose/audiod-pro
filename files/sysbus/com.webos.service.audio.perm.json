@@ -2,6 +2,7 @@
     "com.webos.service.audio": [
         "settings.query",
         "bluetooth.query",
+        "physicaldevice.query",
         "audiooutput.management"
     ]
 }

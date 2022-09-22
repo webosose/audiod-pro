@@ -660,6 +660,7 @@ bool PulseAudioMixer::sendInternalDeviceInfo(int isOutput, int maxDeviceCount)
 
 bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status)
 {
+    PM_LOG_DEBUG("PulseAudioMixer::loadUSBSinkSource");
     char buffer[SIZE_MESG_TO_PULSE] = "";
     bool ret  = false;
     std::string card_no = std::to_string(cardno);

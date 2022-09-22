@@ -13,11 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 #ifndef _DEVICE_MANAGER_H_
 #define _DEVICE_MANAGER_H_
-
 #include <cstring>
+#include <chrono>
+#include <thread>
 #include "utils.h"
 #include "log.h"
 #include "audioMixer.h"
@@ -25,19 +25,36 @@
 #include "deviceManagerInterface.h"
 #include "deviceConfigReader.h"
 
-struct cardDetail
+typedef std::map<int, std::string> connectedDeviceInfo;
+struct USB_DETAILS
 {
     std::string name;
-    int cardNum;
-    int deviceNum;
-    std::string cardId;
-    cardDetail()
+    std::string type;
+    int mmap;
+    int tsched;
+    int fragmentSize;
+    int deviceID;
+    std::list<std::string> preConditionList;
+    bool isOutput;
+    std::string deviceType;
+    std::string devPath;
+    USB_DETAILS( )
     {
-        cardNum = -1;
-        deviceNum = -1;
+        mmap=0;
+        tsched = 0;
+        fragmentSize= 4096;
+        deviceID = 0;
+    }
+    USB_DETAILS(bool isOutput)
+    {
+        mmap=0;
+        tsched = 0;
+        fragmentSize= 4096;
+        deviceID = 0;
+        this->isOutput = isOutput;
+        this->deviceType=isOutput?"playback":"capture";
     }
 };
-
 class DeviceManager : public ModuleInterface
 {
     private:
@@ -49,16 +66,20 @@ class DeviceManager : public ModuleInterface
         static bool mIsObjRegistered;
         std::vector<Device> mDeviceAddedQueue;
         std::vector<Device> mDeviceRemovedQueue;
-        std::list<std::string> mCardNames;
-        std::map<std::string, cardDetail> mSinkInfo;
-        std::map<std::string, cardDetail> mSourceInfo;
-        bool alsaConfRead;
+        utils::mapPhysicalInfo internalDevices;
+        utils::mapPhysicalInfo mPhyInternalInfo;
+        utils::mapPhysicalInfo mPhyExternalInfo;
+        int internalSinkCount;
+        int internalSourceCount;
+        int mDeviceList;
+        connectedDeviceInfo mConnectedDevices;
+        USB_DETAILS inputDevices = USB_DETAILS(false);
+        USB_DETAILS outputDevices = USB_DETAILS(true);
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
         {
             return (ModuleFactory::getInstance()->Register("load_device_manager", &DeviceManager::CreateObject));
         }
-
     public:
         ~DeviceManager();
         static LSMethod deviceManagerMethods[];
@@ -79,11 +100,25 @@ class DeviceManager : public ModuleInterface
         void initialize();
         void deInitialize();
         void eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixerType);
+        void eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message);
+        void eventServerStatusInfo(SERVER_TYPE_E serviceName, bool connected);
         void handleEvent(events::EVENTS_T* ev);
         static bool _event(LSHandle *lshandle, LSMessage *message, void *ctx);
-
+        bool addInternalCard(int cardNumber, std::string cardId, std::string cardName,const std::string deviceType, const std::string devPath);
+        bool addExternalCard(int cardNumber, std::string cardId, std::string cardName,const std::string deviceType, const std::string devPath);
+        bool removeExternalCard(int cardNumber, std::string cardId, std::string deviceType);
+        bool loadInternalCard (utils::CARD_INFO_T& cardInfo);
+        bool loadUnloadExternalCard (utils::CARD_INFO_T& cardInfo, bool isLoad);
         void addEventToQueue(bool isAdd, const Device& device);
+        void printIntCardInfo();
+        void printExtCardInfo();
         bool setDeviceJsonDetails();
-        bool readAlsaCardFile();
+        bool setInternalCardDetails(const pbnjson::JValue& internalListInfo);
+        bool setExternalCardDetails(const pbnjson::JValue& externalListInfo);
+        void getAttachedNonStorageDeviceList(LSMessage *message);
+        std::string getdevPath(int cardId, bool isExternal);
+        std::string getCardId(int cardId, bool isExternal);
+        std::string getCardName(int cardId, bool isExternal);
+        bool supportPlaybackCapture(int cardNumber,std::string deviceType);
 };
 #endif // _DEVICE_MANAGER_H_
