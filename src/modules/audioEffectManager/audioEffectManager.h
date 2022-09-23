@@ -1,5 +1,7 @@
-// Copyright (c) 2022- LG Electronics, Inc.
-//
+/*
+ * Copyright (c) 2022 LG Electronics Inc.
+ * SPDX-License-Identifier: LicenseRef-LGE-Proprietary
+ */
 
 #ifndef _AUDIO_EFFECT_MANAGER_H_
 #define _AUDIO_EFFECT_MANAGER_H_
