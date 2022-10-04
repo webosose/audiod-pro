@@ -71,7 +71,7 @@ void AudioPolicyManager::eventSinkStatus(const std::string& source, const std::s
         if (utils::eSinkOpened == sinkStatus)
         {
             addSinkInput(trackId, sinkIndex, getStreamType(audioSink));
-            muteSink(audioSink, getCurrentSinkMuteStatus(streamType), mixerType, nullptr, nullptr, nullptr, _muteSinkCallBackPA);
+            muteSink(audioSink, getCurrentSinkMuteStatus(streamType), mixerType, nullptr, nullptr, nullptr, nullptr);
             //will be enabled as per reqquirement
 
             /*if (setVolume(audioSink, currentVolume, mixerType, ramp))
@@ -131,7 +131,7 @@ void AudioPolicyManager::eventSourceStatus(const std::string& source, const std:
         if (utils::eSinkOpened == sourceStatus)
         {
             if (mObjAudioMixer)
-                mObjAudioMixer->setVirtualSourceMute((int)audioSource, getCurrentSourceMuteStatus(streamType), nullptr, nullptr, nullptr, _muteSinkCallBackPA);
+                mObjAudioMixer->setVirtualSourceMute((int)audioSource, getCurrentSourceMuteStatus(streamType), nullptr, nullptr, nullptr, nullptr);
             if (setVolume(audioSource, currentVolume, mixerType, nullptr, nullptr, nullptr, nullptr, ramp))
                 notifyGetSourceVolumeSubscribers(streamType, currentVolume);
             payload = getSourceStatus(true);
@@ -377,7 +377,7 @@ void AudioPolicyManager::initStreamVolume()
                 "AudioPolicyManager::initStreamVolume volume could not be set for stream:%s",\
                 elements.streamType.c_str());
         if (mObjAudioMixer)
-            mObjAudioMixer->muteSink(sink, false, nullptr, nullptr, nullptr, _muteSinkCallBackPA);
+            mObjAudioMixer->muteSink(sink, false, nullptr, nullptr, nullptr, nullptr);
     }
     for (const auto &elements : mSourceVolumePolicyInfo)
     {
@@ -387,7 +387,7 @@ void AudioPolicyManager::initStreamVolume()
                 "AudioPolicyManager::initStreamVolume volume could not be set for stream:%s",\
                 elements.streamType.c_str());
         if (mObjAudioMixer)
-            mObjAudioMixer->setVirtualSourceMute(source, false, nullptr, nullptr, nullptr, _muteSinkCallBackPA);
+            mObjAudioMixer->setVirtualSourceMute(source, false, nullptr, nullptr, nullptr, nullptr);
     }
 }
 

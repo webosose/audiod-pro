@@ -770,11 +770,11 @@ void PulseAudioMixer::setNREC(bool value)
 }
 
 bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
-    char buffer[SIZE_MESG_TO_PULSE];
+    //char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: effectId: %d, enabled:%d", effectId, enabled);
 
     //  command, effectId, parameter1, ...
-    snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '4', effectId, enabled);
+    /*snprintf(buffer, SIZE_MESG_TO_PULSE, "%c %d %d", '4', effectId, enabled);
     switch (effectId) {
         case 0:
             mEffectSpeechEnhancementEnabled = enabled;
@@ -782,7 +782,25 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
         default:
             break;
     }
-    return msgToPulse(buffer, __FUNCTION__);
+    return msgToPulse(buffer, __FUNCTION__);*/
+    paudiodMsgHdr audioMsgHdr = addAudioMsgHeader(PAUDIOD_MSGTYPE_SETPARAM, eload_Bluetooth_module_reply);
+
+    struct paParamSet paramSet;
+    paramSet.Type = PAUDIOD_MODULE_SPEECH_ENHANCEMENT_LOAD;
+    paramSet.ID = 0;
+    paramSet.param1 = enabled;
+    paramSet.param2 = effectId;
+    paramSet.param3 = 0;
+
+    char *data=(char*)malloc(sizeof(struct paudiodMsgHdr) + sizeof(struct paParamSet));
+
+    //copying....
+    memcpy(data, &audioMsgHdr, sizeof(struct paudiodMsgHdr));
+	memcpy(data + sizeof(struct paudiodMsgHdr), &paramSet, sizeof(struct paParamSet));
+
+    int status = sendHeaderToPA(data, audioMsgHdr);
+
+    return status;
 }
 bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
     char buffer[SIZE_MESG_TO_PULSE];
@@ -916,7 +934,7 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     /*ret = msgToPulse(buffer, __FUNCTION__);
     return ret;*/
 
-    paudiodMsgHdr audioMsgHdr = addAudioMsgHeader(PAUDIOD_MSGTYPE_MODULE, Oea2dpSource_reply);
+    paudiodMsgHdr audioMsgHdr = addAudioMsgHeader(PAUDIOD_MSGTYPE_MODULE, ea2dpSource_reply);
 
     struct paModuleSet moduleSet;
     moduleSet.Type = PAUDIOD_MODULE_BLUETOOTH_A2DPSOURCE;
@@ -1034,7 +1052,7 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     paudiodMsgHdr audioMsgHdr = addAudioMsgHeader(PAUDIOD_MSGTYPE_DEVICE, eload_lineout_alsa_sink_reply);
 
     struct paDeviceSet deviceSet;
-    deviceSet.Type = PAUDIOD_DEVICE_LOAD_INTERNAL_CARD;
+    deviceSet.Type = PAUDIOD_DEVICE_LOAD_LINEOUT_ALSA_SINK;
     deviceSet.cardNo = cardNumber;
     deviceSet.deviceNo = deviceNumber;
     deviceSet.isLoad = 0;
@@ -1551,79 +1569,29 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
         char deviceName[SIZE_MESG_TO_AUDIOD];
         char deviceNameDetail[SIZE_MESG_TO_AUDIOD];
 
-        if (bytes > 0 && EOF != sscanf (buffer, "%c %i %i", &cmd, &isink, &info))
+        int HdrLen = sizeof(struct paudiodMsgHdr);
+        struct paudiodMsgHdr *msgHdr = (struct paudiodMsgHdr*) buffer;
+        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"len = %d message type=%x, message ID=%x",msgHdr->msgLen,msgHdr->msgType, msgHdr->msgID);
+
+        switch(msgHdr->msgType)
         {
-            if ('i' == cmd)
+            case PAUDIOD_REPLY_MSGTYPE_POLICY:
             {
-                sscanf (buffer, "%c %50s %[^\n]", &cmd, deviceName, deviceNameDetail);
                 PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                    "PulseAudioMixer::_pulseStatus: received command for device loading:%s, %s", deviceName, deviceNameDetail);
-                deviceConnectionStatus(deviceName, deviceNameDetail, true);
-            }
-            else if ('3' == cmd)
-            {
-                sscanf (buffer, "%c %50s %[^\n]", &cmd, deviceName, deviceNameDetail);
+                    "PulseAudioMixer::_pulseStatus: received command PAUDIOD_REPLY_MSGTYPE_POLICY");
+                struct paReplyToPolicySet *sndHdr  = (paReplyToPolicySet*)(buffer+HdrLen);
                 PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                    "PulseAudioMixer::_pulseStatus: received command for device unloading:%s, %s", deviceName, deviceNameDetail);
-                deviceConnectionStatus(deviceName, deviceNameDetail, false);
-            }
-            else
-            {
-                sscanf (buffer, "%c %i %i", &cmd, &isink, &info);
-                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::_pulseStatus: Pulse says: '%c %i %i'",\
-                                  cmd, isink, info);
-                EVirtualAudioSink sink = EVirtualAudioSink(isink);
-                    EVirtualSource source = EVirtualSource(isink);
-                switch (cmd)
+                    "recieved subcommand %d",sndHdr->Type);
+                switch(sndHdr->Type)
                 {
+                    case PAUDIOD_REPLY_POLICY_SINK_CATEGORY:           //case 'O'
+                    {
 
-                case 'a':
-                    PM_LOG_DEBUG("Got A2DP sink running message from PA");
-                    //Will be updated once DAP design is updated
-                    break;
-
-                case 'b':
-                    PM_LOG_DEBUG("Got A2DP sink Suspend message from PA");
-                    //Will be  updated once DAP design is updated
-                    break;
-
-                case 'o':
-                        if (VERIFY(IsValidVirtualSink(sink)))
-                        {
-                            char temp;      //to bypass the scan of cmd from buffer
-                            char appname[100],sinkIndex,sinkType;
-                            sscanf(buffer,"%c %i %i %100s",&temp,&sinkType,&sinkIndex,appname);
-
-                            outputStreamOpened (sink , sinkIndex, appname);
-                            PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
-                            "%s: sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
-                                    __FUNCTION__, (int)sink, virtualSinkName(sink), \
-                                    info, mPulseStateVolume[sink],\
-                                    mPulseStateVolumeHeadset[sink], \
-                                    mPulseStateRoute[sink], \
-                                    mPulseStateActiveStreamCount[sink]);
-                        }
-                        break;
-
-                    case 'c':
-                        if (VERIFY(IsValidVirtualSink(sink)))
-                        {
-                            char temp;      //to bypass the scan of cmd from buffer
-                            char appname[100],sinkIndex,sinkType;
-                            sscanf(buffer,"%c %i %i %100s",&temp,&sinkType,&sinkIndex,appname);
-                            outputStreamClosed (sink,sinkIndex,appname);
-
-                            PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
-                            "%s: sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
-                                    __FUNCTION__, (int)sink, virtualSinkName(sink),\
-                                    info, mPulseStateVolume[sink], \
-                                    mPulseStateVolumeHeadset[sink], \
-                                    mPulseStateRoute[sink], \
-                                    mPulseStateActiveStreamCount[sink]);
-                        }
-                        break;
-                    case 'O':
-                        if (VERIFY(IsValidVirtualSink(sink)) && VERIFY(info >= 0))
+                        int sinkNumber = sndHdr->stream;
+                        int info = sndHdr->count;
+                        EVirtualAudioSink sink = EVirtualAudioSink(sinkNumber);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_SINK_CATEGORY:%d,%d",sink,info);
+                        if (IsValidVirtualSink(sink) && VERIFY(info >= 0))
                         {
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: pulse says %i sink%s of type %i-%s %s already opened", \
                                     __FUNCTION__, info, \
@@ -1635,41 +1603,169 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                             while (mPulseStateActiveStreamCount[sink] > info)
                                 outputStreamClosed (sink , -1, "");
                         }
-                        break;
-                    case 'I':
+                    }
+                    break;
+                    case PAUDIOD_REPLY_POLICY_SOURCE_CATEGORY:         //case 'I'
+                    {
+                        int sourceNumber = sndHdr->stream;
+                        int info = sndHdr->count;
+                        EVirtualSource source = EVirtualSource(sourceNumber);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_POLICY_SOURCE_CATEGORY:%d,%d",source,info);
+                        if (VERIFY(IsValidVirtualSource(source)) && VERIFY(info >= 0))
                         {
-                            if (VERIFY(IsValidVirtualSource(source)) && VERIFY(info >= 0))
-                            {
-                                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: pulse says %i input source%s already opened",\
-                                        __FUNCTION__, info, \
-                                        ((info > 1) ? "s are" : " is"));
-                                while (mInputStreamsCurrentlyOpenedCount < info)
-                                    inputStreamOpened (source);
-                                while (mInputStreamsCurrentlyOpenedCount > info)
-                                    inputStreamClosed (source);
-                            }
+                            PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: pulse says %i input source%s already opened",\
+                                    __FUNCTION__, info, \
+                                    ((info > 1) ? "s are" : " is"));
+                            while (mInputStreamsCurrentlyOpenedCount < info)
+                                inputStreamOpened (source);
+                            while (mInputStreamsCurrentlyOpenedCount > info)
+                                inputStreamClosed (source);
                         }
-                        break;
-                    case 'd':
+                    }
+                    break;
+                    case PAUDIOD_REPLY_MSGTYPE_SINK_OPEN:         //case 'o'
+                    {
+                        int sinkNumber = sndHdr->id;
+                        int sinkIndex = sndHdr->index;
+                        std::string appname(sndHdr->appName);
+                        EVirtualAudioSink sink = EVirtualAudioSink(sinkNumber);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_STREAM_OPEN:%d,%d,%s",sink,sinkIndex,appname.c_str());
+                        if (VERIFY(IsValidVirtualSink(sink)))
+                        {
+                            outputStreamOpened (sink , sinkIndex, appname);
+                            PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
+                            "%s: sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
+                                    __FUNCTION__, (int)sink, virtualSinkName(sink), \
+                                    info, mPulseStateVolume[sink],\
+                                    mPulseStateVolumeHeadset[sink], \
+                                    mPulseStateRoute[sink], \
+                                    mPulseStateActiveStreamCount[sink]);
+                        }
+                    }
+                    break;
+                    case PAUDIOD_REPLY_MSGTYPE_SOURCE_OPEN:         //case 'd'
+                    {
+                        int sourceNumber = sndHdr->id;
+                        EVirtualSource source = EVirtualSource(sourceNumber);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_STREAM_OPEN:%d",source);
+
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "InputStream opened recieved");
                         inputStreamOpened (source);
-                        break;
-                    case 'k':
-                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "InputStream closed recieved");
+                    }
+                    break;
+                    case PAUDIOD_REPLY_MSGTYPE_SINK_CLOSE:          //case 'c'
+                    {
+                        int sinkNumber = sndHdr->id;
+                        int sinkIndex = sndHdr->index;
+                        std::string appname(sndHdr->appName);
+                        EVirtualAudioSink sink = EVirtualAudioSink(sinkNumber);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_SINK_CLOSE:%d,%d,%s",sink,sinkIndex,appname.c_str());
+                        if (VERIFY(IsValidVirtualSink(sink)))
+                        {
+                            outputStreamClosed (sink,sinkIndex,appname);
+
+                            PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
+                            "%s: sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
+                                    __FUNCTION__, (int)sink, virtualSinkName(sink),\
+                                    info, mPulseStateVolume[sink], \
+                                    mPulseStateVolumeHeadset[sink], \
+                                    mPulseStateRoute[sink], \
+                                    mPulseStateActiveStreamCount[sink]);
+                        }
+                    }
+                    break;
+                    case PAUDIOD_REPLY_MSGTYPE_SOURCE_CLOSE:            //case 'k'
+                    {
+                        int sourceNum = sndHdr->id;
+                        EVirtualSource source = EVirtualSource(sourceNum);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_SOURCE_CLOSE:%d",source);
                         inputStreamClosed (source);
+                    }
+                    break;
+                    default:
+                    {
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"Unknown command");
+                    }
+                    break;
+                }
+            }
+            break;
+            case PAUDIOD_REPLY_MSGTYPE_ROUTING:
+            {
+                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                    "PulseAudioMixer::_pulseStatus: received command PAUDIOD_REPLY_MSGTYPE_ROUTING");
+                struct paReplyToRoutingSet *sndHdr  = (paReplyToRoutingSet*)(buffer+HdrLen);
+                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                    "recieved subcommand %d",sndHdr->Type);
+                switch (sndHdr->Type)
+                {
+                    case PAUDIOD_REPLY_MSGTYPE_DEVICE_CONNECTION:       //case '3'
+                    {
+                        std::string deviceName(sndHdr->device);
+                        std::string deviceNameDetail(sndHdr->deviceNameDetail);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_CONNECTION : %s:%s",deviceName.c_str(),deviceNameDetail.c_str());
+                        deviceConnectionStatus(deviceName, deviceNameDetail, true);
+                    }
+                    break;
+                    case PAUDIOD_REPLY_MSGTYPE_DEVICE_REMOVED:
+                    {
+                        std::string deviceName(sndHdr->device);
+                        std::string deviceNameDetail(sndHdr->deviceNameDetail);
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_CONNECTION : %s:%s",deviceName.c_str(),deviceNameDetail.c_str());
+                        deviceConnectionStatus(deviceName, deviceNameDetail, false);
+                    }
+                    break;
+                    default:
                         break;
-                    case 'x':
-                        //Will be updated once DAP design is updated
-                        break;
-                    case 'y':
-                        //prepare hw for capture
-                        break;
-                    case 'H':
-                        //Will be updated once DAP design is updated
-                        break;
-                    case 'R':
-                        //Will be updated once DAP design is updated
-                        break;
+                }
+            }
+            break;
+            case PAUDIOD_REPLY_MSGTYPE_CALLBACK:
+            {
+
+                paReplyToAudiod *replyHdr = (paReplyToAudiod*)(buffer+HdrLen);
+                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                    "callback from pulseaudio id :%d", replyHdr->id);
+                auto it = mPulseCallBackInfo.find(replyHdr->id);
+                if (it != mPulseCallBackInfo.end())
+                {
+                    pulseCallBackInfo cbk = it->second;
+                    PulseCallBackFunc fun = cbk.cb;
+                    if (fun)
+                        fun(cbk.lshandle, cbk.message, cbk.ctx, true);
+                    else
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "CallBAck function is null");
+                    mPulseCallBackInfo.erase(replyHdr->id);
+                }
+                else
+                {
+                    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "CallBack map cannot find the entry");
+                }
+
+            }
+            break;
+            default:
+            {
+                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                    "invalid command given");
+            }
+        }
+
+        /*if (bytes > 0 && EOF != sscanf (buffer, "%c %i %i", &cmd, &isink, &info))
+        {
+
+            else
+            {
+                sscanf (buffer, "%c %i %i", &cmd, &isink, &info);
+                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "PulseAudioMixer::_pulseStatus: Pulse says: '%c %i %i'",\
+                                  cmd, isink, info);
+                EVirtualAudioSink sink = EVirtualAudioSink(isink);
+                    EVirtualSource source = EVirtualSource(isink);
+                switch (cmd)
+                {
+
                     case 's':
                     {
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "sita s command received");
@@ -1711,7 +1807,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         break;
                 }
             }
-       }
+       }*/
     }
 
     if (condition & G_IO_ERR)
