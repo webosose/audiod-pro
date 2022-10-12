@@ -332,6 +332,10 @@ namespace utils
             cardNumber = -1;
             deviceID = -1;
             isConnected = false;
+            mmap = 0;
+            tsched = 0;
+            fragmentSize = 0;
+            isOutput = false;
         }
     }CARD_INFO_T;
 

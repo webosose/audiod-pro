@@ -39,7 +39,7 @@ void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixer
             mObjAudioMixer->sendInternalDeviceInfo(false, internalSourceCount);
             for (auto it : mPhyInternalInfo)
             {
-                for(auto devices:it.second)
+                for(auto &devices:it.second)
                 {
                     if (devices.cardNumber != -1)
                         loadInternalCard(devices);
@@ -156,30 +156,30 @@ bool DeviceManager:: setInternalCardDetails(const pbnjson::JValue& internalListI
             {
                 if(sinkArrItem["Name"].asString(sinkName) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink Name");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink Name");
                 }
                 if(sinkArrItem["type"].asString(sinkType) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink type,setting default to pcm");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink type,setting default to pcm");
                     sinkType="pcm";
                 }
                 if(sinkArrItem["deviceID"].asNumber(deviceID) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink deviceID");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink deviceID");
                 }
                 if (sinkArrItem["mmap"].asNumber(mmap) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink mmap,setting default to 0");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink mmap,setting default to 0");
                     mmap=0;
                 }
                 if (sinkArrItem["tsched"].asNumber(tsched) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink tsched,setting default to 0");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink tsched,setting default to 0");
                     tsched=0;
                 }
                 if (sinkArrItem["fragmentSize"].asNumber(fragmentSize) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink fragmentSize,,setting default to 4096");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink fragmentSize,,setting default to 4096");
                     fragmentSize=4096;
                 }
                 if (sinkArrItem["preCondition"].isArray() && sinkArrItem["preCondition"].arraySize() > 0)
@@ -190,7 +190,7 @@ bool DeviceManager:: setInternalCardDetails(const pbnjson::JValue& internalListI
                 }
                 else
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition array not found");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition array not found");
                 }
                 newCard.cardName=cardName;
                 newCard.name=sinkName;
@@ -215,7 +215,7 @@ bool DeviceManager:: setInternalCardDetails(const pbnjson::JValue& internalListI
         }
         else
         {
-            PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "sink array not found");
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "sink array not found");
         }
         if (arrItem["source"].isArray() && arrItem["source"].arraySize() > 0)
         {
@@ -232,30 +232,30 @@ bool DeviceManager:: setInternalCardDetails(const pbnjson::JValue& internalListI
             {
                 if(sourceArrItem["Name"].asString(sourceName) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source Name");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source Name");
                 }
                 if(sourceArrItem["type"].asString(sourceType) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source type,,setting default to pcm");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source type,,setting default to pcm");
                     sourceType = "pcm";
                 }
                 if(sourceArrItem["deviceID"].asNumber(deviceID) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source deviceID");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source deviceID");
                 }
                 if (sourceArrItem["mmap"].asNumber(mmap) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source mmap,,setting default to 0");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source mmap,,setting default to 0");
                     mmap=0;
                 }
                 if (sourceArrItem["tsched"].asNumber(tsched) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source tsched,,setting default to 0");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source tsched,,setting default to 0");
                     tsched=0;
                 }
                 if (sourceArrItem["fragmentSize"].asNumber(fragmentSize) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source fragmentSize,,setting default to 4096");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source fragmentSize,,setting default to 4096");
                     fragmentSize=4096;
                 }
                 if (sourceArrItem["preCondition"].isArray() && sourceArrItem["preCondition"].arraySize() > 0)
@@ -266,7 +266,7 @@ bool DeviceManager:: setInternalCardDetails(const pbnjson::JValue& internalListI
                 }
                 else
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition array not found");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition array not found");
                 }
                 newCard.cardName=cardName;
                 newCard.name=sourceName;
@@ -291,7 +291,7 @@ bool DeviceManager:: setInternalCardDetails(const pbnjson::JValue& internalListI
         }
         else
         {
-            PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "source array not found");
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "source array not found");
         }
     }
     return true;
@@ -327,30 +327,30 @@ bool DeviceManager:: setExternalCardDetails(const pbnjson::JValue& externalListI
             {
                 if(sinkArrItem["Name"].asString(sinkName) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink Name");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink Name");
                 }
                 if(sinkArrItem["type"].asString(sinkType) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink type,setting default to pcm");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink type,setting default to pcm");
                     sinkType="pcm";
                 }
                 if(sinkArrItem["deviceID"].asNumber(deviceID) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink deviceID");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink deviceID");
                 }
                 if (sinkArrItem["mmap"].asNumber(mmap) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink mmap,setting default to 0");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink mmap,setting default to 0");
                     mmap=0;
                 }
                 if (sinkArrItem["tsched"].asNumber(tsched) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink tsched,,setting default to 0");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink tsched,,setting default to 0");
                     tsched=0;
                 }
                 if (sinkArrItem["fragmentSize"].asNumber(fragmentSize) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink fragmentSize,,setting default to 4096");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find sink fragmentSize,,setting default to 4096");
                     fragmentSize=4096;
                 }
                 if (sinkArrItem["preCondition"].isArray() && sinkArrItem["preCondition"].arraySize() > 0)
@@ -361,7 +361,7 @@ bool DeviceManager:: setExternalCardDetails(const pbnjson::JValue& externalListI
                 }
                 else
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition array not found");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition array not found");
                 }
                 outputDevices.name = sinkName;
                 outputDevices.fragmentSize = fragmentSize;
@@ -372,7 +372,7 @@ bool DeviceManager:: setExternalCardDetails(const pbnjson::JValue& externalListI
         }
         else
         {
-            PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "sink array not found");
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "sink array not found");
         }
         if (arrItem["source"].isArray() && arrItem["source"].arraySize() > 0)
         {
@@ -387,28 +387,28 @@ bool DeviceManager:: setExternalCardDetails(const pbnjson::JValue& externalListI
             {
                 if(sourceArrItem["Name"].asString(sourceName) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source Name");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source Name");
                 }
                 if(sourceArrItem["type"].asString(sourceType) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source type,setting default to pcm");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source type,setting default to pcm");
                     sourceType="pcm";
                 }
                 if(sourceArrItem["deviceID"].asNumber(deviceID) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source deviceID");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source deviceID");
                 }
                 if (sourceArrItem["mmap"].asNumber(mmap) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source mmap");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source mmap");
                 }
                 if (sourceArrItem["tsched"].asNumber(tsched) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source tsched");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source tsched");
                 }
                 if (sourceArrItem["fragmentSize"].asNumber(fragmentSize) != CONV_OK)
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source fragmentSize");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "Unable to find source fragmentSize");
                 }
                 if (sourceArrItem["preCondition"].isArray() && sourceArrItem["preCondition"].arraySize() > 0)
                 {
@@ -418,7 +418,7 @@ bool DeviceManager:: setExternalCardDetails(const pbnjson::JValue& externalListI
                 }
                 else
                 {
-                    PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition not found");
+                    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "precondition not found");
                 }
                 inputDevices.name = sourceName;
                 inputDevices.fragmentSize = fragmentSize;
@@ -429,7 +429,7 @@ bool DeviceManager:: setExternalCardDetails(const pbnjson::JValue& externalListI
         }
         else
         {
-            PM_LOG_DEBUG(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "source array not found");
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, "source array not found");
         }
     }
     return true;
@@ -654,7 +654,7 @@ bool DeviceManager::supportPlaybackCapture(int cardNumber,std::string deviceType
             if(it2->cardNumber == cardNumber && it2->deviceType == deviceType)
             {
                 PM_LOG_DEBUG("%s supported by cardNo:%d",deviceType.c_str(),cardNumber);
-                return true;            
+                return true;
             }
         }
     }
@@ -686,7 +686,7 @@ bool DeviceManager::removeExternalCard(int cardNumber, std::string cardId, std::
         }
         if(it->second.empty())
         {
-            mPhyExternalInfo.erase(it);
+            it = mPhyExternalInfo.erase(it);
         }
         if (found)
             break;
@@ -785,20 +785,25 @@ bool DeviceManager::addInternalCard(int cardNumber, std::string cardId, std::str
     }
     if(!found)
     {
+        bool deviceFoundInlist = false;
         it = internalDevices.find(cardId);
         if (it != internalDevices.end())
         {
             for (auto& deviceInfo : it->second)
             {
-                physicalInfo.name = deviceInfo.name;
-                physicalInfo.type = deviceInfo.type;
-                physicalInfo.mmap = deviceInfo.mmap;
-                physicalInfo.fragmentSize = deviceInfo.fragmentSize;
-                physicalInfo.tsched = deviceInfo.tsched;
-                physicalInfo.isOutput = deviceInfo.isOutput;
-                physicalInfo.deviceType = deviceInfo.deviceType;
-                physicalInfo.deviceID = deviceInfo.deviceID;
-                break;
+                if (deviceInfo.isOutput == isOutput)
+                {
+                    physicalInfo.name = deviceInfo.name;
+                    physicalInfo.type = deviceInfo.type;
+                    physicalInfo.mmap = deviceInfo.mmap;
+                    physicalInfo.fragmentSize = deviceInfo.fragmentSize;
+                    physicalInfo.tsched = deviceInfo.tsched;
+                    physicalInfo.isOutput = deviceInfo.isOutput;
+                    physicalInfo.deviceType = deviceInfo.deviceType;
+                    physicalInfo.deviceID = deviceInfo.deviceID;
+                    deviceFoundInlist = true;
+                    break;
+                }
             }
         }
         physicalInfo.cardId=cardId;
@@ -806,7 +811,7 @@ bool DeviceManager::addInternalCard(int cardNumber, std::string cardId, std::str
         physicalInfo.cardNumber = cardNumber;
         physicalInfo.devPath = devPath;
         physicalInfo.isConnected = false;
-        if (mObjAudioMixer->getPulseMixerReadyStatus() == true)
+        if (deviceFoundInlist && mObjAudioMixer->getPulseMixerReadyStatus() == true)
         {
             loadInternalCard(physicalInfo);
         }
@@ -849,7 +854,7 @@ void DeviceManager::getAttachedNonStorageDeviceList(LSMessage *message)
     int newDeviceList = audioDeviceList.arraySize();
     PM_LOG_DEBUG("%s: newDeviceList size: %zu ",__FUNCTION__,newDeviceList);
     PM_LOG_DEBUG("%s: mDeviceList size: %d",__FUNCTION__,mDeviceList);
-    
+
     if(newDeviceList > mDeviceList)
     {
         for (int j = 0; j < newDeviceList; j++)

@@ -44,6 +44,7 @@ struct USB_DETAILS
         tsched = 0;
         fragmentSize= 4096;
         deviceID = 0;
+        isOutput = false;
     }
     USB_DETAILS(bool isOutput)
     {
