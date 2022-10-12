@@ -2443,7 +2443,7 @@ bool AudioPolicyManager::_setInputVolumeCallBackPA(LSHandle *sh, LSMessage *repl
 
     if (!msg.parse(__FUNCTION__,sh))
        return true;
-    
+
     int volume = 0;
     std::string streamType;
     bool ramp = false;

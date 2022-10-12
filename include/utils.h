@@ -24,7 +24,6 @@
 #include "log.h"
 #include "ConstString.h"
 #include <pulse/module-palm-policy-tables.h>
-#include "IPC_SharedAudiodDefinitions.h"
 #include <map>
 #include <string>
 #include <vector>

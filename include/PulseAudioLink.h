@@ -21,7 +21,6 @@
 #include <set>
 #include <string>
 #include "log.h"
-#include "../include/IPC_SharedAudiodDefinitions.h"
 #include "utils.h"
 #include <math.h>
 #include <unistd.h>

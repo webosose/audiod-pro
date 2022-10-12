@@ -42,17 +42,8 @@ public:
     paudiodMsgHdr addAudioMsgHeader(uint8_t msgType, uint8_t msgID);
 
     //Will ignore volume of high latency sinks not playing and mute them.
-    bool programVolume(EVirtualAudioSink sink, int volume, bool ramp = false);
     bool programTrackVolume(EVirtualAudioSink sink, int sinkIndex, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
     bool programVolume(EVirtualSource source, int volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb, bool ramp = false);
-    bool programCallVoiceOrMICVolume(char cmd, int volume);
-    bool programMute(EVirtualSource source, int mute);
-    bool msgToPulse(const char *buffer, const std::string& fname);
-    /// Same as program volume, but ramped.
-    bool rampVolume(EVirtualAudioSink sink, int endVolume)
-        {return programVolume(sink, endVolume, true);}
-    /// Program destination of a sink
-    bool moveInputDeviceRouting(EVirtualSource source, const char* deviceName);
     bool setSoundOutputOnRange(EVirtualAudioSink startSink,\
         EVirtualAudioSink endSink, const char* deviceName);
     bool setSoundInputOnRange(EVirtualSource startSource,\
@@ -60,9 +51,6 @@ public:
     bool setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtualAudioSink endSink);
     bool setDefaultSourceRouting(EVirtualSource startSource, EVirtualSource endSource);
 
-    /// Program a filter
-    bool programFilter(int filterTable);
-    bool muteAll();
     /// Get active streams set to test which sinks are active.
     VirtualSinkSet getActiveStreams()
         {return mActiveStreams;}
@@ -72,10 +60,6 @@ public:
     /// Count how many input streams are opened
     void inputStreamOpened (EVirtualSource source);
     void inputStreamClosed (EVirtualSource source);
-    /// Suspend all streams (when entering power saving mode).
-    bool suspendAll();
-    /// Suspend sampling rate on sinks/sources
-    bool updateRate(int rate);
     bool setPhysicalSourceMute(const char* source, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
     /// Play a system sound using Pulse's API
     bool playSystemSound(const char *snd, EVirtualAudioSink sink);
@@ -98,7 +82,6 @@ public:
     void playDtmf(const char *snd, EVirtualAudioSink sink) ;
     void playDtmf(const char *snd, const char* sink) ;
     void stopDtmf();
-    bool programHeadsetRoute (EHeadsetState route);
     bool externalSoundcardPathCheck (std::string filename,  int status);
     bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
     bool sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName);
@@ -110,16 +93,11 @@ public:
     void _timer();
 
     GIOChannel* mChannel;
-    bool suspendSink(int sink);
-    bool programSource(char cmd, int sink, int value);
     void openCloseSink(EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string trackId);
     void openCloseSource(EVirtualSource source, bool openNotClose);
-    void setNREC(bool value);
     bool programLoadBluetooth (const char * address , const char *profile, const int displayID);
     bool programUnloadBluetooth (const char *profile, const int displayID);
     bool programA2dpSource (const bool& a2dpSource);
-    bool setRouting(const ConstString & scenario);
-    int loopback_set_parameters(const char * value);
     void init(GMainLoop * loop, LSHandle * handle);
     void deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus);
     bool loadCombinedSink(const char* sinkname, const char* device1, const char *device2, EVirtualAudioSink startSink,
@@ -180,6 +158,7 @@ private:
 
     // Function to send message to pulseaudio
     bool sendHeaderToPA(char *data, paudiodMsgHdr audioMsgHdr);
+    template<typename T>bool sendDataToPule (uint8_t msgType, uint8_t msgID, T subObj);
 };
 
 #endif //PULSEAUDIOMIXER_H_
