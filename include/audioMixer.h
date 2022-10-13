@@ -98,10 +98,10 @@ class AudioMixer : public MixerInterface
         bool playSound(const char *snd, EVirtualAudioSink sink, \
             const char *format, int rate, int channels);
         bool externalSoundcardPathCheck(std::string filename,  int status);
-        bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+        bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, PulseCallBackFunc cb);
         bool sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName);
         bool sendInternalDeviceInfo(int isOutput, int maxDeviceCount);
-        bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status,bool isOutput, const char* deviceName);
+        bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status,bool isOutput, const char* deviceName, PulseCallBackFunc cb);
         bool _connectSocket();
         bool programLoadBluetooth(const char * address , const char *profile, const int displayID);
         bool programUnloadBluetooth(const char *profile, const int displayID);

@@ -121,5 +121,7 @@ class DeviceManager : public ModuleInterface
         std::string getCardId(int cardId, bool isExternal);
         std::string getCardName(int cardId, bool isExternal);
         bool supportPlaybackCapture(int cardNumber,std::string deviceType);
+
+        static bool _loadUnloadPACallBack(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
 };
 #endif // _DEVICE_MANAGER_H_

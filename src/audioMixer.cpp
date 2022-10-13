@@ -683,12 +683,12 @@ bool AudioMixer::externalSoundcardPathCheck(std::string filename,  int status)
     }
 }
 
-bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isOutput, const char* deviceName)
+bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isOutput, const char* deviceName, PulseCallBackFunc cb)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "AudioMixer: loadInternalSoundCard");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->loadInternalSoundCard(cmd, cardno, deviceno, status, isOutput, deviceName);
+        return mObjPulseAudioMixer->loadInternalSoundCard(cmd, cardno, deviceno, status, isOutput, deviceName, cb);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
@@ -697,11 +697,11 @@ bool AudioMixer::loadInternalSoundCard(char cmd, int cardno, int deviceno, int s
     }
 }
 
-bool AudioMixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status)
+bool AudioMixer::loadUSBSinkSource(char cmd, int cardno, int deviceno, int status, PulseCallBackFunc cb)
 {
     PM_LOG_DEBUG("AudioMixer: loadUSBSinkSource");
     if (mObjPulseAudioMixer)
-        return mObjPulseAudioMixer->loadUSBSinkSource(cmd, cardno, deviceno, status);
+        return mObjPulseAudioMixer->loadUSBSinkSource(cmd, cardno, deviceno, status, cb);
     else
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "loadUSBSinkSource: mObjPulseAudioMixer is null");

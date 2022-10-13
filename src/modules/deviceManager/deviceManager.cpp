@@ -64,7 +64,7 @@ bool DeviceManager::loadInternalCard (utils::CARD_INFO_T& cardInfo)
     {
         PM_LOG_DEBUG("calling load internal card with parameters cardno :%d,deviceno:%d,status:%d,isoutput:%d,name:%s",\
             cardInfo.cardNumber, cardInfo.deviceID,1,cardInfo.isOutput,cardInfo.name.c_str());
-        ret = mObjAudioMixer->loadInternalSoundCard('i',cardInfo.cardNumber, cardInfo.deviceID,1,cardInfo.isOutput,cardInfo.name.c_str());
+        ret = mObjAudioMixer->loadInternalSoundCard('i',cardInfo.cardNumber, cardInfo.deviceID,1,cardInfo.isOutput,cardInfo.name.c_str(), _loadUnloadPACallBack);
         cardInfo.isConnected = true; // TODO: move to callback once socket comm initiative completed
     }
     else
@@ -83,14 +83,14 @@ bool DeviceManager::loadUnloadExternalCard (utils::CARD_INFO_T& cardInfo, bool i
     {
         PM_LOG_DEBUG("calling load External card with parameters cmd : %c,cardno :%d,deviceno:%d,status:%d,isoutput:%d",\
                 cmd, cardInfo.cardNumber, cardInfo.deviceID,isLoad,cardInfo.isOutput);
-        ret = mObjAudioMixer->loadUSBSinkSource(cmd, cardInfo.cardNumber,cardInfo.deviceID, isLoad);
+        ret = mObjAudioMixer->loadUSBSinkSource(cmd, cardInfo.cardNumber,cardInfo.deviceID, isLoad, DeviceManager::_loadUnloadPACallBack);
         cardInfo.isConnected = true; // TODO: move to callback once socket comm initiative completed
     }
     else if( !isLoad && cardInfo.isConnected)
     {
         PM_LOG_DEBUG("calling Unload External card with parameters cmd : %c,cardno :%d,deviceno:%d,status:%d,isoutput:%d",\
                 cmd, cardInfo.cardNumber, cardInfo.deviceID,isLoad,cardInfo.isOutput);
-        ret = mObjAudioMixer->loadUSBSinkSource(cmd, cardInfo.cardNumber,cardInfo.deviceID, isLoad);
+        ret = mObjAudioMixer->loadUSBSinkSource(cmd, cardInfo.cardNumber,cardInfo.deviceID, isLoad, DeviceManager::_loadUnloadPACallBack);
         cardInfo.isConnected = false; // TODO: move to callback once socket comm initiative completed
     }
     return ret;
@@ -825,6 +825,16 @@ bool DeviceManager::addInternalCard(int cardNumber, std::string cardId, std::str
             mPhyInternalInfo[cardId] = tmpDeviceInfo;
         }
     }
+    return true;
+}
+
+bool DeviceManager::_loadUnloadPACallBack(LSHandle *sh, LSMessage *reply, void *ctx, bool status)
+{
+    if (status)
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"%s : Device load/un-load success", __FUNCTION__);
+    else
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"%s : Device load/un-load FAIL", __FUNCTION__);
+
     return true;
 }
 

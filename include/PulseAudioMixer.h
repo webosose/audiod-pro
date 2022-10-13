@@ -30,6 +30,8 @@
 #include <pulse/module-palm-policy-tables.h>
 #include "mixerInterface.h"
 
+#define APP_NAME_LENGTH 200
+
 //Implementation of PulseMixer using Pulse as backend
 class PulseAudioMixer
 {
@@ -83,10 +85,10 @@ public:
     void playDtmf(const char *snd, const char* sink) ;
     void stopDtmf();
     bool externalSoundcardPathCheck (std::string filename,  int status);
-    bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status);
+    bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, PulseCallBackFunc cb);
     bool sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName);
     bool sendInternalDeviceInfo(int isOutput, int maxDeviceCount);
-    bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isOutput, const char* deviceName);
+    bool loadInternalSoundCard(char cmd, int cardno, int deviceno, int status, bool isOutput, const char* deviceName, PulseCallBackFunc cb);
     /// These should really be private, but they're needed for global callbacks...
     bool _connectSocket();
     void _pulseStatus(GIOChannel * ch, GIOCondition condition, gpointer user_data);

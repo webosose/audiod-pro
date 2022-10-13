@@ -36,12 +36,12 @@ std::string UdevDeviceManager::onDeviceAdded(Device *device)
         else if (device->event == "usb-mic-inserted") {
             printMicInfo();
 
-            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected)) {
+            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected, nullptr)) {
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
         else if (device->event == "usb-headset-inserted") {
-            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected)) {
+            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected, nullptr)) {
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
@@ -71,13 +71,13 @@ std::string UdevDeviceManager::onDeviceRemoved(Device *device)
         }
         else if (device->event == "usb-mic-removed") {
 
-            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected)) {
+            if (!audioMixerObj->loadUSBSinkSource('j', device->soundCardNumber, device->deviceNumber, connected, nullptr)) {
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }
         else if (device->event == "usb-headset-removed") {
 
-            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected)) {
+            if (!audioMixerObj->loadUSBSinkSource('z', device->soundCardNumber, device->deviceNumber, connected, nullptr)) {
                 reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Audiod internal error");
             }
         }

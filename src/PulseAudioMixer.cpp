@@ -136,6 +136,7 @@ PulseAudioMixer::setMute(const char* deviceName, const int& mutestatus, LSHandle
     volumeSet.parm3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, deviceName, DEVICE_NAME_LENGTH);
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esink_set_master_mute_reply, volumeSet);
 
@@ -163,6 +164,7 @@ bool PulseAudioMixer::setPhysicalSourceMute(const char* source, const int& mutes
     volumeSet.parm3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, source, DEVICE_NAME_LENGTH);
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esource_set_master_mute_reply, volumeSet);
 
@@ -190,7 +192,7 @@ PulseAudioMixer::setVirtualSourceMute(int sink, int mutestatus, LSHandle *lshand
     volumeSet.parm2 = 0;
     volumeSet.parm3 = 0;
     volumeSet.index = 0;
-    volumeSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_source_set_mute_reply, volumeSet);
 
@@ -218,7 +220,7 @@ PulseAudioMixer::muteSink(const int& sink, const int& mutestatus, LSHandle *lsha
     volumeSet.parm2 = 0;
     volumeSet.parm3 = 0;
     volumeSet.index = 0;
-    volumeSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_sink_input_set_mute_reply, volumeSet);
 
@@ -250,6 +252,7 @@ PulseAudioMixer::setVolume(const char* deviceName, const int& volume, LSHandle *
     volumeSet.parm3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, deviceName, DEVICE_NAME_LENGTH);
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esink_set_master_volume_reply, volumeSet);
 
@@ -297,6 +300,7 @@ PulseAudioMixer::setMicVolume(const char* deviceName, const int& volume, LSHandl
     volumeSet.parm3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, deviceName, DEVICE_NAME_LENGTH);
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esource_set_master_volume_reply, volumeSet);
 
@@ -326,7 +330,7 @@ bool PulseAudioMixer::programTrackVolume(EVirtualAudioSink sink, int sinkIndex, 
     volumeSet.parm2 = ramp;
     volumeSet.parm3 = 0;
     volumeSet.index = sinkIndex;
-    volumeSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_sink_input_index_set_volume_reply, volumeSet);
 
@@ -353,7 +357,7 @@ bool PulseAudioMixer::programVolume (EVirtualSource source, int volume, LSHandle
     volumeSet.parm2 = ramp;
     volumeSet.parm3 = 0;
     volumeSet.index = 0;
-    volumeSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    volumeSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
     int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_source_input_set_volume_reply, volumeSet);
 
@@ -369,6 +373,7 @@ bool PulseAudioMixer::setSoundOutputOnRange(EVirtualAudioSink startSink,\
     routingSet.endID = endSink;
     routingSet.id = 0;
     strncpy(routingSet.device, deviceName, DEVICE_NAME_LENGTH);
+    routingSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_sink_outputdevice_on_range_reply, routingSet);
 
@@ -384,6 +389,7 @@ bool PulseAudioMixer::setSoundInputOnRange(EVirtualSource startSource,\
     routingSet.endID = endSource;
     routingSet.id = 0;
     strncpy(routingSet.device, deviceName, DEVICE_NAME_LENGTH);
+    routingSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_source_inputdevice_on_range_reply, routingSet);
 
@@ -397,7 +403,7 @@ bool PulseAudioMixer::setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtua
     routingSet.startID = startSink;
     routingSet.endID = endSink;
     routingSet.id = 0;
-    routingSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    routingSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
     int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_sink_routing_reply, routingSet);
 
@@ -411,7 +417,7 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
     routingSet.startID = startSource;
     routingSet.endID = endSource;
     routingSet.id = 0;
-    routingSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    routingSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
     int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_source_routing_reply, routingSet);
 
@@ -476,8 +482,12 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
     moduleSet.Type = PAUDIOD_MODULE_BLUETOOTH_LOAD;
     moduleSet.id = 0;
     moduleSet.a2dpSource = 0;
+    moduleSet.info=0;
+    moduleSet.port=0;
     strncpy(moduleSet.address, address, BLUETOOTH_MAC_ADDRESS_SIZE);
+    moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = '\0';
     strncpy(moduleSet.profile, profile, BLUETOOTH_PROFILE_SIZE);
+    moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1]='\0';
 
     int status = sendDataToPule<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, eload_Bluetooth_module_reply, moduleSet);
 
@@ -504,8 +514,10 @@ bool PulseAudioMixer::programUnloadBluetooth (const char *profile, const int dis
     moduleSet.Type = PAUDIOD_MODULE_BLUETOOTH_UNLOAD;
     moduleSet.id = 0;
     moduleSet.a2dpSource = 0;
-    moduleSet.address[18] = {'\0'};
-    moduleSet.profile[5] = {'\0'};
+    moduleSet.info=0;
+    moduleSet.port=0;
+    moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
+    moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
     status = sendDataToPule<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, eunload_BlueTooth_module_reply, moduleSet);
 
@@ -533,8 +545,10 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     moduleSet.Type = PAUDIOD_MODULE_BLUETOOTH_A2DPSOURCE;
     moduleSet.id = 0;
     moduleSet.a2dpSource = a2dpSource;
-    moduleSet.address[18] = {'\0'};
-    moduleSet.profile[5] = {'\0'};
+    moduleSet.info=0;
+    moduleSet.port=0;
+    moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
+    moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
     int status = sendDataToPule<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, ea2dpSource_reply, moduleSet);
 
@@ -555,7 +569,7 @@ bool PulseAudioMixer::externalSoundcardPathCheck (std::string filename, int stat
     return true;
 }
 
-bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int deviceNumber, int status, bool isOutput, const char* deviceName)
+bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int deviceNumber, int status, bool isOutput, const char* deviceName, PulseCallBackFunc cb)
 {
     char buffer[SIZE_MESG_TO_PULSE];
     bool returnValue  = false;
@@ -606,6 +620,14 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     PM_LOG_INFO (MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
         "loadInternalSoundCard sending message %s", buffer);
 
+
+    pulseCallBackInfo pci;
+    pci.lshandle = nullptr;
+    pci.message = nullptr;
+    pci.ctx = nullptr;
+    pci.cb=cb;
+    mPulseCallBackInfo.insert(std::make_pair(eload_lineout_alsa_sink_reply, pci));
+
     struct paDeviceSet deviceSet;
     deviceSet.Type = PAUDIOD_DEVICE_LOAD_LINEOUT_ALSA_SINK;
     deviceSet.cardNo = cardNumber;
@@ -618,6 +640,7 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     deviceSet.isOutput = isOutput;
     deviceSet.maxDeviceCnt = 0;
     strncpy(deviceSet.device, deviceName, DEVICE_NAME_LENGTH);
+    deviceSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
     returnValue = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, eload_lineout_alsa_sink_reply, deviceSet);
 
@@ -650,6 +673,7 @@ bool PulseAudioMixer::sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount
     deviceSet.isOutput = isOutput;
     deviceSet.maxDeviceCnt = maxDeviceCount;
     strncpy(deviceSet.device, deviceBaseName.c_str(), DEVICE_NAME_LENGTH);
+    deviceSet.device[DEVICE_NAME_LENGTH-1]='\0';
 
     int status = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, einit_multiple_usb_device_info_reply, deviceSet);
 
@@ -681,14 +705,14 @@ bool PulseAudioMixer::sendInternalDeviceInfo(int isOutput, int maxDeviceCount)
     deviceSet.status = 0;
     deviceSet.isOutput = isOutput;
     deviceSet.maxDeviceCnt = maxDeviceCount;
-    deviceSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    deviceSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
     int status = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, einitialise_internal_card_reply, deviceSet);
 
     return status;
 }
 
-bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status)
+bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, PulseCallBackFunc cb)
 {
     PM_LOG_DEBUG("PulseAudioMixer::loadUSBSinkSource");
     bool ret  = false;
@@ -731,6 +755,13 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
                      "programLoadBluetooth: mObjMixerCallBack is null");
 
+    pulseCallBackInfo pci;
+    pci.lshandle = nullptr;
+    pci.message = nullptr;
+    pci.ctx = nullptr;
+    pci.cb=cb;
+    mPulseCallBackInfo.insert(std::make_pair(edetect_usb_device_reply, pci));
+
     deviceSet.cardNo = cardno;
     deviceSet.deviceNo = deviceno;
     deviceSet.isLoad = 0;
@@ -740,7 +771,7 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
     deviceSet.status = status;
     deviceSet.isOutput = 0;
     deviceSet.maxDeviceCnt = 0;
-    deviceSet.device[DEVICE_NAME_LENGTH] = {'\0'};
+    deviceSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
     ret = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, edetect_usb_device_reply, deviceSet);
 
@@ -1057,8 +1088,8 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         if (VERIFY(IsValidVirtualSource(source)) && VERIFY(info >= 0))
                         {
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "%s: pulse says %i input source%s already opened",\
-                                    __FUNCTION__, info, \
-                                    ((info > 1) ? "s are" : " is"));
+                                     __FUNCTION__, info, \
+                                     ((info > 1) ? "s are" : " is"));
                             while (mInputStreamsCurrentlyOpenedCount < info)
                                 inputStreamOpened (source);
                             while (mInputStreamsCurrentlyOpenedCount > info)
@@ -1070,16 +1101,18 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     {
                         int sinkNumber = sndHdr->id;
                         int sinkIndex = sndHdr->index;
-                        std::string appname(sndHdr->appName);
+                        char appname[APP_NAME_LENGTH];
+                        strncpy(appname, sndHdr->appName, APP_NAME_LENGTH);
+                        appname[APP_NAME_LENGTH-1]='\0';
                         EVirtualAudioSink sink = EVirtualAudioSink(sinkNumber);
-                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_STREAM_OPEN:%d,%d,%s",sink,sinkIndex,appname.c_str());
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_STREAM_OPEN:%d,%d,%s",sink,sinkIndex,appname);
                         if (VERIFY(IsValidVirtualSink(sink)))
                         {
                             outputStreamOpened (sink , sinkIndex, appname);
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
-                            "%s: sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
+                            "sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
                                     __FUNCTION__, (int)sink, virtualSinkName(sink), \
-                                    info, mPulseStateVolume[sink],\
+                                    mPulseStateVolume[sink],\
                                     mPulseStateVolumeHeadset[sink], \
                                     mPulseStateRoute[sink], \
                                     mPulseStateActiveStreamCount[sink]);
@@ -1100,17 +1133,19 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     {
                         int sinkNumber = sndHdr->id;
                         int sinkIndex = sndHdr->index;
-                        std::string appname(sndHdr->appName);
+                        char appname[APP_NAME_LENGTH];
+                        strncpy(appname, sndHdr->appName, APP_NAME_LENGTH);
+                        appname[APP_NAME_LENGTH-1]='\0';
                         EVirtualAudioSink sink = EVirtualAudioSink(sinkNumber);
-                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_SINK_CLOSE:%d,%d,%s",sink,sinkIndex,appname.c_str());
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"PAUDIOD_REPLY_MSGTYPE_SINK_CLOSE:%d,%d,%s",sink,sinkIndex,appname);
                         if (VERIFY(IsValidVirtualSink(sink)))
                         {
                             outputStreamClosed (sink,sinkIndex,appname);
 
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
-                            "%s: sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
+                            "sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
                                     __FUNCTION__, (int)sink, virtualSinkName(sink),\
-                                    info, mPulseStateVolume[sink], \
+                                    mPulseStateVolume[sink], \
                                     mPulseStateVolumeHeadset[sink], \
                                     mPulseStateRoute[sink], \
                                     mPulseStateActiveStreamCount[sink]);
