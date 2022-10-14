@@ -953,7 +953,7 @@ bool AudioPolicyManager::setVolume(EVirtualAudioSink audioSink, const int& volum
                         }
                         PM_LOG_DEBUG("AudioPolicyManager : programTrackVolume:  trackId:%s, effective vol : %d, sink : %d, sinkindex:%d",
                             items.first.c_str(),effectiveVolume, (int)audioSink, elements.sinkInputIndex);
-                        returnStatus = mObjAudioMixer->programTrackVolume(audioSink, elements.sinkInputIndex, effectiveVolume, nullptr, nullptr, nullptr, nullptr);
+                        returnStatus = mObjAudioMixer->programTrackVolume(audioSink, elements.sinkInputIndex, effectiveVolume, lshandle, message, ctx, cb);
                         if (!returnStatus)
                         {
                             return returnStatus;
@@ -1356,6 +1356,7 @@ bool AudioPolicyManager::_muteSink(LSHandle *lshandle, LSMessage *message, void 
                     PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                                 "sink mute updated successfully");
                     LSMessageRef(message);
+                    return true;
                 }
                 else
                 {
@@ -1458,6 +1459,7 @@ bool AudioPolicyManager::_setInputVolume(LSHandle *lshandle, LSMessage *message,
                     PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                          "Volume updated successfully");
                     LSMessageRef(message);
+                    return true;
                 }
                 else
                 {
@@ -1558,6 +1560,7 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
         if ( (it != audioPolicyManagerInstance->mTrackVolumeInfo.end()) && isValidVolume && audioPolicyManagerInstance->setTrackVolume(trackId, volume, lshandle, message, ctx, _setTrackVolumeCallBackPA, true))
         {
             LSMessageRef(message);
+            return true;
         }
         else
         {
@@ -1657,6 +1660,7 @@ bool AudioPolicyManager::_setSourceInputVolume(LSHandle *lshandle, LSMessage *me
                     PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                          "Input volume updated successfully");
                     LSMessageRef(message);
+                    return true;
                 }
                 else
                 {
@@ -2145,6 +2149,7 @@ bool AudioPolicyManager::_muteSource(LSHandle *lshandle, LSMessage *message, voi
             PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                 "source mute updated successfully");
             LSMessageRef(message);
+            return true;
         }
         else
         {
@@ -2168,11 +2173,12 @@ bool AudioPolicyManager::_muteSource(LSHandle *lshandle, LSMessage *message, voi
         {
             if (isStreamActive)
             {
-                if (!AudioPolicyManagerObj->mObjAudioMixer->setVirtualSourceMute(sourceId, mute, lshandle, message, ctx, _muteSourceCallBackPA))
+                if (AudioPolicyManagerObj->mObjAudioMixer->setVirtualSourceMute(sourceId, mute, lshandle, message, ctx, _muteSourceCallBackPA))
                 {
                     PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
                                 "source mute updated successfully");
                     LSMessageRef(message);
+                    return true;
                 }
             }
             else
@@ -2210,6 +2216,7 @@ bool AudioPolicyManager::_muteSource(LSHandle *lshandle, LSMessage *message, voi
         }
     }
     utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+
     return true;
 }
 
@@ -2317,7 +2324,7 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
             {
                 if (!audioPolicyManagerInstance->setVolume(sink, volume, \
                     audioPolicyManagerInstance->getMixerType(streamType), lshandle, message, ctx, _setMediaInputVolumePA, ramp))
-                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager::_setMediaInputVolume volume could not be set");
             }
             else
             {
@@ -2336,19 +2343,23 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
                     if (!audioPolicyManagerInstance->setVolume(mediaSink, volume, audioPolicyManagerInstance->getMixerType("pmedia"), nullptr, nullptr, nullptr, nullptr, ramp))
                         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                             "AudioPolicyManager::_setMediaInputVolume volume could not be set for stream pmedia");
+                    else
+                        status = true;
                 }
                 if (audioPolicyManagerInstance->getStreamActiveStatus("pdefaultapp"))
                 {
                     if (!audioPolicyManagerInstance->setVolume(defaultappSink, volume, audioPolicyManagerInstance->getMixerType("pdefaultapp"), nullptr, nullptr, nullptr, nullptr, ramp))
                         PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT,\
                             "AudioPolicyManager::_setMediaInputVolume volume could not be set for stream pdefaultapp");
+                    else
+                        status = true;
                 }
             }
-            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
         }
 
         if (status)
         {
+             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
             reply = STANDARD_JSON_SUCCESS;
         }
         else
@@ -2640,11 +2651,17 @@ bool AudioPolicyManager::_muteSinkCallBackPA(LSHandle *lshandle, LSMessage *mess
     msg.get ("streamType", streamType);
     msg.get("mute", mute);
 
+    pbnjson::JValue muteVolumeResponse = pbnjson::Object();
+    muteVolumeResponse.put("returnValue", status);
+    muteVolumeResponse.put("mute", mute);
+    muteVolumeResponse.put("streamType", streamType);
+
     if (status)
     {
         if (audioPolicyManagerInstance)
             audioPolicyManagerInstance->updateMuteStatus(streamType, mute);
         PM_LOG_INFO (MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Mute status updated successfully");
+        reply = muteVolumeResponse.stringify();
     }
     else
     {

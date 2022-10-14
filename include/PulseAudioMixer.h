@@ -30,8 +30,6 @@
 #include <pulse/module-palm-policy-tables.h>
 #include "mixerInterface.h"
 
-#define APP_NAME_LENGTH 200
-
 //Implementation of PulseMixer using Pulse as backend
 class PulseAudioMixer
 {

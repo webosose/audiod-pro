@@ -484,6 +484,7 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
     moduleSet.a2dpSource = 0;
     moduleSet.info=0;
     moduleSet.port=0;
+    moduleSet.ip[27] = {'\0'};
     strncpy(moduleSet.address, address, BLUETOOTH_MAC_ADDRESS_SIZE);
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = '\0';
     strncpy(moduleSet.profile, profile, BLUETOOTH_PROFILE_SIZE);
@@ -516,6 +517,7 @@ bool PulseAudioMixer::programUnloadBluetooth (const char *profile, const int dis
     moduleSet.a2dpSource = 0;
     moduleSet.info=0;
     moduleSet.port=0;
+    moduleSet.ip[27] = {'\0'};
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
     moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
@@ -547,6 +549,7 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     moduleSet.a2dpSource = a2dpSource;
     moduleSet.info=0;
     moduleSet.port=0;
+    moduleSet.ip[27] = {'\0'};
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
     moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
@@ -1110,7 +1113,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         {
                             outputStreamOpened (sink , sinkIndex, appname);
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
-                            "sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
+                            "%s sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
                                     __FUNCTION__, (int)sink, virtualSinkName(sink), \
                                     mPulseStateVolume[sink],\
                                     mPulseStateVolumeHeadset[sink], \
@@ -1143,7 +1146,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                             outputStreamClosed (sink,sinkIndex,appname);
 
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
-                            "sink %i-%s closed (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
+                            "%s sink %i-%s closed stream. Volume: %d, Headset: %d, Route: %d, Streams: %d.", \
                                     __FUNCTION__, (int)sink, virtualSinkName(sink),\
                                     mPulseStateVolume[sink], \
                                     mPulseStateVolumeHeadset[sink], \
@@ -1179,19 +1182,27 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                 {
                     case PAUDIOD_REPLY_MSGTYPE_DEVICE_CONNECTION:       //case '3'
                     {
-                        std::string deviceName(sndHdr->device);
-                        std::string deviceNameDetail(sndHdr->deviceNameDetail);
+                        char deviceName[DEVICE_NAME_LENGTH];
+                        strncpy(deviceName, sndHdr->device, DEVICE_NAME_LENGTH);
+                        deviceName[DEVICE_NAME_LENGTH-1]='\0';
+                        char deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH];
+                        strncpy(deviceNameDetail, sndHdr->deviceNameDetail, DEVICE_NAME_DETAILS_LENGTH);
+                        deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH-1]='\0';
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_CONNECTION : %s:%s",deviceName.c_str(),deviceNameDetail.c_str());
+                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_CONNECTION : %s:%s",deviceName,deviceNameDetail);
                         deviceConnectionStatus(deviceName, deviceNameDetail, true);
                     }
                     break;
                     case PAUDIOD_REPLY_MSGTYPE_DEVICE_REMOVED:
                     {
-                        std::string deviceName(sndHdr->device);
-                        std::string deviceNameDetail(sndHdr->deviceNameDetail);
+                        char deviceName[DEVICE_NAME_LENGTH];
+                        strncpy(deviceName, sndHdr->device, DEVICE_NAME_LENGTH);
+                        deviceName[DEVICE_NAME_LENGTH-1]='\0';
+                        char deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH];
+                        strncpy(deviceNameDetail, sndHdr->deviceNameDetail, DEVICE_NAME_DETAILS_LENGTH);
+                        deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH-1]='\0';
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_REMOVED : %s:%s",deviceName.c_str(),deviceNameDetail.c_str());
+                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_REMOVED : %s:%s",deviceName,deviceNameDetail);
                         deviceConnectionStatus(deviceName, deviceNameDetail, false);
                     }
                     break;

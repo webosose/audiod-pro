@@ -704,9 +704,25 @@ void OSEMasterVolumeManager::muteMic(LSHandle *lshandle, LSMessage *message, voi
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
 
     std::string activeDevice = getDisplaySoundInput(display);
+
+    envelopeRef *envelope = new (std::nothrow)envelopeRef;
+    if (nullptr != envelope)
+    {
+        envelope->message = message;
+        envelope->context = this;
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: muteVolume envelope is NULL");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+    }
+
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "active soundinput for display %d = %s", display, activeDevice.c_str());
 
-    if (audioMixerObj && audioMixerObj->setPhysicalSourceMute(activeDevice.c_str(), mute, lshandle, message, ctx, _muteMicCallBackPA))
+    if (audioMixerObj && audioMixerObj->setPhysicalSourceMute(activeDevice.c_str(), mute, lshandle, message, envelope, _muteMicCallBackPA))
     {
         LSMessageRef(message);
         status = true;
