@@ -2279,6 +2279,7 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
         bool ramp = false;
         std::string streamType = " ";
         int sessionId = 0;
+        int returnValue = false;
 
         msg.get ("volume", volume);
         if (!msg.get ("sessionId", sessionId))
@@ -2325,6 +2326,11 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
                 if (!audioPolicyManagerInstance->setVolume(sink, volume, \
                     audioPolicyManagerInstance->getMixerType(streamType), lshandle, message, ctx, _setMediaInputVolumePA, ramp))
                     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager::_setMediaInputVolume volume could not be set");
+                else
+                {
+                    returnValue = true;
+                    LSMessageRef(message);
+                }
             }
             else
             {
@@ -2357,9 +2363,13 @@ bool AudioPolicyManager::_setMediaInputVolume(LSHandle *lshandle, LSMessage *mes
             }
         }
 
-        if (status)
+        if (returnValue)
         {
-             PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
+            return true;
+        }
+        else if (status)
+        {
+            PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume updated successfully");
             reply = STANDARD_JSON_SUCCESS;
         }
         else
