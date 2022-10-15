@@ -485,7 +485,6 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
     moduleSet.info=0;
     moduleSet.port=0;
     moduleSet.ip[27] = {'\0'};
-    moduleSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
     strncpy(moduleSet.address, address, BLUETOOTH_MAC_ADDRESS_SIZE);
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = '\0';
     strncpy(moduleSet.profile, profile, BLUETOOTH_PROFILE_SIZE);
@@ -519,7 +518,6 @@ bool PulseAudioMixer::programUnloadBluetooth (const char *profile, const int dis
     moduleSet.info=0;
     moduleSet.port=0;
     moduleSet.ip[27] = {'\0'};
-    moduleSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
     moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
@@ -552,7 +550,6 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     moduleSet.info=0;
     moduleSet.port=0;
     moduleSet.ip[27] = {'\0'};
-    moduleSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
     moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
