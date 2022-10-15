@@ -69,6 +69,17 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
                 soundOutput.c_str(), volume, displayId);
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
 
+
+    if (soundOutput != "alsa")
+    {
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        return;
+    }
+
     envelopeRef *envelope = new (std::nothrow)envelopeRef;
     if (nullptr != envelope)
     {
@@ -79,16 +90,6 @@ void OSEMasterVolumeManager::setVolume(LSHandle *lshandle, LSMessage *message, v
     {
         PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "SetMasterVolume envelope is NULL");
         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_ENVELOPE_INSTANCE , "Internal error");
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-            lserror.Print(__FUNCTION__, __LINE__);
-        return;
-    }
-
-    if (soundOutput != "alsa")
-    {
-        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
         CLSError lserror;
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
@@ -604,6 +605,16 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
     AudioMixer* audioMixerObj = AudioMixer::getAudioMixerInstance();
     std::string callerId = LSMessageGetSenderServiceName(message);
 
+    if (soundOutput != "alsa")
+    {
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        return;
+    }
+
     envelopeRef *envelope = new (std::nothrow)envelopeRef;
 
     if (nullptr != envelope)
@@ -618,16 +629,6 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
         CLSError lserror;
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
-    }
-
-    if (soundOutput != "alsa")
-    {
-        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-            lserror.Print(__FUNCTION__, __LINE__);
-        return;
     }
 
     if (DISPLAY_TWO == display || displayId == 3 )
@@ -973,6 +974,16 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
     std::string callerId = LSMessageGetSenderServiceName(message);
     AudioMixer *audioMixerInstance = AudioMixer::getAudioMixerInstance();
 
+    if (soundOutput != "alsa")
+    {
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        return;
+    }
+
     envelopeRef *envelope = new (std::nothrow)envelopeRef;
     if(nullptr != envelope)
     {
@@ -986,16 +997,6 @@ void OSEMasterVolumeManager::volumeUp(LSHandle *lshandle, LSMessage *message, vo
         CLSError lserror;
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
-    }
-
-    if (soundOutput != "alsa")
-    {
-        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-            lserror.Print(__FUNCTION__, __LINE__);
-        return;
     }
 
     if (audioMixerInstance)
@@ -1186,6 +1187,17 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
         displayId = 1;
     }
 
+
+    if (soundOutput != "alsa")
+    {
+        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
+        CLSError lserror;
+        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+            lserror.Print(__FUNCTION__, __LINE__);
+        return;
+    }
+
     envelopeRef *envelope = new (std::nothrow)envelopeRef;
     if (nullptr != envelope)
     {
@@ -1199,16 +1211,6 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
         CLSError lserror;
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
-    }
-
-    if (soundOutput != "alsa")
-    {
-        PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Not a valid soundOutput");
-        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_SOUNDOUT, "Volume control is not supported");
-        CLSError lserror;
-        if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
-            lserror.Print(__FUNCTION__, __LINE__);
-        return;
     }
 
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDown with soundout: %s", soundOutput.c_str());
