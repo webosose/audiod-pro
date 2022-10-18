@@ -1557,15 +1557,27 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
             isUnregisterdTrackId = true;
         }
 
-        if ( (it != audioPolicyManagerInstance->mTrackVolumeInfo.end()) && isValidVolume && audioPolicyManagerInstance->setTrackVolume(trackId, volume, lshandle, message, ctx, _setTrackVolumeCallBackPA, true))
+        if ( isValidVolume)
         {
-            LSMessageRef(message);
-            return true;
-        }
-        else
-        {
-            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: failed mixer call");
-            status = true;
+            if (audioPolicyManagerInstance->storeTrackVolume(trackId, volume, streamType))
+            {
+                if (!audioPolicyManagerInstance->setTrackVolume(trackId, volume, lshandle, message, ctx, _setTrackVolumeCallBackPA, true))
+                {
+                    PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: failed mixer call");
+                    status = true;
+                }
+                else
+                {
+                    PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: pulse mixer call success");
+                    LSMessageRef(message);
+                    return true;
+                }
+            }
+            else
+            {
+                PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: unregistered trackId");
+                isUnregisterdTrackId = true;
+            }
         }
 
         if (status)
@@ -1579,6 +1591,7 @@ bool AudioPolicyManager::_setTrackVolume(LSHandle *lshandle, LSMessage *message,
         }
         else
         {
+            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "setTrackVolume: failed mixer call");
             if (!isValidVolume)
             {
                 PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "Volume Not in Range");

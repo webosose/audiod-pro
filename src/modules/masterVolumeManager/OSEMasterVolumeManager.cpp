@@ -323,11 +323,21 @@ bool OSEMasterVolumeManager::_setMicVolumeCallBackPA(LSHandle *sh, LSMessage *re
     int display = DISPLAY_ONE;
     int volume = MIN_VOLUME;
     int displayId = -1;
+    envelopeRef *envelope = nullptr;
 
     msg.get("volume", volume);
     msg.get("displayId", display);
 
-    envelopeRef *envelope = (envelopeRef*)ctx;
+    if (nullptr != ctx)
+    {
+        envelope = (envelopeRef*)ctx;
+    }
+    else
+    {
+       PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "_setMicVolumeCallBackPA: context is null");
+       return true; 
+    }
+    
     LSMessage *message = (LSMessage*)envelope->message;
     OSEMasterVolumeManager* OSEMasterVolumeManagerObj = (OSEMasterVolumeManager*)envelope->context;
 
@@ -396,6 +406,7 @@ bool OSEMasterVolumeManager::_setVolumeCallBackPA(LSHandle *sh, LSMessage *reply
     int volume = MIN_VOLUME;
     int displayId = -1;
     int display = DISPLAY_ONE;
+    envelopeRef *envelope = nullptr;
 
     msg.get("soundOutput", soundOutput);
     msg.get("volume", volume);
@@ -406,7 +417,16 @@ bool OSEMasterVolumeManager::_setVolumeCallBackPA(LSHandle *sh, LSMessage *reply
     else
         displayId = DEFAULT_ONE_DISPLAY_ID;
 
-    envelopeRef *envelope = (envelopeRef*)ctx;
+    if (nullptr != ctx)
+    {
+        envelope = (envelopeRef*)ctx;
+    }
+    else
+    {
+       PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "_setVolumeCallBackPA: context is null");
+       return true; 
+    }
+
     LSMessage *message = (LSMessage*)envelope->message;
     OSEMasterVolumeManager* OSEMasterVolumeManagerObj = (OSEMasterVolumeManager*)envelope->context;
 
@@ -575,6 +595,8 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
     int displayId = DISPLAY_ONE;
     int display = -1;
     std::string reply = STANDARD_JSON_SUCCESS;
+    envelopeRef *envelope = nullptr;
+
 
     msg.get("soundOutput", soundOutput);
     msg.get("mute", mute);
@@ -615,7 +637,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
         return;
     }
 
-    envelopeRef *envelope = new (std::nothrow)envelopeRef;
+    envelope = new (std::nothrow)envelopeRef;
 
     if (nullptr != envelope)
     {
@@ -629,6 +651,7 @@ void OSEMasterVolumeManager::muteVolume(LSHandle *lshandle, LSMessage *message, 
         CLSError lserror;
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
+        return;
     }
 
     if (DISPLAY_TWO == display || displayId == 3 )
@@ -737,6 +760,7 @@ void OSEMasterVolumeManager::muteMic(LSHandle *lshandle, LSMessage *message, voi
         CLSError lserror;
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
+        return;
     }
 
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "active soundinput for display %d = %s", display, activeDevice.c_str());
@@ -764,6 +788,7 @@ bool OSEMasterVolumeManager::_muteMicCallBackPA(LSHandle *sh, LSMessage *reply, 
     int displayId = DISPLAY_ONE;
     int display = -1;
     std::string soundInput;
+    envelopeRef *envelope = nullptr;
 
     msg.get("mute", mute);
     if (!msg.get("displayId", display))
@@ -778,7 +803,17 @@ bool OSEMasterVolumeManager::_muteMicCallBackPA(LSHandle *sh, LSMessage *reply, 
         else
             displayId = 2;
     }
-    envelopeRef *envelope = (envelopeRef*)ctx;
+
+    if (nullptr != ctx)
+    {
+        envelope = (envelopeRef*)ctx;
+    }
+    else
+    {
+       PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "_muteMicCallBackPA: context is null");
+       return true; 
+    }
+
     LSMessage *message = (LSMessage*)envelope->message;
     OSEMasterVolumeManager* OSEMasterVolumeManagerObj = (OSEMasterVolumeManager*)envelope->context;
 
@@ -859,6 +894,7 @@ bool OSEMasterVolumeManager::_muteVolumeCallBackPA(LSHandle *sh, LSMessage *repl
     bool mute = false;
     int displayId = DISPLAY_ONE;
     int display = -1;
+    envelopeRef *envelope = nullptr;
 
     msg.get("soundOutput", soundOutput);
     msg.get("mute", mute);
@@ -875,7 +911,16 @@ bool OSEMasterVolumeManager::_muteVolumeCallBackPA(LSHandle *sh, LSMessage *repl
             displayId = 2;
     }
 
-    envelopeRef *envelope = (envelopeRef*)ctx;
+    if (nullptr != ctx)
+    {
+        envelope = (envelopeRef*)ctx;
+    }
+    else
+    {
+       PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "_muteVolumeCallBackPA: context is null");
+       return true; 
+    }
+
     LSMessage *message = (LSMessage*)envelope->message;
     OSEMasterVolumeManager* OSEMasterVolumeManagerObj = (OSEMasterVolumeManager*)envelope->context;
 
@@ -1089,6 +1134,7 @@ bool OSEMasterVolumeManager::_volumeUpCallBackPA(LSHandle *sh, LSMessage *reply,
     std::string soundOutput;
     int display = DISPLAY_ONE;
     int displayId = -1;
+    envelopeRef *envelope = nullptr;
 
     msg.get("soundOutput", soundOutput);
     msg.get("sessionId", display);
@@ -1097,7 +1143,16 @@ bool OSEMasterVolumeManager::_volumeUpCallBackPA(LSHandle *sh, LSMessage *reply,
     else
         displayId = 1;
 
-    envelopeRef *envelope = (envelopeRef*)ctx;
+    if (nullptr != ctx)
+    {
+        envelope = (envelopeRef*)ctx;
+    }
+    else
+    {
+       PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "_volumeUpCallBackPA: context is null");
+       return true; 
+    }
+
     LSMessage *message = (LSMessage*)envelope->message;
     OSEMasterVolumeManager* OSEMasterVolumeManagerObj = (OSEMasterVolumeManager*)envelope->context;
 
@@ -1211,6 +1266,7 @@ void OSEMasterVolumeManager::volumeDown(LSHandle *lshandle, LSMessage *message, 
         CLSError lserror;
         if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
             lserror.Print(__FUNCTION__, __LINE__);
+        return;
     }
 
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "MasterVolume: volumeDown with soundout: %s", soundOutput.c_str());
@@ -1302,6 +1358,7 @@ bool OSEMasterVolumeManager::_volumeDownCallBackPA(LSHandle *sh, LSMessage *repl
     std::string soundOutput;
     int display = DISPLAY_ONE;
     int displayId = -1;
+    envelopeRef *envelope = nullptr;
 
     msg.get("soundOutput", soundOutput);
     msg.get("sessionId", display);
@@ -1310,7 +1367,16 @@ bool OSEMasterVolumeManager::_volumeDownCallBackPA(LSHandle *sh, LSMessage *repl
     else
         displayId = 1;
 
-    envelopeRef *envelope = (envelopeRef*)ctx;
+    if (nullptr != ctx)
+    {
+        envelope = (envelopeRef*)ctx;
+    }
+    else
+    {
+       PM_LOG_ERROR(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "_volumeDownCallBackPA: context is null");
+       return true; 
+    }
+
     LSMessage *message = (LSMessage*)envelope->message;
     OSEMasterVolumeManager* OSEMasterVolumeManagerObj = (OSEMasterVolumeManager*)envelope->context;
 

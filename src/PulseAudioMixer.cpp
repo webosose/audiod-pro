@@ -375,7 +375,7 @@ bool PulseAudioMixer::setSoundOutputOnRange(EVirtualAudioSink startSink,\
     strncpy(routingSet.device, deviceName, DEVICE_NAME_LENGTH);
     routingSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_sink_outputdevice_on_range_reply, routingSet);
+    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_sink_outputdevice_on_range_reply, routingSet);
 
     return status;
 }
@@ -391,7 +391,7 @@ bool PulseAudioMixer::setSoundInputOnRange(EVirtualSource startSource,\
     strncpy(routingSet.device, deviceName, DEVICE_NAME_LENGTH);
     routingSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_source_inputdevice_on_range_reply, routingSet);
+    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_source_inputdevice_on_range_reply, routingSet);
 
     return status;
 }
@@ -405,7 +405,7 @@ bool PulseAudioMixer::setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtua
     routingSet.id = 0;
     routingSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_sink_routing_reply, routingSet);
+    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_sink_routing_reply, routingSet);
 
     return status;
 }
@@ -419,7 +419,7 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
     routingSet.id = 0;
     routingSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    int status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_source_routing_reply, routingSet);
+    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_source_routing_reply, routingSet);
 
     return status;
 }
@@ -1116,7 +1116,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         {
                             outputStreamOpened (sink , sinkIndex, appname);
                             PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, \
-                            "%s sink %i-%s opened (stream %i). Volume: %d, Headset: %d, Route: %d, Streams: %d.",
+                            "%s sink %i-%s opened. Volume: %d, Headset: %d, Route: %d, Streams: %d.",
                                     __FUNCTION__, (int)sink, virtualSinkName(sink), \
                                     mPulseStateVolume[sink],\
                                     mPulseStateVolumeHeadset[sink], \
