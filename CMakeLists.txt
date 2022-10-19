@@ -103,7 +103,6 @@ include_directories(include)
 
 aux_source_directory(src src_files)
 aux_source_directory(utils utils_1_files)
-aux_source_directory(ipc ipc_files)
 aux_source_directory(pmtrace pmtrace_files)
 
 
