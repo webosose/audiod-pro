@@ -85,7 +85,7 @@ paudiodMsgHdr PulseAudioMixer::addAudioMsgHeader(uint8_t msgType, uint8_t msgID)
 }
 
 template<typename T>
-bool PulseAudioMixer::sendDataToPule (uint8_t msgType, uint8_t msgID, T subObj)
+bool PulseAudioMixer::sendDataToPule (uint32_t msgType, uint32_t msgID, T subObj)
 {
     paudiodMsgHdr audioMsgHdr = addAudioMsgHeader(msgType, msgID);
 
