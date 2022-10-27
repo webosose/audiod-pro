@@ -140,8 +140,8 @@ SET (modules_files
 
     add_definitions(-DDEVICE_NAME="Unknown")
     add_definitions(-DDEVICE_ENUM=eDevice_unknown)
-    add_definitions(-DSYSTEMSOUNDS_PATH="${WEBOS_INSTALL_DATADIR}/systemsounds/")
-    install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_DATADIR} FILES_MATCHING PATTERN "*.pcm")
+    add_definitions(-DSYSTEMSOUNDS_PATH="/media/internal/systemsounds/")
+    install(DIRECTORY "${PROJECT_SOURCE_DIR}/files/share/sounds/systemsounds" DESTINATION ${WEBOS_INSTALL_MEDIADIR}/internal FILES_MATCHING PATTERN "*.pcm")
     install(FILES files/config/audiod_sink_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_source_volume_policy_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_module_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
