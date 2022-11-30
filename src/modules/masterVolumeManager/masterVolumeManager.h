@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 LG Electronics, Inc.
+// Copyright (c) 2020-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,10 @@ class MasterVolumeManager : public ModuleInterface
         void eventMasterVolumeStatus();
         void eventActiveDeviceInfo(const std::string deviceName,\
             const std::string& display, const bool& isConnected, const bool& isOutput);
+        void eventRequestSoundOutputDeviceInfo();
+        void eventRequestSoundInputDeviceInfo();
+        void eventResponseSoundOutputDeviceInfo(utils::mapSoundDevicesInfo soundOutputInfo);
+        void eventResponseSoundInputDeviceInfo(utils::mapSoundDevicesInfo soundInputInfo);
 
         //Internal API for Volume and Mute, will be implemented during dynamic audio policy handling redesign
         bool _setVolume(int volume, bool notifySubscriber = true){return true;}

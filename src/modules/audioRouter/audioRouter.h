@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 LG Electronics, Inc.
+// Copyright (c) 2021-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,6 +65,7 @@ class AudioRouter : public ModuleInterface
         AudioMixer* mObjAudioMixer;
         AudioRouter(ModuleConfig* const pConfObj);
         static bool mIsObjRegistered;
+        bool mSoundDevicesLoaded;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
         {
@@ -87,6 +88,8 @@ class AudioRouter : public ModuleInterface
         utils::mapMultipleDeviceInfo mMutipleInputInfo;
 
         std::list<std::string> mBTDeviceList;
+        utils::mapSoundDevicesInfo mSoundOutputDeviceInfo;
+        utils::mapSoundDevicesInfo mSoundInputDeviceInfo;
 
         void setOutputDeviceRouting(const std::string &deviceName, const int &priority,\
             const std::string &display, utils::EMIXER_TYPE mixerType);
@@ -126,11 +129,14 @@ class AudioRouter : public ModuleInterface
         void eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo);
         void eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo);
         void eventBTDeviceDisplayInfo(const bool &connectionStatus, const std::string &deviceAddress, const int &displayId);
+        std::string getSoundDeviceList(bool subscribed, const std::string &query);
+        void eventResponseSoundDevicesInfo(bool isOutput);
+        void setSoundDeviceInfo(bool isOutput);
+        utils::mapSoundDevicesInfo getSoundDeviceInfo(bool isOutput);
         bool setSoundOutput(const std::string& soundOutput, const int &displayId);
         bool setSoundInput(const std::string& soundInput, const int &displayId);
         std::string getDisplayName(const int &displayId);
-        std::string getSoundOutputList(bool subscribed);
-        std::string getSoundDeviceList(bool subscribed, const std::string &query);
+        std::string getSoundDeviceInfo(bool subscribed, const std::string &query);
 
         void notifyDeviceListSubscribers();
 

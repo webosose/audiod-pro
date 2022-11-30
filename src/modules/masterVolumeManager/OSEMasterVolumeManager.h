@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 LG Electronics, Inc.
+// Copyright (c) 2021-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,6 +55,9 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         std::string getDisplaySoundInput(const int& display);
         bool mMuteStatus;
         static bool mIsObjRegistered;
+        utils::mapSoundDevicesInfo msoundOutputDeviceInfo;
+        utils::mapSoundDevicesInfo msoundInputDeviceInfo;
+        std::map<std::string,bool> mapActiveDevicesInfo;
         //Register Object to object factory. This is called automatically
         static bool RegisterObject()
         {
@@ -75,15 +78,18 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         }
         void setCurrentVolume(int iVolume);
         void setCurrentMuteStatus(bool bMuteStatus);
-        void notifyVolumeSubscriber(const int &displayId,const std::string &callerId);
-        void notifyMicVolumeSubscriber(const int &displayId, bool subscribed);
+        void notifyVolumeSubscriber(const std::string &soundOutput, const int &displayId,const std::string &callerId);
+        void notifyMicVolumeSubscriber(const std::string &soundInput, const int &displayId, bool subscribed);
         void setVolume(const int &displayId);
         void setMicVolume(const int &displayId, LSHandle *lshandle, LSMessage *message, void *ctx);
         void setMuteStatus(const int &displayId);
-        void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput);
-        void setDisplaySoundInput(const std::string& display, const std::string& soundInput);
-        std::string getVolumeInfo(const int &displayId, const std::string &callerId);
-        std::string getMicVolumeInfo(const int &displayId, bool subscribed);
+        void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput, const bool& isConnected);
+        void setDisplaySoundInput(const std::string& display, const std::string& soundInput, const bool& isConnected);
+        std::string getVolumeInfo(const std::string &soundOutput, const int &displayId, const std::string &callerId);
+        std::string getMicVolumeInfo(const std::string &soundInput, const int &displayId, bool subscribed);
+        void setSoundOutputInfo(utils::mapSoundDevicesInfo soundOutputInfo);
+        void setSoundInputInfo(utils::mapSoundDevicesInfo soundInputInfo);
+        int getDisplayId(const std::string &displayName);
 
         void setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void setMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);

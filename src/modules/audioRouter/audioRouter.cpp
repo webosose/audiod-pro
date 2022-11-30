@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 LG Electronics, Inc.
+// Copyright (c) 2020-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -307,6 +307,62 @@ void AudioRouter::eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo)
     }
 }
 
+void AudioRouter::eventResponseSoundDevicesInfo(bool isOutput)
+{
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,"eventResponseSoundDevicesInfo");
+    if (mObjModuleManager)
+    {
+        if(isOutput)
+        {
+            events::EVENT_RESPONSE_SOUNDOUTPUT_INFO_T eventResponseSoundOutputDeviceInfo;
+            eventResponseSoundOutputDeviceInfo.eventName = utils::eEventResponseSoundOutputDeviceInfo;
+            eventResponseSoundOutputDeviceInfo.soundOutputInfo = getSoundDeviceInfo(true);
+            mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventResponseSoundOutputDeviceInfo);
+        }
+        else
+        {
+            events::EVENT_RESPONSE_SOUNDINPUT_INFO_T eventResponseSoundInputDeviceInfo;
+            eventResponseSoundInputDeviceInfo.eventName = utils::eEventResponseSoundInputDeviceInfo;
+            eventResponseSoundInputDeviceInfo.soundInputInfo = getSoundDeviceInfo(false);
+            mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventResponseSoundInputDeviceInfo);
+        }
+    }
+    else
+        PM_LOG_ERROR (MSGID_AUDIOROUTER, INIT_KVCOUNT, \
+            "eventResponseSoundDevicesList: mObjModuleManager is null");
+}
+
+void AudioRouter::setSoundDeviceInfo(bool isOutput)
+{
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,"setSoundDeviceInfo");
+    utils::mapSoundDevicesInfo soundDeviceInfo;
+    if(isOutput)
+    {
+        for (const auto it : mSoundOutputInfo)
+            for (const auto& deviceInfo : it.second)
+                soundDeviceInfo[it.first].push_back(deviceInfo.deviceName);
+        mSoundOutputDeviceInfo = soundDeviceInfo;
+    }
+    else
+    {
+        for (const auto it : mSoundInputInfo)
+            for (const auto& deviceInfo : it.second)
+                soundDeviceInfo[it.first].push_back(deviceInfo.deviceName);
+        mSoundInputDeviceInfo = soundDeviceInfo;
+    }
+}
+
+utils::mapSoundDevicesInfo AudioRouter::getSoundDeviceInfo(bool isOutput)
+{
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,"getSoundDeviceInfo ::mSoundDevicesLoaded :%d",(int)mSoundDevicesLoaded);
+    if(!mSoundDevicesLoaded)
+        PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT, "%s SoundDevices Not updated ", __FUNCTION__);
+    if(isOutput)
+        return mSoundOutputDeviceInfo;
+    else
+        return mSoundInputDeviceInfo;
+}
+
 void AudioRouter::setBTDeviceRouting(const std::string &deviceName)
 {
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
@@ -401,7 +457,6 @@ void AudioRouter::resetOutputDeviceRouting(const std::string &deviceName, const 
     }
 }
 
-
 void AudioRouter::setInputDeviceRouting(const std::string &deviceName, const int &priority,\
     const std::string &display, utils::EMIXER_TYPE mixerType)
 {
@@ -427,7 +482,6 @@ void AudioRouter::setInputDeviceRouting(const std::string &deviceName, const int
         updateDeviceStatus(display, deviceName, true, false, false);
 }
 
-
 void AudioRouter::resetInputDeviceRouting(const std::string &deviceName, const int &priority,\
     const std::string &display, utils::EMIXER_TYPE mixerType)
 {
@@ -452,7 +506,6 @@ void AudioRouter::resetInputDeviceRouting(const std::string &deviceName, const i
         }
     }
 }
-
 
 std::string AudioRouter::getActualOutputDevice(const std::string &deviceName)
 {
@@ -489,7 +542,6 @@ std::string AudioRouter::getActualOutputDevice(const std::string &deviceName)
         "actual devcie is:%s", actualDeviceName.c_str());
     return actualDeviceName;
 }
-
 
 utils::SINK_ROUTING_INFO_T AudioRouter::getSinkRoutingInfo(const std::string &display)
 {
@@ -653,7 +705,6 @@ std::string AudioRouter::getActiveDevice(const std::string& display, const bool&
     }
     return "";
 }
-
 
 void AudioRouter::updateDeviceStatus(const std::string& display, const std::string& deviceName,
     const bool& isConnected, bool const& isActive, const bool& isOutput)
@@ -950,6 +1001,7 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                     (int)deviceInfo.activeStatus, (int)deviceInfo.isConnected);
             }
         }
+        setSoundDeviceInfo(true);
     }
 
     if (!soundInputListInfo.isArray())
@@ -1060,6 +1112,8 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                     (int)deviceInfo.activeStatus, (int)deviceInfo.isConnected);
             }
         }
+        setSoundDeviceInfo(false);
+        mSoundDevicesLoaded = true;
     }
 }
 
@@ -1238,14 +1292,22 @@ std::string AudioRouter::getSoundDeviceList(bool subscribed, const std::string &
             {
                 pbnjson::JObject deviceObject = pbnjson::JObject();
                 if (deviceInfo.deviceType == "internal")
+                {
                     deviceObject.put("deviceType", deviceInfo.deviceType);
+                    deviceObject.put("deviceIcon", "audio-card");
+                }
                 else
+                {
                     deviceObject.put("deviceType", "external");
+                    deviceObject.put("deviceIcon", "");
+                }
                 deviceObject.put("type", "input");
                 deviceObject.put("deviceName", deviceInfo.deviceName);
                 deviceObject.put("deviceNameDetail",deviceInfo.deviceNameDetail);
                 deviceObject.put("connected", deviceInfo.isConnected);
-                deviceObject.put("display",it.first);
+                deviceObject.put("displayId",getNotificationSessionId(it.first));
+                deviceObject.put("active",deviceInfo.activeStatus);
+                deviceObject.put("initialVolume",100);
                 deviceListArray.append(deviceObject);
             }
         }
@@ -1259,14 +1321,22 @@ std::string AudioRouter::getSoundDeviceList(bool subscribed, const std::string &
             {
                 pbnjson::JObject deviceObject = pbnjson::JObject();
                 if (deviceInfo.deviceType == "internal")
+                {
                     deviceObject.put("deviceType", deviceInfo.deviceType);
+                    deviceObject.put("deviceIcon", "audio-card");
+                }
                 else
+                {
                     deviceObject.put("deviceType", "external");
+                    deviceObject.put("deviceIcon", "");
+                }
                 deviceObject.put("type", "output");
                 deviceObject.put("deviceName", deviceInfo.deviceName);
                 deviceObject.put("deviceNameDetail",deviceInfo.deviceNameDetail);
                 deviceObject.put("connected", deviceInfo.isConnected);
-                deviceObject.put("display",it.first);
+                deviceObject.put("displayId",getNotificationSessionId(it.first));
+                deviceObject.put("active",deviceInfo.activeStatus);
+                deviceObject.put("initialVolume",100);
                 deviceListArray.append(deviceObject);
             }
         }
@@ -1639,7 +1709,8 @@ AudioRouter* AudioRouter::getAudioRouterInstance()
 }
 
 AudioRouter::AudioRouter(ModuleConfig* const pConfObj):mObjModuleManager(nullptr),\
-                                                       mObjAudioMixer(nullptr)
+                                                       mObjAudioMixer(nullptr),\
+                                                       mSoundDevicesLoaded(false)
 {
     PM_LOG_DEBUG("AudioRouter constructor");
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
@@ -1652,6 +1723,8 @@ AudioRouter::AudioRouter(ModuleConfig* const pConfObj):mObjModuleManager(nullptr
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventSourcePolicyInfo);
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventDeviceConnectionStatus);
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventBTDeviceDisplayInfo);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventRequestSoundOutputDeviceInfo);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventRequestSoundInputDeviceInfo);
     }
     else
         PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
@@ -1782,6 +1855,20 @@ void AudioRouter::handleEvent(events::EVENTS_T *event)
                 "handleEvent : eEventBTDeviceDisplayInfo");
             eventBTDeviceDisplayInfo(stEventBtDeviceDisplayInfo->state, stEventBtDeviceDisplayInfo->address, stEventBtDeviceDisplayInfo->displayId);
 
+        }
+        break;
+        case utils::eEventRequestSoundOutputDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventRequestSoundOutputDeviceList");
+            eventResponseSoundDevicesInfo(true);
+        }
+        break;
+        case utils::eEventRequestSoundInputDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventRequestSoundInputDeviceList");
+            eventResponseSoundDevicesInfo(false);
         }
         break;
         default:

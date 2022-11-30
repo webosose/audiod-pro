@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 LG Electronics, Inc.
+// Copyright (c) 2021-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -152,6 +152,27 @@ namespace events
         std::string trackId;
     }EVENT_UNREGISTER_TRACK_T;
 
+    typedef struct
+    {
+        EModuleEventType eventName;
+    }EVENT_REQUEST_SOUNDOUTPUT_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        utils::mapSoundDevicesInfo soundOutputInfo;
+    }EVENT_RESPONSE_SOUNDOUTPUT_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+    }EVENT_REQUEST_SOUNDINPUT_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        utils::mapSoundDevicesInfo soundInputInfo;
+    }EVENT_RESPONSE_SOUNDINPUT_INFO_T;
 
     typedef struct
     {

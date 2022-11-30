@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 LG Electronics, Inc.
+// Copyright (c) 2020-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -220,9 +220,9 @@ void MasterVolumeManager::eventActiveDeviceInfo(const std::string deviceName,\
     std::string device;
     if (isOutput)
     {
+        mMasterVolumeClientInstance->setDisplaySoundOutput(display, deviceName,isConnected);
         if (isConnected)
         {
-            mMasterVolumeClientInstance->setDisplaySoundOutput(display, deviceName);
             mMasterVolumeClientInstance->setMuteStatus(DEFAULT_ONE_DISPLAY_ID);
             mMasterVolumeClientInstance->setVolume(DEFAULT_ONE_DISPLAY_ID);
             mMasterVolumeClientInstance->setMuteStatus(DEFAULT_TWO_DISPLAY_ID);
@@ -231,12 +231,60 @@ void MasterVolumeManager::eventActiveDeviceInfo(const std::string deviceName,\
     }
     else
     {
-        if (isConnected)
-        {
-            mMasterVolumeClientInstance->setDisplaySoundInput(display, deviceName);
-        }
+        mMasterVolumeClientInstance->setDisplaySoundInput(display, deviceName, isConnected);
     }
 }
+
+void MasterVolumeManager::eventResponseSoundOutputDeviceInfo(utils::mapSoundDevicesInfo soundOutputInfo)
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"eventResponseSoundOutputDeviceInfo");
+    if (mMasterVolumeClientInstance)
+    {
+        mMasterVolumeClientInstance->setSoundOutputInfo(soundOutputInfo);
+    }
+    else
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
+}
+
+void MasterVolumeManager::eventRequestSoundOutputDeviceInfo()
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"eventRequestSoundOutputDeviceInfo");
+    if (mObjModuleManager)
+    {
+        events::EVENT_REQUEST_SOUNDOUTPUT_INFO_T eventRequestSoundOutputDeviceInfo;
+        eventRequestSoundOutputDeviceInfo.eventName = utils::eEventRequestSoundOutputDeviceInfo;
+        mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventRequestSoundOutputDeviceInfo);
+    }
+    else
+        PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+            "eventRequestSoundOutputDeviceInfo: mObjModuleManager is null");
+}
+
+void MasterVolumeManager::eventRequestSoundInputDeviceInfo()
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"eventRequestSoundInputDeviceInfo");
+    if (mObjModuleManager)
+    {
+        events::EVENT_REQUEST_SOUNDOUTPUT_INFO_T eventRequestSoundInputDeviceInfo;
+        eventRequestSoundInputDeviceInfo.eventName = utils::eEventRequestSoundInputDeviceInfo;
+        mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventRequestSoundInputDeviceInfo);
+    }
+    else
+        PM_LOG_ERROR (MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, \
+            "eventRequestSoundInputDeviceInfo: mObjModuleManager is null");
+}
+
+void MasterVolumeManager::eventResponseSoundInputDeviceInfo(utils::mapSoundDevicesInfo soundInputInfo)
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"eventResponseSoundInputDeviceInfo");
+    if (mMasterVolumeClientInstance)
+    {
+        mMasterVolumeClientInstance->setSoundInputInfo(soundInputInfo);
+    }
+    else
+        PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "Client MasterVolumeInstance is nullptr");
+}
+
 /* TODO
 currently these luna API's are not in sync with exsting master volume
 In future existing master volume will be removed and these below luna API's will be used
@@ -309,6 +357,22 @@ void MasterVolumeManager::handleEvent(events::EVENTS_T *event)
                 stActiveDeviceInfo->isOutput);
         }
         break;
+        case utils::eEventResponseSoundOutputDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventResponseSoundOutputDeviceInfo");
+            events::EVENT_RESPONSE_SOUNDOUTPUT_INFO_T *stSoundOutputDeviceInfo = (events::EVENT_RESPONSE_SOUNDOUTPUT_INFO_T*)event;
+            eventResponseSoundOutputDeviceInfo(stSoundOutputDeviceInfo->soundOutputInfo);
+        }
+        break;
+        case utils::eEventResponseSoundInputDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventResponseSoundInputDeviceInfo");
+            events::EVENT_RESPONSE_SOUNDINPUT_INFO_T *stSoundInputDeviceInfo = (events::EVENT_RESPONSE_SOUNDINPUT_INFO_T*)event;
+            eventResponseSoundInputDeviceInfo(stSoundInputDeviceInfo->soundInputInfo);
+        }
+        break;
         default:
         {
             PM_LOG_WARNING(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
@@ -326,12 +390,16 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
     {
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventMasterVolumeStatus);
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventActiveDeviceInfo);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventResponseSoundOutputDeviceInfo);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventResponseSoundInputDeviceInfo);
     }
     else
         PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mObjModuleManager is nullptr");
     mMasterVolumeClientInstance = MasterVolumeInterface::getClientInstance();
     if (!mMasterVolumeClientInstance)
         PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mMasterVolumeClientInstance is nullptr");
+    eventRequestSoundOutputDeviceInfo();
+    eventRequestSoundInputDeviceInfo();
 }
 
 MasterVolumeManager::~MasterVolumeManager()

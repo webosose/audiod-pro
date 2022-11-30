@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 LG Electronics, Inc.
+// Copyright (c) 2021-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,9 +61,11 @@ public:
     virtual void setVolume(const int &displayId) = 0;
     virtual void setMicVolume(const int &displayId, LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
-    virtual void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput) = 0;
-    virtual void setDisplaySoundInput(const std::string& display, const std::string& soundInput) = 0;
+    virtual void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput, const bool& isConnected) = 0;
+    virtual void setDisplaySoundInput(const std::string& display, const std::string& soundInput, const bool& isConnected) = 0;
     virtual void muteMic(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
+    virtual void setSoundOutputInfo(utils::mapSoundDevicesInfo soundOutputInfo) = 0;
+    virtual void setSoundInputInfo(utils::mapSoundDevicesInfo soundInputInfo) = 0;
 };
 
 #endif //MASTERVOLUME_INTERFACE_H
