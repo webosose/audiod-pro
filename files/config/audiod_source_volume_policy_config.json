@@ -71,6 +71,20 @@
             "category": "display1"
         },
         {
+            "streamType": "webcall1",
+            "policyVolume":50,
+            "priority":0,
+            "group":0,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":false,
+            "category": "display1"
+        },
+        {
             "streamType": "record1",
             "policyVolume":50,
             "priority":1,
@@ -89,6 +103,20 @@
             "policyVolume":50,
             "priority":1,
             "group":3,
+            "defaultVolume":100,
+            "maxVolume":100,
+            "minVolume":0,
+            "volumeAdjustable": true,
+            "currentVolume":100,
+            "muteStatus": false,
+            "ramp":false,
+            "category": "display2"
+        },
+        {
+            "streamType": "webcall2",
+            "policyVolume":50,
+            "priority":0,
+            "group":0,
             "defaultVolume":100,
             "maxVolume":100,
             "minVolume":0,

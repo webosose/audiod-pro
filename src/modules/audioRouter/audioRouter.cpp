@@ -264,6 +264,9 @@ void AudioRouter::eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo)
         std::list<EVirtualSource> sourceList;
         utils::SOURCE_ROUTING_INFO_T inputRoutingInfo;
         mMapSourceRoutingInfo["display1"] = inputRoutingInfo;
+        if (WEBOS_SOC_TYPE == "RPI4") {
+            mMapSourceRoutingInfo["display2"] = inputRoutingInfo;
+        }
         utils::itMapSourceRoutingInfo it;
         for (const pbnjson::JValue& elements : sourcePolicyInfo.items())
         {
@@ -272,12 +275,21 @@ void AudioRouter::eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo)
             if ((elements["category"].asString(category) == CONV_OK) && \
                 (elements["streamType"].asString(streamType) == CONV_OK))
             {
-                it = mMapSourceRoutingInfo.find("display1");            //only one category, since only 1 set of displays are supported
+                if (WEBOS_SOC_TYPE == "RPI4")
+                    it = mMapSourceRoutingInfo.find(category);
+                else
+                    it = mMapSourceRoutingInfo.find("display1");            //only one category, since only 1 set of displays are supported
                 if (it != mMapSourceRoutingInfo.end())
                     it->second.sourceList.push_back(getSourceByName(streamType.c_str()));
             }
         }
         it = mMapSourceRoutingInfo.find("display1");
+        if (it != mMapSourceRoutingInfo.end())
+        {
+            it->second.startSource = it->second.sourceList.front();
+            it->second.endSource = it->second.sourceList.back();
+        }
+        it = mMapSourceRoutingInfo.find("display2");
         if (it != mMapSourceRoutingInfo.end())
         {
             it->second.startSource = it->second.sourceList.front();
