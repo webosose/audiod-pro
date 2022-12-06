@@ -91,22 +91,31 @@ bool PulseAudioMixer::sendDataToPule (uint32_t msgType, uint32_t msgID, T subObj
 
     char *data=(char*)malloc(sizeof(struct paudiodMsgHdr) + sizeof(T));
 
-    //copying....
-    memcpy(data, &audioMsgHdr, sizeof(struct paudiodMsgHdr));
-    memcpy(data + sizeof(struct paudiodMsgHdr), &subObj, sizeof(T));
-
-    int sockfd = g_io_channel_unix_get_fd (mChannel);
-    ssize_t bytes = send(sockfd, data, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
-
-    free(data);
-
-    if (bytes != SIZE_MESG_TO_PULSE)
+    if (data)
     {
-        if (bytes >= 0)
-            PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "sendDataToPulse: only %u bytes sent to Pulse out of %d (%s).", \
-                                   bytes, SIZE_MESG_TO_PULSE, strerror(errno));
-        else
-            PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "sendHeaderToPA: send to Pulse failed: %s", strerror(errno));
+        //copying....
+        memcpy(data, &audioMsgHdr, sizeof(struct paudiodMsgHdr));
+        memcpy(data + sizeof(struct paudiodMsgHdr), &subObj, sizeof(T));
+
+        int sockfd = g_io_channel_unix_get_fd (mChannel);
+        ssize_t bytes = send(sockfd, data, SIZE_MESG_TO_PULSE, MSG_DONTWAIT);
+
+        free(data);
+
+        if (bytes != SIZE_MESG_TO_PULSE)
+        {
+            if (bytes >= 0)
+                PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "sendDataToPulse: only %u bytes sent to Pulse out of %d (%s).", \
+                                       bytes, SIZE_MESG_TO_PULSE, strerror(errno));
+            else
+                PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "sendHeaderToPA: send to Pulse failed: %s", strerror(errno));
+        }
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
+                "PulseAudioMixer::sendDataToPule: data handle is NULL");
+        return false;
     }
     return true;
 }
@@ -1342,6 +1351,8 @@ bool PulseAudioMixer::playSound(const char *snd, EVirtualAudioSink sink, const c
 void PulseAudioMixer::preloadSystemSound(const char * snd)
 {
     std::string path = SYSTEMSOUNDS_PATH;
+    if (nullptr == snd)
+        return;
     path += snd;
     path += "-ondemand.pcm";
 

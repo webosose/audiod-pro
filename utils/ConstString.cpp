@@ -1,4 +1,4 @@
-// Copyright (c) 2002-2018 LG Electronics, Inc.
+// Copyright (c) 2002-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -156,6 +156,7 @@ std::string string_printf(const char *format, ...)
     va_end(args);
     std::string    str(buffer, result);
     delete[] buffer;
+
     return str;
 }
 
@@ -187,7 +188,10 @@ std::string & append_format(std::string & str, const char * format, ...)
         result = vsnprintf(buffer, length, format, args);
     } while (result == -1 && result < length);
     va_end(args);
-    str.append(buffer, result);
-    delete[] buffer;
+    if (buffer)
+    {
+        str.append(buffer, result);
+        delete[] buffer;
+    }
     return str;
 }

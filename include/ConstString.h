@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 LG Electronics, Inc.
+// Copyright (c) 2012-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ public:
     /// Build an std::string using a ConstString. Will copy the text
     // and the resulting std::string will survive the ConstString
     std::string    operator+(const gchar * inRhs) const
-                                 { return std::string(c_str()) += inRhs; }
+                                 { return std::string(c_str()) += (inRhs ? inRhs : ""); }
 
     /// Built-in unit test for the class: Returns true on success.
     static bool    UnitTest();

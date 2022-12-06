@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 LG Electronics, Inc.
+// Copyright (c) 2012-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -150,6 +150,8 @@ bool PulseAudioLink::play(const char * samplename, const char * sink)
 {
     PMTRACE_FUNCTION;
     std::string path = SYSTEMSOUNDS_PATH;
+    if (nullptr == samplename)
+        return false;
     path += samplename;
     path += "-ondemand.pcm";
 
@@ -161,11 +163,20 @@ bool PulseAudioLink::play(const char * samplename, const char * sink)
         return false;
 
     PlaySampleDeferData* data = (PlaySampleDeferData*)malloc(sizeof(PlaySampleDeferData));
-    strncpy(data->samplename, samplename, sizeof(data->samplename)-1);
-    data->sink = sink;
-    data->pacontext = mContext;
-    pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
-                                              &PlaySampleDeferCB, data);
+    if (data)
+    {
+        strncpy(data->samplename, samplename, sizeof(data->samplename)-1);
+        data->sink = sink;
+        data->pacontext = mContext;
+        pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
+                                                  &PlaySampleDeferCB, data);
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "PulseAudioLink::play: data handle is NULL");
+        return false;
+    }
     return true;
 }
 
@@ -305,13 +316,22 @@ bool PulseAudioLink::play(PulseAudioDataProvider* data, const char* sinkname)
     struct PlayAudioDataProviderDeferData* dataCB =
                            (struct PlayAudioDataProviderDeferData*)malloc
                                (sizeof(struct PlayAudioDataProviderDeferData));
-    dataCB->dataProvider = data;
-    dataCB->sinkname = sinkname;
-    dataCB->pacontext = mContext;
-    pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
-                        &PlayAudioDataProviderDeferCB,
-                        dataCB);
+    if (dataCB)
+    {
+        dataCB->dataProvider = data;
+        dataCB->sinkname = sinkname;
+        dataCB->pacontext = mContext;
+        pa_mainloop_get_api(mMainLoop)->defer_new(pa_mainloop_get_api(mMainLoop),
+                            &PlayAudioDataProviderDeferCB,
+                            dataCB);
 
+    }
+    else
+    {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "PulseAudioLink::play: data handle is NULL");
+        return false;
+    }
     return true;
 }
 

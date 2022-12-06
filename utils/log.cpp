@@ -401,7 +401,8 @@ static std::string sLogIndent;
 
 LogIndent::LogIndent(const char * indent) : mIndent(indent)
 {
-    sLogIndent += indent;
+    if (nullptr != indent)
+        sLogIndent += indent;
 }
 
 LogIndent::~LogIndent()

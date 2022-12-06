@@ -42,7 +42,7 @@ bool TrackManager::disconnetedCb( LSHandle *sh,
     for (auto items = trackManagerInstance->mMapPipelineTrackId.begin();
             items != trackManagerInstance->mMapPipelineTrackId.end(); items++)
     {
-        if (items->second.serviceName == serviceName)
+        if (nullptr != serviceName && items->second.serviceName == serviceName)
         {
             PM_LOG_INFO(MSGID_TRACKMANAGER, INIT_KVCOUNT, "TrackManager: trackid not unregistered %s : %s",\
                 serviceName, items->first.c_str());

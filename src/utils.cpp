@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2021 LG Electronics, Inc.
+// Copyright (c) 2012-2022 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -335,7 +335,7 @@ const char * controlEventName(utils::EConnStatus eConnStatus)
 const char * virtualSinkName(EVirtualAudioSink sink, bool prettyName)
 {
     const char * name = "<invalid sink>";
-    if (IsValidVirtualSink(sink))
+    if (IsValidVirtualSink(sink) && sink >= 0)
         name = virtualsinkmap[sink].virtualsinkname +
                                                       (prettyName ? 1 : 0);
     else if (sink == eVirtualSink_None)
@@ -371,7 +371,7 @@ EVirtualAudioSink getSinkByName(const char * name)
 const char * virtualSourceName(EVirtualSource source, bool prettyName)
 {
     const char * name = "<invalid source>";
-    if (IsValidVirtualSource(source))
+    if (IsValidVirtualSource(source) && source >= 0)
         name = virtualsourcemap[source].virtualsourcename +
                                                        (prettyName ? 1 : 0);
     else if (source == eVirtualSource_None)
