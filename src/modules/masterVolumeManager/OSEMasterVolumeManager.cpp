@@ -22,6 +22,8 @@ OSEMasterVolumeManager::OSEMasterVolumeManager():mVolume(0), mMuteStatus(false),
                                                  displayOneMicVolume(100), displayTwoMicVolume(100), displayOneMuteStatus(0), displayTwoMuteStatus(0)
 {
     PM_LOG_DEBUG("OSEMasterVolumeManager constructor");
+    requestSoundInputDeviceInfo();
+    requestSoundOutputDeviceInfo();
 }
 
 OSEMasterVolumeManager::~OSEMasterVolumeManager()
@@ -2018,4 +2020,119 @@ int OSEMasterVolumeManager::getDisplayId(const std::string &displayName)
 
     PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "returning displayId:%d", displayId);
     return displayId;
+}
+
+
+void OSEMasterVolumeManager::eventMasterVolumeStatus()
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "eventMasterVolumeStatus: setMuteStatus and setVolume");
+
+    setMuteStatus(DEFAULT_ONE_DISPLAY_ID);
+    setVolume(DEFAULT_ONE_DISPLAY_ID);
+    setMuteStatus(DEFAULT_TWO_DISPLAY_ID);
+    setVolume(DEFAULT_TWO_DISPLAY_ID);
+}
+
+void OSEMasterVolumeManager::eventActiveDeviceInfo(const std::string deviceName,\
+    const std::string& display, const bool& isConnected, const bool& isOutput)
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+        "eventActiveDeviceInfo deviceName:%s display:%s isConnected:%d isOutput:%d", \
+        deviceName.c_str(), display.c_str(), (int)isConnected, (int)isOutput);
+    std::string device;
+    if (isOutput)
+    {
+        setDisplaySoundOutput(display, deviceName,isConnected);
+        if (isConnected)
+        {
+            setMuteStatus(DEFAULT_ONE_DISPLAY_ID);
+            setVolume(DEFAULT_ONE_DISPLAY_ID);
+            setMuteStatus(DEFAULT_TWO_DISPLAY_ID);
+            setVolume(DEFAULT_TWO_DISPLAY_ID);
+        }
+    }
+    else
+    {
+        setDisplaySoundInput(display, deviceName, isConnected);
+    }
+}
+
+void OSEMasterVolumeManager::eventResponseSoundOutputDeviceInfo(utils::mapSoundDevicesInfo soundOutputInfo)
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"eventResponseSoundOutputDeviceInfo");
+
+    setSoundOutputInfo(soundOutputInfo);
+
+}
+
+void OSEMasterVolumeManager::requestSoundOutputDeviceInfo()
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"requestSoundOutputDeviceInfo");
+
+    events::EVENT_REQUEST_SOUNDOUTPUT_INFO_T stEventRequestSoundOutputDeviceInfo;
+    stEventRequestSoundOutputDeviceInfo.eventName = utils::eEventRequestSoundOutputDeviceInfo;
+    ModuleManager::getModuleManagerInstance()->publishModuleEvent((events::EVENTS_T*)&stEventRequestSoundOutputDeviceInfo);
+
+}
+
+void OSEMasterVolumeManager::requestSoundInputDeviceInfo()
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"requestSoundInputDeviceInfo");
+
+    events::EVENT_REQUEST_SOUNDOUTPUT_INFO_T stEventRequestSoundInputDeviceInfo;
+    stEventRequestSoundInputDeviceInfo.eventName = utils::eEventRequestSoundInputDeviceInfo;
+    ModuleManager::getModuleManagerInstance()->publishModuleEvent((events::EVENTS_T*)&stEventRequestSoundInputDeviceInfo);
+}
+
+void OSEMasterVolumeManager::eventResponseSoundInputDeviceInfo(utils::mapSoundDevicesInfo soundInputInfo)
+{
+    PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,"eventResponseSoundInputDeviceInfo");
+    setSoundInputInfo(soundInputInfo);
+}
+
+
+void OSEMasterVolumeManager::handleEvent(events::EVENTS_T *event)
+{
+    switch(event->eventName)
+    {
+        case utils::eEventMasterVolumeStatus:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventMasterVolumeStatus");
+            events::EVENT_MASTER_VOLUME_STATUS_T *masterVolumeStatusEvent = (events::EVENT_MASTER_VOLUME_STATUS_T*)event;
+            eventMasterVolumeStatus();
+        }
+        break;
+        case utils::eEventActiveDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventActiveDeviceInfo");
+            events::EVENT_ACTIVE_DEVICE_INFO_T *stActiveDeviceInfo = (events::EVENT_ACTIVE_DEVICE_INFO_T*)event;
+            eventActiveDeviceInfo(stActiveDeviceInfo->deviceName, stActiveDeviceInfo->display, stActiveDeviceInfo->isConnected,
+                stActiveDeviceInfo->isOutput);
+        }
+        break;
+        case utils::eEventResponseSoundOutputDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventResponseSoundOutputDeviceInfo");
+            events::EVENT_RESPONSE_SOUNDOUTPUT_INFO_T *stSoundOutputDeviceInfo = (events::EVENT_RESPONSE_SOUNDOUTPUT_INFO_T*)event;
+            eventResponseSoundOutputDeviceInfo(stSoundOutputDeviceInfo->soundOutputInfo);
+        }
+        break;
+        case utils::eEventResponseSoundInputDeviceInfo:
+        {
+            PM_LOG_INFO(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                    "handleEvent:: eEventResponseSoundInputDeviceInfo");
+            events::EVENT_RESPONSE_SOUNDINPUT_INFO_T *stSoundInputDeviceInfo = (events::EVENT_RESPONSE_SOUNDINPUT_INFO_T*)event;
+            eventResponseSoundInputDeviceInfo(stSoundInputDeviceInfo->soundInputInfo);
+        }
+        break;
+        default:
+        {
+            PM_LOG_WARNING(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
+                "handleEvent:Unknown event");
+        }
+        break;
+    }
 }

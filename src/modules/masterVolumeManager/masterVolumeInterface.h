@@ -19,6 +19,7 @@
 
 #include "utils.h"
 #include "messageUtils.h"
+#include "events.h"
 
 class MasterVolumeInterface;
 
@@ -57,15 +58,11 @@ public:
     virtual void muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
-    virtual void setMuteStatus(const int &displayId) = 0;
-    virtual void setVolume(const int &displayId) = 0;
     virtual void setMicVolume(const int &displayId, LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
-    virtual void setDisplaySoundOutput(const std::string& display, const std::string& soundOutput, const bool& isConnected) = 0;
-    virtual void setDisplaySoundInput(const std::string& display, const std::string& soundInput, const bool& isConnected) = 0;
     virtual void muteMic(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
-    virtual void setSoundOutputInfo(utils::mapSoundDevicesInfo soundOutputInfo) = 0;
-    virtual void setSoundInputInfo(utils::mapSoundDevicesInfo soundInputInfo) = 0;
+
+    virtual void handleEvent(events::EVENTS_T *event) = 0;
 };
 
 #endif //MASTERVOLUME_INTERFACE_H

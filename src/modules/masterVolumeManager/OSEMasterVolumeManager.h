@@ -107,5 +107,14 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         static bool _volumeUpCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
         static bool _volumeDownCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
         static bool _muteMicCallBackPA(LSHandle *sh, LSMessage *reply, void *ctx, bool status);
+
+        void handleEvent(events::EVENTS_T *event);
+        void eventMasterVolumeStatus();
+        void eventActiveDeviceInfo(const std::string deviceName,\
+            const std::string& display, const bool& isConnected, const bool& isOutput);
+        void requestSoundOutputDeviceInfo();
+        void requestSoundInputDeviceInfo();
+        void eventResponseSoundOutputDeviceInfo(utils::mapSoundDevicesInfo soundOutputInfo);
+        void eventResponseSoundInputDeviceInfo(utils::mapSoundDevicesInfo soundInputInfo);
 };
 #endif
