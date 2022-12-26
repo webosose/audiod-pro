@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 LG Electronics Inc.
+ * Copyright (c) 2022-2023 LG Electronics Inc.
  * SPDX-License-Identifier: LicenseRef-LGE-Proprietary
  */
 
@@ -23,9 +23,10 @@ class AudioEffectManager : public ModuleInterface
         static bool mIsObjRegistered;
 
         //  change audio effect list size and add to list
-        static const int audioEffectListSize = 1;
+        static const int audioEffectListSize = 2;
         static constexpr const char* audioEffectList[] = {
             "speech enhancement",
+            "gain control"
         };
 
         //  Register Object to object factory. This is called automatically
@@ -35,6 +36,9 @@ class AudioEffectManager : public ModuleInterface
         }
 
         int getEffectId(std::string effectName);
+        bool mCacheRead;
+        int inputDevCnt;
+        bool isAGCEnabled;
 
     public:
         ~AudioEffectManager();
@@ -52,13 +56,16 @@ class AudioEffectManager : public ModuleInterface
         }
         void initialize();
         void deInitialize();
-        void handleEvent(events::EVENTS_T* ev);
+        void setConnStatus(std::string deviceName, int display, bool isOutput, bool connStatus);
+        void handleEvent(events::EVENTS_T *event);
 
         //  luna API calls
         static LSMethod audioeffectMethods[];
         static bool _getAudioEffectList(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _setAudioEffect(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _checkAudioEffectStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
+        void eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail, const std::string &deviceIcon, \
+            utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool &isOutput);
 };
 
 #endif  //  _AUDIO_EFFECT_MANAGER_H_

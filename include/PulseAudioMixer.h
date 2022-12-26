@@ -140,6 +140,7 @@ private:
     bool BTvolumeSupport;
 
     bool mEffectSpeechEnhancementEnabled;
+    bool mEffectGainControlEnabled;
 
     //To start the pulse socket connect timer
     void createPulseSocketCommunication();

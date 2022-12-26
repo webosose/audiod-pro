@@ -49,6 +49,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
                                      mPreviousVolume(0),
                                      BTvolumeSupport(false),
                                      mEffectSpeechEnhancementEnabled(false),
+                                     mEffectGainControlEnabled(false),
                                      mObjMixerCallBack(mixerCallBack)
 {
     // initialize table for the pulse state lookup table
@@ -435,17 +436,21 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
 
 bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: effectId: %d, enabled:%d", effectId, enabled);
+    struct paParamSet paramSet;
 
     switch (effectId) {
         case 0:
             mEffectSpeechEnhancementEnabled = enabled;
+            paramSet.Type = PAUDIOD_MODULE_SPEECH_ENHANCEMENT_LOAD;
+            break;
+        case 1:
+            mEffectGainControlEnabled = enabled;
+            paramSet.Type = PAUDIOD_MODULE_GAIN_CONTROL_LOAD;
             break;
         default:
             break;
     }
 
-    struct paParamSet paramSet;
-    paramSet.Type = PAUDIOD_MODULE_SPEECH_ENHANCEMENT_LOAD;
     paramSet.ID = 0;
     paramSet.param1 = enabled;
     paramSet.param2 = effectId;
@@ -463,6 +468,8 @@ bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
     switch (effectId) {
         case 0:
             return mEffectSpeechEnhancementEnabled;
+        case 1:
+            return mEffectGainControlEnabled;
         default:
             return false;
     }
