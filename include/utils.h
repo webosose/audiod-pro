@@ -69,6 +69,7 @@ typedef enum serverType{
     eBluetoothService2,
     eAudiooutputdService,
     eSettingsService,
+    eSettingsService2,
     ePdmService,
     eServiceCount,        //Last element should be eServiceCount
     eServiceFirst = eBluetoothService,
@@ -146,6 +147,7 @@ namespace utils
         eEventResponseSoundOutputDeviceInfo,
         eEventRequestSoundInputDeviceInfo,
         eEventResponseSoundInputDeviceInfo,
+        eEventRequestInternalDevices,
         eEventType_Count,
         eEventType_First = 0,
         eEventType_Last = eEventResponseSoundInputDeviceInfo

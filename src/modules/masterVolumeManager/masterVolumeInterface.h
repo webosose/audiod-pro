@@ -58,7 +58,6 @@ public:
     virtual void muteVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void volumeUp(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void volumeDown(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
-    virtual void setMicVolume(const int &displayId, LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void getMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
     virtual void muteMic(LSHandle *lshandle, LSMessage *message, void *ctx) = 0;
 

@@ -263,6 +263,8 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventActiveDeviceInfo);
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventResponseSoundOutputDeviceInfo);
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventResponseSoundInputDeviceInfo);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventMixerStatus);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventDeviceConnectionStatus);
     }
     else
         PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mObjModuleManager is nullptr");
@@ -271,6 +273,7 @@ MasterVolumeManager::MasterVolumeManager(ModuleConfig* const pConfObj): mObjAudi
     {
         PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "mMasterVolumeClientInstance is nullptr");
     }
+    mObjModuleManager->subscribeServerStatusInfo(this, eSettingsService2);
 
 }
 

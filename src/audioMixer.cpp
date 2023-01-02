@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2022 LG Electronics Company.
+*      Copyright (c) 2020-2023 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -301,7 +301,7 @@ void AudioMixer::callBackSourceStatus(const std::string& source, const std::stri
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
 }
 
-void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType)
+void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "callBackDeviceConnectionStatus::deviceName:%s : %s deviceStatus:%d mixerType:%d",\
@@ -320,6 +320,7 @@ void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, c
         stEventDeviceConnectionStatus.deviceNameDetail = deviceNameDetail;
         stEventDeviceConnectionStatus.deviceStatus = deviceStatus;
         stEventDeviceConnectionStatus.mixerType = mixerType;
+        stEventDeviceConnectionStatus.isOutput = isOutput;
         mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventDeviceConnectionStatus);
     }
     else

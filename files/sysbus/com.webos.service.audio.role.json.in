@@ -9,6 +9,7 @@
             "outbound":["com.webos.service.audiooutput",
                         "com.webos.service.bluetooth2",
                         "com.webos.settingsservice",
+                        "com.webos.service.settings",
                         "com.webos.service.pdm"]
         }
     ]

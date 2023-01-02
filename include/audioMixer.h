@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2022 LG Electronics Company.
+*      Copyright (c) 2020-2023 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ class AudioMixer : public MixerInterface
         void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType);
         void callBackSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
-        void callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType);
+        void callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput);
         void callBackMasterVolumeStatus();
 
 };

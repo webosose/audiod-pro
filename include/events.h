@@ -120,6 +120,7 @@ namespace events
         std::string deviceNameDetail;
         utils::E_DEVICE_STATUS deviceStatus;
         utils::EMIXER_TYPE mixerType;
+        bool isOutput;
     }EVENT_DEVICE_CONNECTION_STATUS_T;
 
     typedef struct
@@ -129,6 +130,7 @@ namespace events
         std::string display;
         bool isConnected;
         bool isOutput;
+        bool isActive;
     }EVENT_ACTIVE_DEVICE_INFO_T;
 
     typedef struct
@@ -173,6 +175,12 @@ namespace events
         EModuleEventType eventName;
         utils::mapSoundDevicesInfo soundInputInfo;
     }EVENT_RESPONSE_SOUNDINPUT_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        std::function <void(std::list<std::string>&,std::list<std::string>&)> func;
+    }EVENT_REQUEST_INTERNAL_DEVICES_INFO_T;
 
     typedef struct
     {

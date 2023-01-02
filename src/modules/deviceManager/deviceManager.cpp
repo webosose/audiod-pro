@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2021-2022 LG Electronics Company.
+*      Copyright (c) 2021-2023 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,6 +26,36 @@ DeviceManager* DeviceManager::mObjDeviceManager = nullptr;
 DeviceManagerInterface* DeviceManager::mClientDeviceManagerInstance = nullptr;
 DeviceManagerInterface* DeviceManagerInterface::mClientInstance = nullptr;
 pFuncCreateClient DeviceManagerInterface::mClientFuncPointer = nullptr;
+
+void DeviceManager::eventInternalDeviceRequest(std::function <void(std::list<std::string>&,std::list<std::string>&)> func)
+{
+    std::list<std::string> inputlist,outputlist;
+    for(auto it:internalDevices)
+    {
+        for(auto it2:it.second)
+        {
+            if (it2.isOutput == true)
+            {
+                outputlist.push_back(it2.name);
+            }
+            else
+            {
+                inputlist.push_back(it2.name);
+            }
+        }
+    }
+    func(inputlist,outputlist);
+    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"==============");
+    for(auto it:inputlist)
+    {
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,it.c_str());
+    }
+    for(auto it:outputlist)
+    {
+        PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,it.c_str());
+    }
+    PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"==============");
+}
 
 void DeviceManager::eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixerType)
 {
@@ -1004,6 +1034,7 @@ DeviceManager::DeviceManager(ModuleConfig* const pConfObj) : internalSinkCount(0
     if (mObjModuleManager)
     {
         mObjModuleManager->subscribeModuleEvent(this, utils::eEventMixerStatus);
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventRequestInternalDevices);
     }
     printIntCardInfo();
     printExtCardInfo();
@@ -1087,6 +1118,14 @@ void DeviceManager::handleEvent(events::EVENTS_T* ev)
                 "handleEvent:: eEventPdmDeviceStatus");
             events::EVENT_KEY_INFO_T *keySubscribeInfoEvent = (events::EVENT_KEY_INFO_T*)ev;
             eventKeyInfo(keySubscribeInfoEvent->type, keySubscribeInfoEvent->message);
+        }
+        break;
+        case utils::eEventRequestInternalDevices:
+        {
+            PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,\
+                "handleEvent:: eEventRequestInternalDevices");
+            events::EVENT_REQUEST_INTERNAL_DEVICES_INFO_T *stEventRequestInternalDevices = (events::EVENT_REQUEST_INTERNAL_DEVICES_INFO_T*)ev;
+            eventInternalDeviceRequest(stEventRequestInternalDevices->func);
         }
         break;
         default:

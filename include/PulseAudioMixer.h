@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 LG Electronics, Inc.
+// Copyright (c) 2012-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -99,7 +99,7 @@ public:
     bool programUnloadBluetooth (const char *profile, const int displayID);
     bool programA2dpSource (const bool& a2dpSource);
     void init(GMainLoop * loop, LSHandle * handle);
-    void deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus);
+    void deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus, const bool& isOutput);
     bool loadCombinedSink(const char* sinkname, const char* device1, const char *device2, EVirtualAudioSink startSink,
             EVirtualAudioSink endSink, int display);
     bool closeClient(int sinkIndex);

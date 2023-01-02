@@ -125,7 +125,7 @@ class AudioRouter : public ModuleInterface
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
-        void eventDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType);
+        void eventDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput);
         void eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo);
         void eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo);
         void eventBTDeviceDisplayInfo(const bool &connectionStatus, const std::string &deviceAddress, const int &displayId);

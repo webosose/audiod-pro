@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 LG Electronics, Inc.
+// Copyright (c) 2012-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1017,7 +1017,7 @@ PulseAudioMixer::openCloseSink (EVirtualAudioSink sink, bool openNotClose, int s
 
 }
 
-void PulseAudioMixer::deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus)
+void PulseAudioMixer::deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus, const bool &isOutput)
 {
     PM_LOG_DEBUG("deviceName:%s %s status:%d", deviceName.c_str(),deviceNameDetail.c_str(), (int)connectionStatus);
     if (mObjMixerCallBack)
@@ -1025,9 +1025,9 @@ void PulseAudioMixer::deviceConnectionStatus (const std::string &deviceName, con
         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
             "notifiying status to audio mixer");
         if (connectionStatus)   //TODO
-            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, deviceNameDetail, utils::eDeviceConnected, utils::ePulseMixer);
+            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, deviceNameDetail, utils::eDeviceConnected, utils::ePulseMixer, isOutput);
         else
-            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, deviceNameDetail, utils::eDeviceDisconnected, utils::ePulseMixer);
+            mObjMixerCallBack->callBackDeviceConnectionStatus(deviceName, deviceNameDetail, utils::eDeviceDisconnected, utils::ePulseMixer,isOutput);
     }
     else
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
@@ -1200,9 +1200,10 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         char deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH];
                         strncpy(deviceNameDetail, sndHdr->deviceNameDetail, DEVICE_NAME_DETAILS_LENGTH);
                         deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH-1]='\0';
+                        char isOutput = sndHdr->isOutput;
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
                             "PAUDIOD_REPLY_MSGTYPE_DEVICE_CONNECTION : %s:%s",deviceName,deviceNameDetail);
-                        deviceConnectionStatus(deviceName, deviceNameDetail, true);
+                        deviceConnectionStatus(deviceName, deviceNameDetail, true, (isOutput==0)?false:true);
                     }
                     break;
                     case PAUDIOD_REPLY_MSGTYPE_DEVICE_REMOVED:
@@ -1213,9 +1214,10 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                         char deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH];
                         strncpy(deviceNameDetail, sndHdr->deviceNameDetail, DEVICE_NAME_DETAILS_LENGTH);
                         deviceNameDetail[DEVICE_NAME_DETAILS_LENGTH-1]='\0';
+                        char isOutput = sndHdr->isOutput;
                         PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_REMOVED : %s:%s",deviceName,deviceNameDetail);
-                        deviceConnectionStatus(deviceName, deviceNameDetail, false);
+                            "PAUDIOD_REPLY_MSGTYPE_DEVICE_REMOVED : %s:%s, %d",deviceName,deviceNameDetail, isOutput);
+                        deviceConnectionStatus(deviceName, deviceNameDetail, false, (isOutput==0)?false:true);
                     }
                     break;
                     default:

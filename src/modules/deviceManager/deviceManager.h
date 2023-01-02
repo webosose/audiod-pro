@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 LG Electronics, Inc.
+// Copyright (c) 2021-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@
 #include "moduleFactory.h"
 #include "deviceManagerInterface.h"
 #include "deviceConfigReader.h"
+#include <list>
+#include <string>
 
 typedef std::map<int, std::string> connectedDeviceInfo;
 struct USB_DETAILS
@@ -100,6 +102,7 @@ class DeviceManager : public ModuleInterface
         }
         void initialize();
         void deInitialize();
+        void eventInternalDeviceRequest(std::function <void(std::list<std::string>&,std::list<std::string>&)> func);
         void eventMixerStatus (bool mixerStatus, utils::EMIXER_TYPE mixerType);
         void eventKeyInfo (LUNA_KEY_TYPE_E type, LSMessage *message);
         void eventServerStatusInfo(SERVER_TYPE_E serviceName, bool connected);

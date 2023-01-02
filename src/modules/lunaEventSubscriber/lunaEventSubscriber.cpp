@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2023 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ serverNameMap statusSubscriptionMap =
     { "com.webos.service.bluetooth2", eBluetoothService2},
     { "com.webos.service.audiooutput", eAudiooutputdService},
     { "com.webos.settingsservice", eSettingsService},
-    { "com.webos.service.pdm", ePdmService}
+    { "com.webos.service.pdm", ePdmService},
+    { "com.webos.service.settings", eSettingsService2},
 };
 
 lunaEventSubscriber * lunaEventSubscriber::mLunaEventSubscriber = nullptr;

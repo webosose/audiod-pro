@@ -77,7 +77,7 @@ void AudioRouter::eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerTyp
 }
 
 void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail,\
-    utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType)
+    utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput)
 {
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
         "eventDeviceConnectionStatus with deviceName:%s deviceStatus:%d mixerType:%d",\
@@ -309,7 +309,7 @@ void AudioRouter::eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo)
 
 void AudioRouter::eventResponseSoundDevicesInfo(bool isOutput)
 {
-    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,"eventResponseSoundDevicesInfo");
+    PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,"eventResponseSoundDevicesInfo 1");
     if (mObjModuleManager)
     {
         if(isOutput)
@@ -317,6 +317,7 @@ void AudioRouter::eventResponseSoundDevicesInfo(bool isOutput)
             events::EVENT_RESPONSE_SOUNDOUTPUT_INFO_T eventResponseSoundOutputDeviceInfo;
             eventResponseSoundOutputDeviceInfo.eventName = utils::eEventResponseSoundOutputDeviceInfo;
             eventResponseSoundOutputDeviceInfo.soundOutputInfo = getSoundDeviceInfo(true);
+            for(auto it:eventResponseSoundOutputDeviceInfo.soundOutputInfo)
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventResponseSoundOutputDeviceInfo);
         }
         else
@@ -380,6 +381,7 @@ void AudioRouter::setBTDeviceRouting(const std::string &deviceName)
                 deviceConnectionStatus.deviceStatus = utils::eDeviceConnected;
                 deviceConnectionStatus.mixerType = utils::ePulseMixer;
                 deviceConnectionStatus.deviceNameDetail = items;
+                deviceConnectionStatus.isOutput = true;
                 mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&deviceConnectionStatus);
             }
             else
@@ -739,7 +741,8 @@ void AudioRouter::updateDeviceStatus(const std::string& display, const std::stri
             stEventActiveDeviceInfo.eventName = utils::eEventActiveDeviceInfo;
             stEventActiveDeviceInfo.display = display;
             stEventActiveDeviceInfo.deviceName = getActualOutputDevice(deviceName);
-            stEventActiveDeviceInfo.isConnected = isActive;
+            stEventActiveDeviceInfo.isConnected = isConnected;
+            stEventActiveDeviceInfo.isActive = isActive;
             stEventActiveDeviceInfo.isOutput = isOutput;
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventActiveDeviceInfo);
         }
@@ -1828,7 +1831,7 @@ void AudioRouter::handleEvent(events::EVENTS_T *event)
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
                 "handleEvent : eEventDeviceConnectionStatus");
             events::EVENT_DEVICE_CONNECTION_STATUS_T * stDeviceConnectionStatus = (events::EVENT_DEVICE_CONNECTION_STATUS_T*)event;
-            eventDeviceConnectionStatus(stDeviceConnectionStatus->devicename, stDeviceConnectionStatus->deviceNameDetail, stDeviceConnectionStatus->deviceStatus, stDeviceConnectionStatus->mixerType);
+            eventDeviceConnectionStatus(stDeviceConnectionStatus->devicename, stDeviceConnectionStatus->deviceNameDetail, stDeviceConnectionStatus->deviceStatus, stDeviceConnectionStatus->mixerType,stDeviceConnectionStatus->isOutput);
         }
         break;
         case utils::eEventSinkPolicyInfo:
