@@ -55,6 +55,13 @@
 #define MULTIPLE_DEVICE_MAX 10
 #define MULTIPLE_DEVICE_MIN 1
 
+struct BTInfo
+{
+    std::string deviceName;
+    std::string deviceNameDetail;
+    std::string deviceIcon;
+};
+
 
 class AudioRouter : public ModuleInterface
 {
@@ -87,7 +94,7 @@ class AudioRouter : public ModuleInterface
         utils::mapMultipleDeviceInfo mMutipleOutputInfo;
         utils::mapMultipleDeviceInfo mMutipleInputInfo;
 
-        std::list<std::string> mBTDeviceList;
+        std::list<BTInfo> mBTDeviceList;
         utils::mapSoundDevicesInfo mSoundOutputDeviceInfo;
         utils::mapSoundDevicesInfo mSoundInputDeviceInfo;
 
@@ -125,7 +132,8 @@ class AudioRouter : public ModuleInterface
         void eventSinkStatus(const std::string& source, const std::string& sink, EVirtualAudioSink audioSink, \
             utils::ESINK_STATUS sinkStatus, utils::EMIXER_TYPE mixerType);
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
-        void eventDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput);
+        void eventDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, const std::string &deviceIcon, \
+            utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput);
         void eventSinkPolicyInfo(const pbnjson::JValue& sinkPolicyInfo);
         void eventSourcePolicyInfo(const pbnjson::JValue& sourcePolicyInfo);
         void eventBTDeviceDisplayInfo(const bool &connectionStatus, const std::string &deviceAddress, const int &displayId);

@@ -76,14 +76,14 @@ void AudioRouter::eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerTyp
     }
 }
 
-void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail,\
+void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail, const std::string &deviceIcon,\
     utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput)
 {
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
         "eventDeviceConnectionStatus with deviceName:%s deviceStatus:%d mixerType:%d",\
         deviceName.c_str(), (int)deviceStatus, (int)mixerType);
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
-        "eventDeviceConnectionStatus deviceNameDetail : %s",deviceNameDetail.c_str());
+        "eventDeviceConnectionStatus deviceNameDetail : %s, deviceIcon:%s",deviceNameDetail.c_str(), deviceIcon.c_str());
 
     bool isBTDeviceMapped = false;
     std::string actualDeviceName = deviceName;
@@ -105,7 +105,11 @@ void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName , co
         if (!isBTDeviceMapped)
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "adding device to mBTDeviceList");
-            mBTDeviceList.push_back(deviceName);
+            BTInfo newDevice;
+            newDevice.deviceName = deviceName;
+            newDevice.deviceNameDetail = deviceNameDetail;
+            newDevice.deviceIcon = deviceIcon;
+            mBTDeviceList.push_back(newDevice);
         }
         PM_LOG_DEBUG("remapped soundoutput:%s", actualDeviceName.c_str());
     }
@@ -121,12 +125,14 @@ void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName , co
 
                 if (utils::eDeviceConnected == deviceStatus) {
                     deviceInfo.deviceNameDetail = deviceNameDetail;
+                    deviceInfo.deviceIcon = deviceIcon;
                     setOutputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority, items.first, mixerType);
                     notifyDeviceListSubscribers();
                 }
                 else if(utils::eDeviceDisconnected == deviceStatus) {
                     deviceInfo.deviceNameDetail = actualDeviceName;
+                    deviceInfo.deviceIcon.clear();
                     resetOutputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority,  items.first, mixerType);
                     notifyDeviceListSubscribers();
@@ -184,8 +190,8 @@ void AudioRouter::eventBTDeviceDisplayInfo(const bool &connectionStatus, const s
             mMapBTDeviceInfo.erase(it);
         for (auto it = mBTDeviceList.begin(); it != mBTDeviceList.end(); it++)
         {
-            std::string btDevice = *it;
-            if (btDevice.find(btDeviceAddress) != std::string::npos)
+            BTInfo btDevice = *it;
+            if (btDevice.deviceName.find(btDeviceAddress) != std::string::npos)
             {
                 mBTDeviceList.erase(it);
                 break;
@@ -370,19 +376,22 @@ void AudioRouter::setBTDeviceRouting(const std::string &deviceName)
         "setBTDeviceRouting deviceName:%s", deviceName.c_str());
     for (auto const& items : mBTDeviceList)
     {
-        if (items.find(deviceName) != std::string::npos)
+        if (items.deviceName.find(deviceName) != std::string::npos)
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setBTDeviceRouting notifying deviceConnectionStatus internally");
             if (mObjModuleManager)
             {
                 events::EVENT_DEVICE_CONNECTION_STATUS_T deviceConnectionStatus;
                 deviceConnectionStatus.eventName = utils::eEventDeviceConnectionStatus;
-                deviceConnectionStatus.devicename = items;
+                deviceConnectionStatus.devicename = items.deviceName;
                 deviceConnectionStatus.deviceStatus = utils::eDeviceConnected;
                 deviceConnectionStatus.mixerType = utils::ePulseMixer;
-                deviceConnectionStatus.deviceNameDetail = items;
+                deviceConnectionStatus.deviceNameDetail = items.deviceNameDetail;
+                deviceConnectionStatus.deviceIcon = items.deviceIcon;
                 deviceConnectionStatus.isOutput = true;
-                mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&deviceConnectionStatus);
+                //mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&deviceConnectionStatus);
+                eventDeviceConnectionStatus(deviceConnectionStatus.devicename, deviceConnectionStatus.deviceNameDetail, deviceConnectionStatus.deviceIcon,\
+                    utils::eDeviceConnected, utils::ePulseMixer, true);
             }
             else
                 PM_LOG_ERROR(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setBTDeviceRouting mObjModuleManager is null");
@@ -1145,6 +1154,11 @@ bool AudioRouter::setSoundOutput(const std::string& soundOutput, const int &disp
                     {
                         returnStatus = true;
                     }
+                    else if (deviceInfo.isConnected == false)
+                    {
+                        PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setSoundOutput: Device not connected");
+                        returnStatus = true;
+                    }
                     else if (mObjAudioMixer->setSoundOutputOnRange(sinkInfo.startSink, sinkInfo.endSink,
                         outputDevice.c_str()))
                     {
@@ -1184,7 +1198,12 @@ bool AudioRouter::setSoundInput(const std::string& soundInput, const int &displa
                     utils::SOURCE_ROUTING_INFO_T sourceInfo = getSourceRoutingInfo(display);
                     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setSoundInput: sourceid:%d",
                         (int)sourceInfo.startSource);
-                    if (mObjAudioMixer->setSoundInputOnRange(sourceInfo.startSource,
+                    if (deviceInfo.isConnected == false)
+                    {
+                        PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "setSoundInput: Device not connected");
+                        returnStatus = true;
+                    }
+                    else if (mObjAudioMixer->setSoundInputOnRange(sourceInfo.startSource,
                         sourceInfo.endSource, soundInput.c_str()))
                     {
                         updateDeviceStatus(display, soundInput, true, true, false);
@@ -1297,20 +1316,18 @@ std::string AudioRouter::getSoundDeviceList(bool subscribed, const std::string &
                 if (deviceInfo.deviceType == "internal")
                 {
                     deviceObject.put("deviceType", deviceInfo.deviceType);
-                    deviceObject.put("deviceIcon", "audio-card");
                 }
                 else
                 {
                     deviceObject.put("deviceType", "external");
-                    deviceObject.put("deviceIcon", "");
                 }
                 deviceObject.put("type", "input");
                 deviceObject.put("deviceName", deviceInfo.deviceName);
+                deviceObject.put("deviceIcon", deviceInfo.deviceIcon);
                 deviceObject.put("deviceNameDetail",deviceInfo.deviceNameDetail);
                 deviceObject.put("connected", deviceInfo.isConnected);
                 deviceObject.put("displayId",getNotificationSessionId(it.first));
                 deviceObject.put("active",deviceInfo.activeStatus);
-                deviceObject.put("initialVolume",100);
                 deviceListArray.append(deviceObject);
             }
         }
@@ -1326,20 +1343,18 @@ std::string AudioRouter::getSoundDeviceList(bool subscribed, const std::string &
                 if (deviceInfo.deviceType == "internal")
                 {
                     deviceObject.put("deviceType", deviceInfo.deviceType);
-                    deviceObject.put("deviceIcon", "audio-card");
                 }
                 else
                 {
                     deviceObject.put("deviceType", "external");
-                    deviceObject.put("deviceIcon", "");
                 }
                 deviceObject.put("type", "output");
                 deviceObject.put("deviceName", deviceInfo.deviceName);
+                deviceObject.put("deviceIcon", deviceInfo.deviceIcon);
                 deviceObject.put("deviceNameDetail",deviceInfo.deviceNameDetail);
                 deviceObject.put("connected", deviceInfo.isConnected);
                 deviceObject.put("displayId",getNotificationSessionId(it.first));
                 deviceObject.put("active",deviceInfo.activeStatus);
-                deviceObject.put("initialVolume",100);
                 deviceListArray.append(deviceObject);
             }
         }
@@ -1831,7 +1846,8 @@ void AudioRouter::handleEvent(events::EVENTS_T *event)
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT,\
                 "handleEvent : eEventDeviceConnectionStatus");
             events::EVENT_DEVICE_CONNECTION_STATUS_T * stDeviceConnectionStatus = (events::EVENT_DEVICE_CONNECTION_STATUS_T*)event;
-            eventDeviceConnectionStatus(stDeviceConnectionStatus->devicename, stDeviceConnectionStatus->deviceNameDetail, stDeviceConnectionStatus->deviceStatus, stDeviceConnectionStatus->mixerType,stDeviceConnectionStatus->isOutput);
+            eventDeviceConnectionStatus(stDeviceConnectionStatus->devicename, stDeviceConnectionStatus->deviceNameDetail, stDeviceConnectionStatus->deviceIcon, \
+                stDeviceConnectionStatus->deviceStatus, stDeviceConnectionStatus->mixerType,stDeviceConnectionStatus->isOutput);
         }
         break;
         case utils::eEventSinkPolicyInfo:

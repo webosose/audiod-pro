@@ -99,7 +99,7 @@ public:
     bool programUnloadBluetooth (const char *profile, const int displayID);
     bool programA2dpSource (const bool& a2dpSource);
     void init(GMainLoop * loop, LSHandle * handle);
-    void deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const bool &connectionStatus, const bool& isOutput);
+    void deviceConnectionStatus (const std::string &deviceName, const std::string &deviceNameDetail, const std::string &deviceIcon, const bool &connectionStatus, const bool& isOutput);
     bool loadCombinedSink(const char* sinkname, const char* device1, const char *device2, EVirtualAudioSink startSink,
             EVirtualAudioSink endSink, int display);
     bool closeClient(int sinkIndex);

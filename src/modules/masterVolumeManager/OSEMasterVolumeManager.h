@@ -79,6 +79,7 @@ struct deviceDetail
         isActive = false;
         this->isOutput = isOutput;
         muteStatus = false;
+        volume = 0;
     }
 };
 
@@ -93,7 +94,7 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         utils::mapSoundDevicesInfo msoundInputDeviceInfo;
         std::map<std::string,bool> mapActiveDevicesInfo;
 
-        std::string bluetoothName;
+        std::string mBluetoothName;
 
         std::list<deviceInfo> mExtOutputDeviceListDB;
         std::list<deviceInfo> mIntOutputDeviceListDB;
@@ -159,6 +160,8 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         bool getDeviceMute(std::string deviceName, int display, bool isOutput);
         int getDeviceDisplay(std::string deviceName, bool isOutput);
         bool isValidSoundDevice(std::string deviceName, bool isOutput);
+        std::string getMappedName (std::string deviceName);
+        std::string getActualDeviceName (std::string mappedName);
 
         void setVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
         void setMicVolume(LSHandle *lshandle, LSMessage *message, void *ctx);
@@ -191,7 +194,7 @@ class OSEMasterVolumeManager : public MasterVolumeInterface
         void eventResponseSoundOutputDeviceInfo(utils::mapSoundDevicesInfo soundOutputInfo);
         void eventResponseSoundInputDeviceInfo(utils::mapSoundDevicesInfo soundInputInfo);
         void eventMixerStatus(bool mixerStatus, utils::EMIXER_TYPE mixerType);
-        void eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail,\
+        void eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail, const std::string &deviceIcon, \
             utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool &isOutput);
 };
 #endif

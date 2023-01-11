@@ -231,6 +231,7 @@ namespace utils
     typedef struct deviceInfo
     {
         std::string deviceName;
+        std::string deviceIcon;
         std::string deviceNameDetail;
         bool activeStatus;
         bool muteStatus;

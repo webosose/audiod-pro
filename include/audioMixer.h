@@ -137,7 +137,7 @@ class AudioMixer : public MixerInterface
         void callBackMixerStatus(const bool& mixerStatus, utils::EMIXER_TYPE mixerType);
         void callBackSourceStatus(const std::string& source, const std::string& sink, EVirtualSource audioSource, \
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
-        void callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput);
+        void callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, const std::string &deviceIcon, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput);
         void callBackMasterVolumeStatus();
 
 };

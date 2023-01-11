@@ -301,7 +301,7 @@ void AudioMixer::callBackSourceStatus(const std::string& source, const std::stri
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "%s Invalid virtual Sink", __FUNCTION__);
 }
 
-void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput)
+void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail,const std::string &deviceIcon, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput)
 {
     PM_LOG_INFO(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
         "callBackDeviceConnectionStatus::deviceName:%s : %s deviceStatus:%d mixerType:%d",\
@@ -318,6 +318,7 @@ void AudioMixer::callBackDeviceConnectionStatus(const std::string &deviceName, c
         stEventDeviceConnectionStatus.eventName = utils::eEventDeviceConnectionStatus;
         stEventDeviceConnectionStatus.devicename = deviceName;
         stEventDeviceConnectionStatus.deviceNameDetail = deviceNameDetail;
+        stEventDeviceConnectionStatus.deviceIcon = deviceIcon;
         stEventDeviceConnectionStatus.deviceStatus = deviceStatus;
         stEventDeviceConnectionStatus.mixerType = mixerType;
         stEventDeviceConnectionStatus.isOutput = isOutput;
