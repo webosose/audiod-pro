@@ -2285,7 +2285,8 @@ std::string OSEMasterVolumeManager::getVolumeInfo(const std::string &soundOutput
     }
 
     volume  = getDeviceVolume(soundDevice,display,true);
-    PM_LOG_DEBUG("getVolumeInfo:: soundOutput = %s ,display: %d", soundDevice.c_str(), display);
+    muteStatus = getDeviceMute(soundDevice, display, true);
+    PM_LOG_DEBUG("getVolumeInfo:: soundOutput = %s ,display: %d, volume :%d, mute :%d", soundDevice.c_str(), display,volume,muteStatus);
 
     volumeStatus = {{"muted", muteStatus},
                     {"volume", volume},
