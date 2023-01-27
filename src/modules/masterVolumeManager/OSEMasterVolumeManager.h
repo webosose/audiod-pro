@@ -80,6 +80,7 @@ struct deviceDetail
         this->isOutput = isOutput;
         muteStatus = false;
         volume = 0;
+        display = 0;
     }
 };
 

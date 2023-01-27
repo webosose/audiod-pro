@@ -53,7 +53,7 @@ bool TrackManager::disconnetedCb( LSHandle *sh,
 
             trackManagerInstance->mMapTrackIdList.erase(items->first);
             LSCancelServerStatus(GetPalmService(), trackManagerInstance->mMapPipelineTrackId[items->first].serverCookie, nullptr);
-            trackManagerInstance->mMapPipelineTrackId.erase(items->first);
+            items = trackManagerInstance->mMapPipelineTrackId.erase(items);
         }
     }
 

@@ -32,7 +32,7 @@ void DeviceManager::eventInternalDeviceRequest(std::function <void(std::list<std
     std::list<std::string> inputlist,outputlist;
     for(auto it:internalDevices)
     {
-        for(auto it2:it.second)
+        for(auto &it2:it.second)
         {
             if (it2.isOutput == true)
             {

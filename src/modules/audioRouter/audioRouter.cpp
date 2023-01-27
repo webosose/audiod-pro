@@ -150,12 +150,14 @@ void AudioRouter::eventDeviceConnectionStatus(const std::string &deviceName , co
             {
                 if (utils::eDeviceConnected == deviceStatus) {
                     deviceInfo.deviceNameDetail = deviceNameDetail;
+                    deviceInfo.deviceIcon = deviceIcon;
                     setInputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority, items.first, mixerType);
                     notifyDeviceListSubscribers();
                 }
                 else if(utils::eDeviceDisconnected == deviceStatus) {
                     deviceInfo.deviceNameDetail = actualDeviceName;
+                    deviceInfo.deviceIcon.clear();
                     resetInputDeviceRouting(actualDeviceName,\
                         deviceInfo.priority, items.first, mixerType);
                     notifyDeviceListSubscribers();
@@ -782,6 +784,7 @@ void AudioRouter::updateDeviceStatus(const std::string& display, const std::stri
             stEventActiveDeviceInfo.deviceName = getActualOutputDevice(deviceName);
             stEventActiveDeviceInfo.isConnected = isActive;
             stEventActiveDeviceInfo.isOutput = isOutput;
+            stEventActiveDeviceInfo.isActive = isActive;
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stEventActiveDeviceInfo);
         }
         if (isActive)
