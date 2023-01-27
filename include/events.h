@@ -19,6 +19,7 @@
 #define _EVENTS_H_
 
 #include "utils.h"
+#include <functional>
 
 namespace events
 {
