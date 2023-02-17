@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2022 LG Electronics Company.
+*      Copyright (c) 2022-2023 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -50,13 +50,15 @@ bool TrackManager::disconnetedCb( LSHandle *sh,
             stUnregisterTrack.eventName = utils::eEventUnregisterTrack;
             stUnregisterTrack.trackId = items->first;
             trackManagerInstance->mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&stUnregisterTrack);
-
             trackManagerInstance->mMapTrackIdList.erase(items->first);
             LSCancelServerStatus(GetPalmService(), trackManagerInstance->mMapPipelineTrackId[items->first].serverCookie, nullptr);
             items = trackManagerInstance->mMapPipelineTrackId.erase(items);
+            if (trackManagerInstance->mMapPipelineTrackId.empty())
+            {
+                break;
+            }
         }
     }
-
     return true;
 }
 
