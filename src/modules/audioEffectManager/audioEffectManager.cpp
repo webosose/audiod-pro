@@ -207,11 +207,22 @@ void AudioEffectManager::eventDeviceConnectionStatus(const std::string &deviceNa
             inputDevCnt++;
             PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"increment devicecount %d", inputDevCnt);
         }
+        else if (!isOutput && deviceName == "pcm_input")
+        {
+            inputDevCnt++;
+            PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"increment devicecount %d", inputDevCnt);
+        }
     }
     else if ((deviceStatus == utils::eDeviceDisconnected))
     {
         if(!isOutput && deviceName.find("usb")!=deviceName.npos)
         {
+            inputDevCnt--;
+            PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"decrement devicecount %d", inputDevCnt);
+        }
+        else if (!isOutput && deviceName == "pcm_input")
+        {
+
             inputDevCnt--;
             PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"decrement devicecount %d", inputDevCnt);
         }
