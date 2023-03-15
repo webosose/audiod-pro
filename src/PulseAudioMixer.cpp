@@ -437,6 +437,7 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
 bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: effectId: %d, enabled:%d", effectId, enabled);
     struct paParamSet paramSet;
+    int status = false;
 
     switch (effectId) {
         case 0:
@@ -456,7 +457,8 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
     paramSet.param2 = effectId;
     paramSet.param3 = 0;
 
-    int status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eparse_effect_message_reply, paramSet);
+    if (effectId == 0 | effectId==1)
+        status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eparse_effect_message_reply, paramSet);
 
     return status;
 }
