@@ -18,7 +18,7 @@
 #ifndef MESSAGEUTILS_H_
 #define MESSAGEUTILS_H_
 
-#include <lunaservice.h>
+#include <luna-service2/lunaservice.h>
 #include <pbnjson.h>
 #include <pbnjson.hpp>
 #include "log.h"

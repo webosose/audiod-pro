@@ -19,7 +19,7 @@
 #define _UTILS_H_
 
 #include <glib.h>
-#include <lunaservice.h>
+#include <luna-service2/lunaservice.h>
 #include <pulse/module-palm-policy.h>
 #include "log.h"
 #include "ConstString.h"

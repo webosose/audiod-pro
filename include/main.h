@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //New Audiod service path
-#include <lunaservice.h>
+#include <luna-service2/lunaservice.h>
 #include <utils.h>
 
 #define AUDIOD_SERVICE_PATH                 "com.webos.service.audio"

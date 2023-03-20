@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sstream>
-#include <lunaservice.h>
+#include <luna-service2/lunaservice.h>
 #include "log.h"
 #include "main.h"
 #include "messageUtils.h"
