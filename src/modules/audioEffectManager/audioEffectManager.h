@@ -36,7 +36,6 @@ class AudioEffectManager : public ModuleInterface
         }
 
         int getEffectId(std::string effectName);
-        bool mCacheRead;
         int inputDevCnt;
         bool isAGCEnabled;
 
