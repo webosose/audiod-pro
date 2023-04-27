@@ -23,10 +23,11 @@ class AudioEffectManager : public ModuleInterface
         static bool mIsObjRegistered;
 
         //  change audio effect list size and add to list
-        static const int audioEffectListSize = 2;
+        static const int audioEffectListSize = 3;
         static constexpr const char* audioEffectList[] = {
             "speech enhancement",
-            "gain control"
+            "gain control",
+            "beamforming",
         };
 
         //  Register Object to object factory. This is called automatically
@@ -37,6 +38,11 @@ class AudioEffectManager : public ModuleInterface
 
         int getEffectId(std::string effectName);
         int inputDevCnt;
+        static const int arrayMicListSize = 1;
+        static constexpr const char* arrayMicList[] = {
+            "seeed-4mic-voicecard",
+        };
+        bool isArrayMic;
         bool isAGCEnabled;
 
     public:

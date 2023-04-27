@@ -50,6 +50,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
                                      BTvolumeSupport(false),
                                      mEffectSpeechEnhancementEnabled(false),
                                      mEffectGainControlEnabled(false),
+                                     mEffectBeamformingEnabled(false),
                                      mObjMixerCallBack(mixerCallBack)
 {
     // initialize table for the pulse state lookup table
@@ -448,7 +449,12 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
             mEffectGainControlEnabled = enabled;
             paramSet.Type = PAUDIOD_MODULE_GAIN_CONTROL_LOAD;
             break;
+        case 2:
+            mEffectBeamformingEnabled = enabled;
+            paramSet.Type = PAUDIOD_MODULE_BEAMFORMING_LOAD;
+            break;
         default:
+            return false;
             break;
     }
 
@@ -456,9 +462,7 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
     paramSet.param1 = enabled;
     paramSet.param2 = effectId;
     paramSet.param3 = 0;
-
-    if (effectId == 0 | effectId==1)
-        status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eparse_effect_message_reply, paramSet);
+    status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eparse_effect_message_reply, paramSet);
 
     return status;
 }
@@ -472,6 +476,8 @@ bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
             return mEffectSpeechEnhancementEnabled;
         case 1:
             return mEffectGainControlEnabled;
+        case 2:
+            return mEffectBeamformingEnabled;
         default:
             return false;
     }

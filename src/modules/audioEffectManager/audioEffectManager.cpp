@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LicenseRef-LGE-Proprietary
  */
 
+#include <string.h>
+
 #include "audioEffectManager.h"
 
 bool AudioEffectManager::mIsObjRegistered = AudioEffectManager::RegisterObject();
@@ -15,6 +17,7 @@ AudioEffectManager* AudioEffectManager::getAudioEffectManagerInstance() {
 AudioEffectManager::AudioEffectManager(ModuleConfig* const pConfObj):   mObjModuleManager(nullptr),
                                                                         mObjAudioMixer(nullptr),
                                                                         inputDevCnt(0),
+                                                                        isArrayMic(false),
                                                                         isAGCEnabled(false)
 {
     PM_LOG_DEBUG("%s: constructor()", MSGID_AUDIO_EFFECT_MANAGER);
@@ -88,9 +91,14 @@ bool AudioEffectManager::_getAudioEffectList(LSHandle *lshandle, LSMessage *mess
     std::string reply ;
     pbnjson::JValue listArray = pbnjson::Array();
     bool returnValue = true;
+    AudioEffectManager* obj = AudioEffectManager::getAudioEffectManagerInstance();
 
     for (int i = 0; i < audioEffectListSize; i++) {
-        listArray << pbnjson::JValue(audioEffectList[i]);
+        if (strcmp(audioEffectList[i], "beamforming") == 0) {
+            if (obj->isArrayMic) listArray << pbnjson::JValue(audioEffectList[i]);
+        } else {
+            listArray << pbnjson::JValue(audioEffectList[i]);
+        }
     }
 
     pbnjson::JValue effectResponse = pbnjson::Object();
@@ -119,7 +127,6 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
         utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
         return true;
     }
-    PM_LOG_DEBUG("%d ,%d", obj->inputDevCnt ,effectId);
     if (obj->inputDevCnt<=0)
     {
         if (effectId == 1)
@@ -139,7 +146,15 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
         return true;
     }
 
-    if(((obj->inputDevCnt > 0) && effectId == 1) || effectId == 0)
+    if ((obj->isArrayMic == false) && effectId == 2)
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Your input device does not support beamforming");
+        reply = STANDARD_JSON_ERROR(5, "SoundInput not connected");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+
+    if(((obj->inputDevCnt > 0) && effectId == 1) || effectId == 0 || effectId == 2)
     {
         AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
         if (effectId != -1 && audioMixer && audioMixer->setAudioEffect(effectId, enabled)) {
@@ -212,6 +227,13 @@ void AudioEffectManager::eventDeviceConnectionStatus(const std::string &deviceNa
             inputDevCnt++;
             PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"increment devicecount %d", inputDevCnt);
         }
+        for (int i = 0; i < arrayMicListSize; i++)
+        {
+            if (strcmp(deviceNameDetail.c_str(), arrayMicList[i]) == 0) {
+                isArrayMic = true;
+                PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"Array mic Attached %s", arrayMicList[i]);
+            }
+        }
     }
     else if ((deviceStatus == utils::eDeviceDisconnected))
     {
@@ -225,6 +247,13 @@ void AudioEffectManager::eventDeviceConnectionStatus(const std::string &deviceNa
 
             inputDevCnt--;
             PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"decrement devicecount %d", inputDevCnt);
+        }
+        for (int i = 0; i < arrayMicListSize; i++)
+        {
+            if (strcmp(deviceNameDetail.c_str(), arrayMicList[i]) == 0) {
+                isArrayMic = false;
+                PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"Array mic Dettached %s", arrayMicList[i]);
+            }
         }
     }
 }

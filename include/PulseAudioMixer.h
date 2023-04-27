@@ -141,6 +141,7 @@ private:
 
     bool mEffectSpeechEnhancementEnabled;
     bool mEffectGainControlEnabled;
+    bool mEffectBeamformingEnabled;
 
     //To start the pulse socket connect timer
     void createPulseSocketCommunication();
