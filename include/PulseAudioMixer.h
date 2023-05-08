@@ -143,6 +143,8 @@ private:
     bool mEffectGainControlEnabled;
     bool mEffectBeamformingEnabled;
 
+    bool mEffectDynamicRangeCompressorEnabled;
+
     //To start the pulse socket connect timer
     void createPulseSocketCommunication();
 

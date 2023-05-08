@@ -154,19 +154,20 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
         return true;
     }
 
-    if(((obj->inputDevCnt > 0) && effectId == 1) || effectId == 0 || effectId == 2)
+    if(((obj->inputDevCnt > 0) && effectId == 1) || effectId == 0 || effectId == 2 || effectId == 3)
     {
         AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
         if (effectId != -1 && audioMixer && audioMixer->setAudioEffect(effectId, enabled)) {
             returnValue = true;
-            if (effectId == 1 && enabled)
-               getAudioEffectManagerInstance()->isAGCEnabled = true;
-            else if (effectId == 1 && !enabled)
-               getAudioEffectManagerInstance()->isAGCEnabled = false;
+            if (effectId == 1)
+               getAudioEffectManagerInstance()->isAGCEnabled = enabled;
         }
     }
     else {
         PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Could not load module mAudioEffectManager");
+        reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
     }
 
     pbnjson::JValue effectResponse = pbnjson::Object();

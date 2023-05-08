@@ -51,6 +51,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
                                      mEffectSpeechEnhancementEnabled(false),
                                      mEffectGainControlEnabled(false),
                                      mEffectBeamformingEnabled(false),
+                                     mEffectDynamicRangeCompressorEnabled(false),
                                      mObjMixerCallBack(mixerCallBack)
 {
     // initialize table for the pulse state lookup table
@@ -453,6 +454,10 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
             mEffectBeamformingEnabled = enabled;
             paramSet.Type = PAUDIOD_MODULE_BEAMFORMING_LOAD;
             break;
+        case 3:
+            mEffectDynamicRangeCompressorEnabled = enabled;
+            paramSet.Type = PAUDIOD_MODULE_DYNAMIC_COMPRESSOR_LOAD;
+            break;
         default:
             return false;
             break;
@@ -478,6 +483,8 @@ bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
             return mEffectGainControlEnabled;
         case 2:
             return mEffectBeamformingEnabled;
+        case 3:
+            return mEffectDynamicRangeCompressorEnabled;
         default:
             return false;
     }

@@ -23,11 +23,12 @@ class AudioEffectManager : public ModuleInterface
         static bool mIsObjRegistered;
 
         //  change audio effect list size and add to list
-        static const int audioEffectListSize = 3;
+        static const int audioEffectListSize = 4;
         static constexpr const char* audioEffectList[] = {
             "speech enhancement",
             "gain control",
             "beamforming",
+            "dynamic compressor"
         };
 
         //  Register Object to object factory. This is called automatically
