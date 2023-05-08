@@ -39,6 +39,7 @@
     "com.webos.service.audio/getSourceStatus",
     "com.webos.service.audio/listSupportedDevices",
     "com.webos.service.audio/getAudioEffectList",
-    "com.webos.service.audio/checkAudioEffectStatus"
+    "com.webos.service.audio/checkAudioEffectStatus",
+    "com.webos.service.audio/getAudioEffectsStatus"
  ]
 }

@@ -11,6 +11,8 @@
 #include "audioMixer.h"
 #include "moduleFactory.h"
 
+#define AUDIOD_API_GET_AUDIO_EFFECTS_STATUS    "/getAudioEffectsStatus"
+
 class AudioEffectManager : public ModuleInterface
 {
     private:
@@ -38,6 +40,7 @@ class AudioEffectManager : public ModuleInterface
         }
 
         int getEffectId(std::string effectName);
+        std::string getEffecName(int effectId);
         int inputDevCnt;
         static const int arrayMicListSize = 1;
         static constexpr const char* arrayMicList[] = {
@@ -70,8 +73,11 @@ class AudioEffectManager : public ModuleInterface
         static bool _getAudioEffectList(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _setAudioEffect(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _checkAudioEffectStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _getAudioEffectsStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
+        std::string getAudioEffectsStatus(const bool &subscribed);
         void eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail, const std::string &deviceIcon, \
             utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool &isOutput);
+        void notifyAudioEffectSubscriber();
 };
 
 #endif  //  _AUDIO_EFFECT_MANAGER_H_

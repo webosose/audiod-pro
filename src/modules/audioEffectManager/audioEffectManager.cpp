@@ -75,11 +75,22 @@ int AudioEffectManager::getEffectId(std::string effectName) {
     return effectId;
 }
 
+std::string AudioEffectManager::getEffecName(int effectId) {
+    std::string effectName;
+    for (int i = 0; i < audioEffectListSize; i++) {
+        if (i == effectId) {
+            effectName = audioEffectList[i];
+        }
+    }
+    return effectName;
+}
+
 //  luna API calls
 LSMethod AudioEffectManager::audioeffectMethods[] = {
     { "getAudioEffectList", AudioEffectManager::_getAudioEffectList},
     { "setAudioEffect", AudioEffectManager::_setAudioEffect},
     { "checkAudioEffectStatus", AudioEffectManager::_checkAudioEffectStatus},
+    { "getAudioEffectsStatus", AudioEffectManager::_getAudioEffectsStatus},
     { },
 };
 
@@ -118,6 +129,7 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
     bool returnValue = false;
     std::string effectName;
     bool enabled = false;
+    bool notifyStatus = false;
     AudioEffectManager* obj = AudioEffectManager::getAudioEffectManagerInstance();
     msg.get("effectName", effectName);
     msg.get("enabled", enabled);
@@ -138,6 +150,17 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
         }
     }
 
+    AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
+    if (!audioMixer) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Invalid AudioMixer Instance");
+            reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+            utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+            return true;
+    }
+
+    if (audioMixer->checkAudioEffectStatus(effectId) != enabled)
+        notifyStatus = true;
+
     if (getAudioEffectManagerInstance()->isAGCEnabled && effectId == 1 && enabled)
     {
         PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"AGC feature is already enabled");
@@ -156,8 +179,7 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
 
     if(((obj->inputDevCnt > 0) && effectId == 1) || effectId == 0 || effectId == 2 || effectId == 3)
     {
-        AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
-        if (effectId != -1 && audioMixer && audioMixer->setAudioEffect(effectId, enabled)) {
+         if (effectId != -1 && audioMixer->setAudioEffect(effectId, enabled)) {
             returnValue = true;
             if (effectId == 1)
                getAudioEffectManagerInstance()->isAGCEnabled = enabled;
@@ -169,7 +191,8 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
         utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
         return true;
     }
-
+    if (returnValue && notifyStatus)
+        getAudioEffectManagerInstance()->notifyAudioEffectSubscriber();
     pbnjson::JValue effectResponse = pbnjson::Object();
     effectResponse.put("returnValue", returnValue);
     reply = effectResponse.stringify();
@@ -207,6 +230,34 @@ bool AudioEffectManager::_checkAudioEffectStatus(LSHandle *lshandle, LSMessage *
 
 }
 
+bool AudioEffectManager::_getAudioEffectsStatus(LSHandle *lshandle, LSMessage *message, void *ctx) {
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "AudioEffectManager: _getAudioEffectsStatus");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(subscribe, boolean))));
+    if (!msg.parse(__FUNCTION__,lshandle)) return true;
+
+    std::string reply ;
+    CLSError lserror;
+    bool returnValue = true;
+    bool subscribed = false;
+    msg.get("subscribe", subscribed);
+
+    if (LSMessageIsSubscription(message))
+    {
+        if (!LSSubscriptionProcess(lshandle, message, &subscribed, &lserror))
+        {
+            lserror.Print(__FUNCTION__, __LINE__);
+            PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "LSSubscriptionProcess failed");
+            return true;
+        }
+    }
+
+    reply = getAudioEffectManagerInstance()->getAudioEffectsStatus(subscribed);
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "%s : Reply:%s", __FUNCTION__, reply.c_str());
+    if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+        lserror.Print(__FUNCTION__, __LINE__);
+    return true;
+
+}
 void AudioEffectManager::eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail, const std::string &deviceIcon, \
     utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput)
 {
@@ -257,6 +308,48 @@ void AudioEffectManager::eventDeviceConnectionStatus(const std::string &deviceNa
             }
         }
     }
+}
+
+void AudioEffectManager::notifyAudioEffectSubscriber()
+{
+    CLSError lserror;
+    std::string reply;
+
+    reply = getAudioEffectManagerInstance()->getAudioEffectsStatus(true);
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "[%s] reply message to subscriber: %s", __FUNCTION__, reply.c_str());
+    if (!LSSubscriptionReply(GetPalmService(), AUDIOD_API_GET_AUDIO_EFFECTS_STATUS, reply.c_str(), &lserror))
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Notify volume subscriber error");
+    }
+}
+
+std::string AudioEffectManager::getAudioEffectsStatus(const bool &subscribed)
+{
+    PM_LOG_DEBUG("%s ", __FUNCTION__);
+    pbnjson::JValue effectStatusArray = pbnjson::Array();
+
+    AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
+    if (!audioMixer) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Invalid AudioMixer Instance");
+        return effectStatusArray.stringify();
+    }
+
+    for (int i = 0; i < audioEffectListSize; i++)
+    {
+        pbnjson::JValue effectStatusObject = pbnjson::Object();
+        effectStatusObject.put("name", getAudioEffectManagerInstance()->getEffecName(i));
+        effectStatusObject.put("enabled", audioMixer->checkAudioEffectStatus(i));
+        effectStatusArray.append(effectStatusObject);
+    }
+
+    pbnjson::JValue returnPayload  = pbnjson::Object();
+    returnPayload .put("returnValue", true);
+    returnPayload .put("status", effectStatusArray);
+    returnPayload .put("subscribed", subscribed);
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, \
+                    "%s returning payload = %s", __FUNCTION__, returnPayload .stringify().c_str());
+    return returnPayload .stringify();
 }
 
 void AudioEffectManager::handleEvent(events::EVENTS_T *event)
