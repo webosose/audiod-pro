@@ -25,12 +25,13 @@ class AudioEffectManager : public ModuleInterface
         static bool mIsObjRegistered;
 
         //  change audio effect list size and add to list
-        static const int audioEffectListSize = 4;
+        static const int audioEffectListSize = 5;
         static constexpr const char* audioEffectList[] = {
             "speech enhancement",
             "gain control",
             "beamforming",
-            "dynamic compressor"
+            "dynamic compressor",
+            "equalizer"
         };
 
         //  Register Object to object factory. This is called automatically
@@ -47,7 +48,6 @@ class AudioEffectManager : public ModuleInterface
             "seeed-4mic-voicecard",
         };
         bool isArrayMic;
-        bool isAGCEnabled;
 
     public:
         ~AudioEffectManager();
@@ -74,6 +74,10 @@ class AudioEffectManager : public ModuleInterface
         static bool _setAudioEffect(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _checkAudioEffectStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _getAudioEffectsStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
+
+        static bool _setAudioEqualizerBandLevel(LSHandle *lshandle, LSMessage *message, void *ctx);
+        static bool _setAudioEqualizerPreset(LSHandle *lshandle, LSMessage *message, void *ctx);
+
         std::string getAudioEffectsStatus(const bool &subscribed);
         void eventDeviceConnectionStatus(const std::string &deviceName , const std::string &deviceNameDetail, const std::string &deviceIcon, \
             utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool &isOutput);

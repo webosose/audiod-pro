@@ -17,8 +17,7 @@ AudioEffectManager* AudioEffectManager::getAudioEffectManagerInstance() {
 AudioEffectManager::AudioEffectManager(ModuleConfig* const pConfObj):   mObjModuleManager(nullptr),
                                                                         mObjAudioMixer(nullptr),
                                                                         inputDevCnt(0),
-                                                                        isArrayMic(false),
-                                                                        isAGCEnabled(false)
+                                                                        isArrayMic(false)
 {
     PM_LOG_DEBUG("%s: constructor()", MSGID_AUDIO_EFFECT_MANAGER);
     mObjModuleManager = ModuleManager::getModuleManagerInstance();
@@ -91,6 +90,8 @@ LSMethod AudioEffectManager::audioeffectMethods[] = {
     { "setAudioEffect", AudioEffectManager::_setAudioEffect},
     { "checkAudioEffectStatus", AudioEffectManager::_checkAudioEffectStatus},
     { "getAudioEffectsStatus", AudioEffectManager::_getAudioEffectsStatus},
+    { "setAudioEqualizerBandLevel", AudioEffectManager::_setAudioEqualizerBandLevel},
+    { "setAudioEqualizerPreset", AudioEffectManager::_setAudioEqualizerPreset},
     { },
 };
 
@@ -126,30 +127,21 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
     if (!msg.parse(__FUNCTION__,lshandle)) return true;
 
     std::string reply ;
-    bool returnValue = false;
     std::string effectName;
     bool enabled = false;
-    bool notifyStatus = false;
     AudioEffectManager* obj = AudioEffectManager::getAudioEffectManagerInstance();
     msg.get("effectName", effectName);
     msg.get("enabled", enabled);
+
+    //  effectId boundary check
     int effectId = getAudioEffectManagerInstance()->getEffectId(effectName);
-    if (effectId < 0) {
+    if (effectId < 0 || effectId >= obj->audioEffectListSize) {
         reply = STANDARD_JSON_ERROR(19, "Invalid parameters");
         utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
         return true;
     }
-    if (obj->inputDevCnt<=0)
-    {
-        if (effectId == 1)
-        {
-            PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"No input device connected");
-            reply = STANDARD_JSON_ERROR(5, "SoundInput not connected");
-            utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
-            return true;
-        }
-    }
-
+    
+    //  AudioMixer instance check
     AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
     if (!audioMixer) {
         PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Invalid AudioMixer Instance");
@@ -158,17 +150,27 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
             return true;
     }
 
-    if (audioMixer->checkAudioEffectStatus(effectId) != enabled)
-        notifyStatus = true;
-
-    if (getAudioEffectManagerInstance()->isAGCEnabled && effectId == 1 && enabled)
+    //  previous status check
+    if (audioMixer->checkAudioEffectStatus(effectId) == enabled)
     {
-        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"AGC feature is already enabled");
-        reply = STANDARD_JSON_ERROR(7, "AGC Already Enabled");
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"Audio Effect Status is same, not changed");
+        reply = STANDARD_JSON_ERROR(7, "Status is same, not changed");
         utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
         return true;
     }
 
+    //  input device check
+    if (obj->inputDevCnt<=0)
+    {
+        if (effectId == 0 || effectId == 1 || effectId == 2)
+        {
+            PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,"No input device connected");
+            reply = STANDARD_JSON_ERROR(5, "SoundInput not connected");
+            utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+            return true;
+        }
+    }
+    //  input device check (array mic)
     if ((obj->isArrayMic == false) && effectId == 2)
     {
         PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Your input device does not support beamforming");
@@ -177,24 +179,21 @@ bool AudioEffectManager::_setAudioEffect(LSHandle *lshandle, LSMessage *message,
         return true;
     }
 
-    if(((obj->inputDevCnt > 0) && effectId == 1) || effectId == 0 || effectId == 2 || effectId == 3)
+    //  set audio effect enabled
+    if (!audioMixer->setAudioEffect(effectId, enabled))
     {
-         if (effectId != -1 && audioMixer->setAudioEffect(effectId, enabled)) {
-            returnValue = true;
-            if (effectId == 1)
-               getAudioEffectManagerInstance()->isAGCEnabled = enabled;
-        }
-    }
-    else {
-        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Could not load module mAudioEffectManager");
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Unexpected AudioMixer error");
         reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
         utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
         return true;
     }
-    if (returnValue && notifyStatus)
-        getAudioEffectManagerInstance()->notifyAudioEffectSubscriber();
+    
+    //  notify to subscribers
+    getAudioEffectManagerInstance()->notifyAudioEffectSubscriber();
+
+    //  make json return message
     pbnjson::JValue effectResponse = pbnjson::Object();
-    effectResponse.put("returnValue", returnValue);
+    effectResponse.put("returnValue", true);
     reply = effectResponse.stringify();
     utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
     return true;
@@ -350,6 +349,95 @@ std::string AudioEffectManager::getAudioEffectsStatus(const bool &subscribed)
     PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, \
                     "%s returning payload = %s", __FUNCTION__, returnPayload .stringify().c_str());
     return returnPayload .stringify();
+}
+
+bool AudioEffectManager::_setAudioEqualizerBandLevel(LSHandle *lshandle, LSMessage *message, void *ctx) {
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "AudioEffectManager: _setAudioEqualizerBandLevel");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(PROP(band, integer), PROP(level, integer)) REQUIRED_2(band, level)));
+    if (!msg.parse(__FUNCTION__,lshandle)) return true;
+
+    std::string reply ;
+    int band, level;
+    msg.get("band", band);
+    msg.get("level", level);
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "equalizer params: band[%d] level[%d]", band, level);
+
+    //  AudioMixer instance check
+    AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
+    if (!audioMixer) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Invalid AudioMixer Instance");
+            reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+            utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+            return true;
+    }
+
+    //  Equalizer enabled check
+    if (!audioMixer->checkAudioEffectStatus(getAudioEffectManagerInstance()->getEffectId("equalizer"))) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Equalizer feature is not enabled");
+        reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+
+    //  set audio effect param
+    if (!audioMixer->setAudioEqualizerParam(-1, band, level)) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Unexpected AudioMixer error");
+        reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+
+    //  make json return message
+    pbnjson::JValue effectResponse = pbnjson::Object();
+    effectResponse.put("returnValue", true);
+    reply = effectResponse.stringify();
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+
+    return true;
+}
+
+bool AudioEffectManager::_setAudioEqualizerPreset(LSHandle *lshandle, LSMessage *message, void *ctx) {
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "AudioEffectManager: _setAudioEqualizerPreset");
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_1(PROP(preset, integer)) REQUIRED_1(preset)));
+    if (!msg.parse(__FUNCTION__,lshandle)) return true;
+
+    std::string reply ;
+    int preset;
+    msg.get("preset", preset);
+    PM_LOG_INFO(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "equalizer params: preset[%d]", preset);
+
+    //  AudioMixer instance check
+    AudioMixer* audioMixer = AudioMixer::getAudioMixerInstance();
+    if (!audioMixer) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Invalid AudioMixer Instance");
+            reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+            utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+            return true;
+    }
+
+    //  Equalizer enabled check
+    if (!audioMixer->checkAudioEffectStatus(getAudioEffectManagerInstance()->getEffectId("equalizer"))) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Equalizer feature is not enabled");
+        reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+
+    //  set audio effect param
+    if (!audioMixer->setAudioEqualizerParam(preset, -1, 0)) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Unexpected AudioMixer error");
+        reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+
+    //  make json return message
+    pbnjson::JValue effectResponse = pbnjson::Object();
+    effectResponse.put("returnValue", true);
+    reply = effectResponse.stringify();
+    utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+
+    return true;
 }
 
 void AudioEffectManager::handleEvent(events::EVENTS_T *event)

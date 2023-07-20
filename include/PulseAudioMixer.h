@@ -106,6 +106,7 @@ public:
 
     bool setAudioEffect(int effectId, bool enabled);
     bool checkAudioEffectStatus(int effectId);
+    bool setAudioEqualizerParam(int preset, int band, int level);
 
 private:
     PulseAudioMixer() = delete;
@@ -142,8 +143,8 @@ private:
     bool mEffectSpeechEnhancementEnabled;
     bool mEffectGainControlEnabled;
     bool mEffectBeamformingEnabled;
-
     bool mEffectDynamicRangeCompressorEnabled;
+    bool mEffectEqualizerEnalbed;
 
     //To start the pulse socket connect timer
     void createPulseSocketCommunication();

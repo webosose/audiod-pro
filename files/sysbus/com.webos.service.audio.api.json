@@ -19,7 +19,9 @@
     "com.webos.service.audio/master/volumeUp",
     "com.webos.service.audio/UMI/connect",
     "com.webos.service.audio/UMI/disconnect",
-    "com.webos.service.audio/setAudioEffect"
+    "com.webos.service.audio/setAudioEffect",
+    "com.webos.service.audio/setAudioEqualizerBandLevel",
+    "com.webos.service.audio/setAudioEqualizerPreset"
  ],
  "audio.management": [
     "com.webos.service.audio/systemsounds/playFeedback",

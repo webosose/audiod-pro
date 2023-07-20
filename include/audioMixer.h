@@ -124,6 +124,7 @@ class AudioMixer : public MixerInterface
 
         bool setAudioEffect(int effectId, bool enabled);
         bool checkAudioEffectStatus(int effectId);
+        bool setAudioEqualizerParam(int preset, int band, int level);
 
         //Audio mixer calls
         utils::vectorVirtualSink getActiveStreams();

@@ -458,6 +458,10 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
             mEffectDynamicRangeCompressorEnabled = enabled;
             paramSet.Type = PAUDIOD_MODULE_DYNAMIC_COMPRESSOR_LOAD;
             break;
+        case 4:
+            mEffectEqualizerEnalbed = enabled;
+            paramSet.Type = PAUDIOD_MODULE_EQUALIZER_LOAD;
+            break;
         default:
             return false;
             break;
@@ -471,6 +475,23 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
 
     return status;
 }
+
+//  socket to module-palm-policy
+bool PulseAudioMixer::setAudioEqualizerParam(int preset, int band, int level) {
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEqualizerParam: preset[%d] band[%d] level[%d]", preset, band, level);
+    struct paParamSet paramSet;
+    int status = false;
+
+    paramSet.ID = 0;
+    paramSet.Type = PAUDIOD_MODULE_EQUALIZER_SETPARAM;
+    paramSet.param1 = preset;
+    paramSet.param2 = band;
+    paramSet.param3 = level;
+    status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eparse_effect_message_reply, paramSet);
+
+    return status;
+}
+
 bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
     char buffer[SIZE_MESG_TO_PULSE];
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "checkAudioEffectStatus: effectId: %d", effectId);
@@ -485,6 +506,8 @@ bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
             return mEffectBeamformingEnabled;
         case 3:
             return mEffectDynamicRangeCompressorEnabled;
+        case 4:
+            return mEffectEqualizerEnalbed;
         default:
             return false;
     }

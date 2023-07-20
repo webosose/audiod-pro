@@ -926,6 +926,15 @@ bool AudioMixer::setAudioEffect(int effectId, bool enabled) {
     return mObjPulseAudioMixer->setAudioEffect(effectId, enabled);
 }
 
+bool AudioMixer::setAudioEqualizerParam(int preset, int band, int level) {
+    PM_LOG_DEBUG("AudioMixer: setAudioEqualizerParam");
+    if (!mObjPulseAudioMixer) {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setAudioEqualizerParam: mObjPulseAudioMixer is null");
+        return false;
+    }
+    return mObjPulseAudioMixer->setAudioEqualizerParam(preset, band, level);
+}
+
 bool AudioMixer::checkAudioEffectStatus(int effectId) {
     PM_LOG_DEBUG("AudioMixer: checkAudioEffectStatus");
     if (!mObjPulseAudioMixer) {
