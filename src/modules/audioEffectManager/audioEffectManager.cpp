@@ -379,6 +379,14 @@ bool AudioEffectManager::_setAudioEqualizerBandLevel(LSHandle *lshandle, LSMessa
         return true;
     }
 
+    //  parameter boundary check
+    if (band < 0 || band >= audioEffectEqualizerBandSize || level < -audioEffectEqualizerLevelMax || level > audioEffectEqualizerLevelMax) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Equalizer band range [0, 5], level range [-10, 10]");
+        reply = STANDARD_JSON_ERROR(19, "Invalid parameters");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+
     //  set audio effect param
     if (!audioMixer->setAudioEqualizerParam(-1, band, level)) {
         PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Unexpected AudioMixer error");
@@ -419,6 +427,14 @@ bool AudioEffectManager::_setAudioEqualizerPreset(LSHandle *lshandle, LSMessage 
     if (!audioMixer->checkAudioEffectStatus(getAudioEffectManagerInstance()->getEffectId("equalizer"))) {
         PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Equalizer feature is not enabled");
         reply = STANDARD_JSON_ERROR(15, "Audiod Internal Error");
+        utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
+        return true;
+    }
+
+    //  parameter boundary check
+    if (preset < 0 || preset >= audioEffectEqualizerPresetSize) {
+        PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT, "Equalizer preset range [0, 3]");
+        reply = STANDARD_JSON_ERROR(19, "Invalid parameters");
         utils::LSMessageResponse(lshandle, message, reply.c_str(), utils::eLSRespond, false);
         return true;
     }

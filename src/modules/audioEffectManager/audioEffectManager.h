@@ -34,6 +34,11 @@ class AudioEffectManager : public ModuleInterface
             "equalizer"
         };
 
+        //  equalizer configuration
+        static const int audioEffectEqualizerBandSize = 6;
+        static const int audioEffectEqualizerLevelMax = 10;
+        static const int audioEffectEqualizerPresetSize = 4;
+
         //  Register Object to object factory. This is called automatically
         static bool RegisterObject() {
             PM_LOG_DEBUG("%s, RegisterObject - Registering the AudioEffectManager", MSGID_AUDIO_EFFECT_MANAGER);
