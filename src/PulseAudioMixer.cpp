@@ -88,7 +88,7 @@ paudiodMsgHdr PulseAudioMixer::addAudioMsgHeader(uint8_t msgType, uint8_t msgID)
 }
 
 template<typename T>
-bool PulseAudioMixer::sendDataToPule (uint32_t msgType, uint32_t msgID, T subObj)
+bool PulseAudioMixer::sendDataToPulse (uint32_t msgType, uint32_t msgID, T subObj)
 {
     paudiodMsgHdr audioMsgHdr = addAudioMsgHeader(msgType, msgID);
 
@@ -117,7 +117,7 @@ bool PulseAudioMixer::sendDataToPule (uint32_t msgType, uint32_t msgID, T subObj
     else
     {
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-                "PulseAudioMixer::sendDataToPule: data handle is NULL");
+                "PulseAudioMixer::sendDataToPulse: data handle is NULL");
         return false;
     }
     return true;
@@ -143,14 +143,14 @@ PulseAudioMixer::setMute(const char* deviceName, const int& mutestatus, LSHandle
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = mutestatus;
-    volumeSet.parm1 = 0;
-    volumeSet.parm2 = 0;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = 0;
+    volumeSet.param2 = 0;
+    volumeSet.param3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, deviceName, DEVICE_NAME_LENGTH);
     volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esink_set_master_mute_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esink_set_master_mute_reply, volumeSet);
 
     return status;
 }
@@ -171,14 +171,14 @@ bool PulseAudioMixer::setPhysicalSourceMute(const char* source, const int& mutes
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = mutestatus;
-    volumeSet.parm1 = 0;
-    volumeSet.parm2 = 0;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = 0;
+    volumeSet.param2 = 0;
+    volumeSet.param3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, source, DEVICE_NAME_LENGTH);
     volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esource_set_master_mute_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esource_set_master_mute_reply, volumeSet);
 
     return status;
 }
@@ -200,13 +200,13 @@ PulseAudioMixer::setVirtualSourceMute(int sink, int mutestatus, LSHandle *lshand
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = mutestatus;
-    volumeSet.parm1 = 0;
-    volumeSet.parm2 = 0;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = 0;
+    volumeSet.param2 = 0;
+    volumeSet.param3 = 0;
     volumeSet.index = 0;
     volumeSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_source_set_mute_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_source_set_mute_reply, volumeSet);
 
     return status;
 }
@@ -228,13 +228,13 @@ PulseAudioMixer::muteSink(const int& sink, const int& mutestatus, LSHandle *lsha
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = mutestatus;
-    volumeSet.parm1 = 0;
-    volumeSet.parm2 = 0;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = 0;
+    volumeSet.param2 = 0;
+    volumeSet.param3 = 0;
     volumeSet.index = 0;
     volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_sink_input_set_mute_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_sink_input_set_mute_reply, volumeSet);
 
     return status;
 }
@@ -259,14 +259,14 @@ PulseAudioMixer::setVolume(const char* deviceName, const int& volume, LSHandle *
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = 0;
-    volumeSet.parm1 = 0;
-    volumeSet.parm2 = 0;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = 0;
+    volumeSet.param2 = 0;
+    volumeSet.param3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, deviceName, DEVICE_NAME_LENGTH);
     volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esink_set_master_volume_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esink_set_master_volume_reply, volumeSet);
 
     return status;
 }
@@ -307,14 +307,14 @@ PulseAudioMixer::setMicVolume(const char* deviceName, const int& volume, LSHandl
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = 0;
-    volumeSet.parm1 = 0;
-    volumeSet.parm2 = 0;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = 0;
+    volumeSet.param2 = 0;
+    volumeSet.param3 = 0;
     volumeSet.index = 0;
     strncpy(volumeSet.device, deviceName, DEVICE_NAME_LENGTH);
     volumeSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esource_set_master_volume_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, esource_set_master_volume_reply, volumeSet);
 
     return status;
 }
@@ -338,13 +338,13 @@ bool PulseAudioMixer::programTrackVolume(EVirtualAudioSink sink, int sinkIndex, 
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = 0;
-    volumeSet.parm1 = volume;
-    volumeSet.parm2 = ramp;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = volume;
+    volumeSet.param2 = ramp;
+    volumeSet.param3 = 0;
     volumeSet.index = sinkIndex;
     volumeSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_sink_input_index_set_volume_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_sink_input_index_set_volume_reply, volumeSet);
 
     return status;
 }
@@ -365,13 +365,13 @@ bool PulseAudioMixer::programVolume (EVirtualSource source, int volume, LSHandle
     volumeSet.table = 0;
     volumeSet.ramp = 0;
     volumeSet.mute = 0;
-    volumeSet.parm1 = volume;
-    volumeSet.parm2 = ramp;
-    volumeSet.parm3 = 0;
+    volumeSet.param1 = volume;
+    volumeSet.param2 = ramp;
+    volumeSet.param3 = 0;
     volumeSet.index = 0;
     volumeSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    int status = sendDataToPule<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_source_input_set_volume_reply, volumeSet);
+    int status = sendDataToPulse<paVolumeSet>(PAUDIOD_MSGTYPE_VOLUME, evirtual_source_input_set_volume_reply, volumeSet);
 
     return status;
 }
@@ -387,7 +387,7 @@ bool PulseAudioMixer::setSoundOutputOnRange(EVirtualAudioSink startSink,\
     strncpy(routingSet.device, deviceName, DEVICE_NAME_LENGTH);
     routingSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_sink_outputdevice_on_range_reply, routingSet);
+    bool status = sendDataToPulse<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_sink_outputdevice_on_range_reply, routingSet);
 
     return status;
 }
@@ -403,7 +403,7 @@ bool PulseAudioMixer::setSoundInputOnRange(EVirtualSource startSource,\
     strncpy(routingSet.device, deviceName, DEVICE_NAME_LENGTH);
     routingSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_source_inputdevice_on_range_reply, routingSet);
+    bool status = sendDataToPulse<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_source_inputdevice_on_range_reply, routingSet);
 
     return status;
 }
@@ -417,7 +417,7 @@ bool PulseAudioMixer::setDefaultSinkRouting(EVirtualAudioSink startSink, EVirtua
     routingSet.id = 0;
     routingSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_sink_routing_reply, routingSet);
+    bool status = sendDataToPulse<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_sink_routing_reply, routingSet);
 
     return status;
 }
@@ -431,47 +431,47 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
     routingSet.id = 0;
     routingSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    bool status = sendDataToPule<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_source_routing_reply, routingSet);
+    bool status = sendDataToPulse<paRoutingSet>(PAUDIOD_REPLY_MSGTYPE_ROUTING, eset_default_source_routing_reply, routingSet);
 
     return status;
 }
 
 bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: effectId: %d, enabled:%d", effectId, enabled);
-    struct paParamSet paramSet;
+    struct paEffectSet effectSet;
     int status = false;
 
     switch (effectId) {
         case 0:
             mEffectSpeechEnhancementEnabled = enabled;
-            paramSet.Type = PAUDIOD_MODULE_SPEECH_ENHANCEMENT_LOAD;
+            effectSet.Type = PAUDIOD_EFFECT_SPEECH_ENHANCEMENT_LOAD;
             break;
         case 1:
             mEffectGainControlEnabled = enabled;
-            paramSet.Type = PAUDIOD_MODULE_GAIN_CONTROL_LOAD;
+            effectSet.Type = PAUDIOD_EFFECT_GAIN_CONTROL_LOAD;
             break;
         case 2:
             mEffectBeamformingEnabled = enabled;
-            paramSet.Type = PAUDIOD_MODULE_BEAMFORMING_LOAD;
+            effectSet.Type = PAUDIOD_EFFECT_BEAMFORMING_LOAD;
             break;
         case 3:
             mEffectDynamicRangeCompressorEnabled = enabled;
-            paramSet.Type = PAUDIOD_MODULE_DYNAMIC_COMPRESSOR_LOAD;
+            effectSet.Type = PAUDIOD_EFFECT_DYNAMIC_COMPRESSOR_LOAD;
             break;
         case 4:
             mEffectEqualizerEnalbed = enabled;
-            paramSet.Type = PAUDIOD_MODULE_EQUALIZER_LOAD;
+            effectSet.Type = PAUDIOD_EFFECT_EQUALIZER_LOAD;
             break;
         default:
             return false;
             break;
     }
 
-    paramSet.ID = 0;
-    paramSet.param1 = enabled;
-    paramSet.param2 = effectId;
-    paramSet.param3 = 0;
-    status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eparse_effect_message_reply, paramSet);
+    effectSet.id = effectId;
+    effectSet.param[0] = enabled;
+    effectSet.param[1] = 0;
+    effectSet.param[2] = 0;
+    status = sendDataToPulse<paEffectSet>(PAUDIOD_MSGTYPE_EFFECT, eparse_effect_message_reply, effectSet);
 
     return status;
 }
@@ -479,15 +479,15 @@ bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
 //  socket to module-palm-policy
 bool PulseAudioMixer::setAudioEqualizerParam(int preset, int band, int level) {
     PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEqualizerParam: preset[%d] band[%d] level[%d]", preset, band, level);
-    struct paParamSet paramSet;
+    struct paEffectSet effectSet;
     int status = false;
 
-    paramSet.ID = 0;
-    paramSet.Type = PAUDIOD_MODULE_EQUALIZER_SETPARAM;
-    paramSet.param1 = preset;
-    paramSet.param2 = band;
-    paramSet.param3 = level;
-    status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eparse_effect_message_reply, paramSet);
+    effectSet.Type = PAUDIOD_EFFECT_EQUALIZER_SETPARAM;
+    effectSet.id = 0;
+    effectSet.param[0] = preset;
+    effectSet.param[1] = band;
+    effectSet.param[2] = level;
+    status = sendDataToPulse<paEffectSet>(PAUDIOD_MSGTYPE_EFFECT, eparse_effect_message_reply, effectSet);
 
     return status;
 }
@@ -545,7 +545,7 @@ bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *pro
     strncpy(moduleSet.profile, profile, BLUETOOTH_PROFILE_SIZE);
     moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1]='\0';
 
-    int status = sendDataToPule<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, eload_Bluetooth_module_reply, moduleSet);
+    int status = sendDataToPulse<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, eload_Bluetooth_module_reply, moduleSet);
 
     return status;
 }
@@ -577,7 +577,7 @@ bool PulseAudioMixer::programUnloadBluetooth (const char *profile, const int dis
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
     moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
-    status = sendDataToPule<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, eunload_BlueTooth_module_reply, moduleSet);
+    status = sendDataToPulse<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, eunload_BlueTooth_module_reply, moduleSet);
 
     return status;
 }
@@ -610,7 +610,7 @@ bool PulseAudioMixer::programA2dpSource (const bool & a2dpSource)
     moduleSet.address[BLUETOOTH_MAC_ADDRESS_SIZE-1] = {'\0'};
     moduleSet.profile[BLUETOOTH_PROFILE_SIZE-1] = {'\0'};
 
-    int status = sendDataToPule<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, ea2dpSource_reply, moduleSet);
+    int status = sendDataToPulse<paModuleSet>(PAUDIOD_MSGTYPE_MODULE, ea2dpSource_reply, moduleSet);
 
     return status;
 }
@@ -702,7 +702,7 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     strncpy(deviceSet.device, deviceName, DEVICE_NAME_LENGTH);
     deviceSet.device[DEVICE_NAME_LENGTH-1] = '\0';
 
-    returnValue = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, eload_lineout_alsa_sink_reply, deviceSet);
+    returnValue = sendDataToPulse<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, eload_lineout_alsa_sink_reply, deviceSet);
 
     return returnValue;
 }
@@ -735,7 +735,7 @@ bool PulseAudioMixer::sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount
     strncpy(deviceSet.device, deviceBaseName.c_str(), DEVICE_NAME_LENGTH);
     deviceSet.device[DEVICE_NAME_LENGTH-1]='\0';
 
-    int status = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, einit_multiple_usb_device_info_reply, deviceSet);
+    int status = sendDataToPulse<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, einit_multiple_usb_device_info_reply, deviceSet);
 
     return status;
 }
@@ -767,7 +767,7 @@ bool PulseAudioMixer::sendInternalDeviceInfo(int isOutput, int maxDeviceCount)
     deviceSet.maxDeviceCnt = maxDeviceCount;
     deviceSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    int status = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, einitialise_internal_card_reply, deviceSet);
+    int status = sendDataToPulse<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, einitialise_internal_card_reply, deviceSet);
 
     return status;
 }
@@ -833,7 +833,7 @@ bool PulseAudioMixer::loadUSBSinkSource(char cmd,int cardno, int deviceno, int s
     deviceSet.maxDeviceCnt = 0;
     deviceSet.device[DEVICE_NAME_LENGTH-1] = {'\0'};
 
-    ret = sendDataToPule<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, edetect_usb_device_reply, deviceSet);
+    ret = sendDataToPulse<paDeviceSet>(PAUDIOD_MSGTYPE_DEVICE, edetect_usb_device_reply, deviceSet);
 
     return ret;
 }
@@ -1289,7 +1289,7 @@ PulseAudioMixer::_pulseStatus(GIOChannel *ch,
                     if (fun)
                         fun(cbk.lshandle, cbk.message, cbk.ctx, true);
                     else
-                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "CallBAck function is null");
+                        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "CallBack function is null");
                     mPulseCallBackInfo.erase(replyHdr->id);
                 }
                 else
@@ -1461,7 +1461,7 @@ bool PulseAudioMixer::closeClient(int sinkIndex)
     paramSet.param2 = 0;
     paramSet.param3 = 0;
 
-    int status = sendDataToPule<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eclose_playback_by_sink_input_reply, paramSet);
+    int status = sendDataToPulse<paParamSet>(PAUDIOD_MSGTYPE_SETPARAM, eclose_playback_by_sink_input_reply, paramSet);
 
     return ret;
 }

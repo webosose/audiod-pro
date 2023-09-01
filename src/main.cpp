@@ -141,9 +141,7 @@ main(int argc, char **argv)
         case 's':
             usleep(atoi(optarg) * 1000);
             return 0;
-        case 'h':
         default:
-
             PrintUsage(argv[0]);
             return 0;
         }

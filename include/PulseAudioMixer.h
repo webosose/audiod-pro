@@ -163,7 +163,7 @@ private:
 
     // Function to send message to pulseaudio
     bool sendHeaderToPA(char *data, paudiodMsgHdr audioMsgHdr);
-    template<typename T>bool sendDataToPule (uint32_t msgType, uint32_t msgID, T subObj);
+    template<typename T>bool sendDataToPulse (uint32_t msgType, uint32_t msgID, T subObj);
 };
 
 #endif //PULSEAUDIOMIXER_H_
