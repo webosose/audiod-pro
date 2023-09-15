@@ -4,8 +4,6 @@
     "com.webos.service.audio/setSourceInputVolume",
     "com.webos.service.audio/muteSource",
     "com.webos.service.audio/muteSink",
-    "com.webos.service.audio/setSoundOutput",
-    "com.webos.service.audio/setSoundInput",
     "com.webos.service.audio/setInputVolume",
     "com.webos.service.audio/registerTrack",
     "com.webos.service.audio/unregisterTrack",
@@ -24,6 +22,8 @@
     "com.webos.service.audio/setAudioEqualizerPreset"
  ],
  "audio.management": [
+    "com.webos.service.audio/setSoundOutput",
+    "com.webos.service.audio/setSoundInput",
     "com.webos.service.audio/systemsounds/playFeedback",
     "com.webos.service.audio/playSound",
     "com.webos.service.audio/soundSettings/setSoundOut",
