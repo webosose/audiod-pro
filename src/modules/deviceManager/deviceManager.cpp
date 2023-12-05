@@ -46,11 +46,11 @@ void DeviceManager::eventInternalDeviceRequest(std::function <void(std::list<std
     }
     func(inputlist,outputlist);
     PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,"==============");
-    for(auto it:inputlist)
+    for(auto& it:inputlist)
     {
         PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,it.c_str());
     }
-    for(auto it:outputlist)
+    for(auto& it:outputlist)
     {
         PM_LOG_INFO(MSGID_DEVICE_MANAGER, INIT_KVCOUNT,it.c_str());
     }
@@ -469,7 +469,7 @@ void DeviceManager:: printIntCardInfo()
 {
     PM_LOG_DEBUG("DeviceManager::printIntCardInfo");
     PM_LOG_DEBUG("****************************************");
-    for (const auto it : mPhyInternalInfo)
+    for (const auto& it : mPhyInternalInfo)
     {
         PM_LOG_DEBUG("mPhyInternalInfo: CardName:%s", it.first.c_str());
         for (const auto& physicalInfo : it.second)
@@ -498,7 +498,7 @@ void DeviceManager::printExtCardInfo()
 {
     PM_LOG_DEBUG("DeviceManager::printExtCardInfo");
     PM_LOG_DEBUG("****************************************");
-    for (const auto it : mPhyExternalInfo)
+    for (const auto& it : mPhyExternalInfo)
     {
         PM_LOG_DEBUG("mPhyExternalInfo: CardName:%s", it.first.c_str());
         for (const auto& physicalInfo : it.second)

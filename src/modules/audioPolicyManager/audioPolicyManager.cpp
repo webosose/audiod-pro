@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2022 LG Electronics Company.
+*      Copyright (c) 2020-2023 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -869,7 +869,7 @@ void AudioPolicyManager::printTrackVolumeInfo()
 {
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager::printTrackVolumeInfo");
     PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "****************************************");
-    for (const auto it : mTrackVolumeInfo)
+    for (const auto& it : mTrackVolumeInfo)
     {
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "mTrackVolumeInfo: trackId:%s", it.first.c_str());
         for (const auto& volumeInfo : it.second)

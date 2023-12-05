@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 LG Electronics, Inc.
+// Copyright (c) 2020-2023 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -157,7 +157,10 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address, char *
                 }
             }
             mapIter = mDisplayConnectionStatus.find(display);
-            mapIter->second = true;
+            if (mapIter != mDisplayConnectionStatus.end())
+            {
+                mapIter->second = true;
+            }
             PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                 "Display value is %d", display);
             if (mObjAudioMixer)
@@ -193,7 +196,10 @@ void BluetoothManager::setBlueToothA2DPActive (bool state, char *address, char *
                 }
             }
             mapIter = mDisplayConnectionStatus.find(display);
-            mapIter->second = false;
+            if (mapIter != mDisplayConnectionStatus.end())
+            {
+                mapIter->second = false;
+            }
             PM_LOG_INFO(MSGID_BLUETOOTH_MANAGER, INIT_KVCOUNT,\
                     "Display value is %d", display);
 

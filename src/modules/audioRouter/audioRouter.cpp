@@ -325,7 +325,7 @@ void AudioRouter::eventResponseSoundDevicesInfo(bool isOutput)
             events::EVENT_RESPONSE_SOUNDOUTPUT_INFO_T eventResponseSoundOutputDeviceInfo;
             eventResponseSoundOutputDeviceInfo.eventName = utils::eEventResponseSoundOutputDeviceInfo;
             eventResponseSoundOutputDeviceInfo.soundOutputInfo = getSoundDeviceInfo(true);
-            for(auto it:eventResponseSoundOutputDeviceInfo.soundOutputInfo)
+            for(auto& it:eventResponseSoundOutputDeviceInfo.soundOutputInfo)
             mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventResponseSoundOutputDeviceInfo);
         }
         else
@@ -347,14 +347,14 @@ void AudioRouter::setSoundDeviceInfo(bool isOutput)
     utils::mapSoundDevicesInfo soundDeviceInfo;
     if(isOutput)
     {
-        for (const auto it : mSoundOutputInfo)
+        for (const auto& it : mSoundOutputInfo)
             for (const auto& deviceInfo : it.second)
                 soundDeviceInfo[it.first].push_back(deviceInfo.deviceName);
         mSoundOutputDeviceInfo = soundDeviceInfo;
     }
     else
     {
-        for (const auto it : mSoundInputInfo)
+        for (const auto& it : mSoundInputInfo)
             for (const auto& deviceInfo : it.second)
                 soundDeviceInfo[it.first].push_back(deviceInfo.deviceName);
         mSoundInputDeviceInfo = soundDeviceInfo;
@@ -839,7 +839,7 @@ void AudioRouter::printDeviceInfo(const bool& isOutput)
     PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "printDeviceInfo");
     if (isOutput)
     {
-        for (const auto it : mSoundOutputInfo)
+        for (const auto& it : mSoundOutputInfo)
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "mSoundOutputInfo: display:%s", it.first.c_str());
             for (const auto& deviceInfo : it.second)
@@ -853,7 +853,7 @@ void AudioRouter::printDeviceInfo(const bool& isOutput)
     }
     else
     {
-        for (const auto it : mSoundInputInfo)
+        for (const auto& it : mSoundInputInfo)
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "mSoundInputInfo: display:%s", it.first.c_str());
             for (const auto& deviceInfo : it.second)
@@ -1005,7 +1005,7 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                 }
             }
         }
-        for (const auto it : mSoundOutputInfo)
+        for (const auto& it : mSoundOutputInfo)
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "mSoundOutputInfo: display:%s", it.first.c_str());
             for (const auto& deviceInfo : it.second)
@@ -1116,7 +1116,7 @@ void AudioRouter::setDeviceRoutingInfo(const pbnjson::JValue& deviceRoutingInfo)
                 }
             }
         }
-        for (const auto it : mSoundInputInfo)
+        for (const auto& it : mSoundInputInfo)
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "mSoundInputInfo: display:%s", it.first.c_str());
             for (const auto& deviceInfo : it.second)

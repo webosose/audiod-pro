@@ -299,7 +299,7 @@ void lunaEventSubscriber::eventSubscribeServerStatus(SERVER_TYPE_E eService)
         "lunaEventSubscriber::eventSubscribeServerStatus : %d",eService);
     if (mServerStatusSubscribed==false)
     {
-        for(auto it:statusSubscriptionMap)
+        for(auto& it:statusSubscriptionMap)
         {
             bool result = LSRegisterServerStatusEx(GetPalmService(), it.first.c_str(),
                 serviceStatusCallBack, mLoop, NULL, &lserror);

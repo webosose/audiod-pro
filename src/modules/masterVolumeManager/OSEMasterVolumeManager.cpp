@@ -88,7 +88,7 @@ bool OSEMasterVolumeManager::readInitialVolume(pbnjson::JValue settingsObj)
         }
     }
     //fill internal DB structs according to the device counter
-    for(auto it:OutputDeviceList)
+    for(auto& it:OutputDeviceList)
     {
         if (isInternalDevice(it.second.deviceName, true))
         {
@@ -102,7 +102,7 @@ bool OSEMasterVolumeManager::readInitialVolume(pbnjson::JValue settingsObj)
             mExtOutputDeviceListDB.push_back(it.second);
         }
     }
-    for(auto it:InputDeviceList)
+    for(auto& it:InputDeviceList)
     {
         if (isInternalDevice(it.second.deviceName, false))
         {
@@ -2337,7 +2337,7 @@ void OSEMasterVolumeManager::setSoundOutputInfo(utils::mapSoundDevicesInfo sound
     {
         PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s",it.first.c_str());
         int displayId = getDisplayId(it.first);
-        for (auto it2: it.second)
+        for (auto& it2: it.second)
         {
             PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s",it2.c_str());
             deviceDetail newdevice(true);
@@ -2354,7 +2354,7 @@ void OSEMasterVolumeManager::setSoundInputInfo(utils::mapSoundDevicesInfo soundI
     {
         int displayId = getDisplayId(it.first);
         PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s",it.first.c_str());
-        for (auto it2: it.second)
+        for (auto& it2: it.second)
         {
             PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s",it2.c_str());
             deviceDetail newdevice(false);
