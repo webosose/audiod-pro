@@ -436,38 +436,42 @@ bool PulseAudioMixer::setDefaultSourceRouting(EVirtualSource startSource, EVirtu
     return status;
 }
 
-bool PulseAudioMixer::setAudioEffect(int effectId, bool enabled) {
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: effectId: %d, enabled:%d", effectId, enabled);
+bool PulseAudioMixer::setAudioEffect(std::string effectName, bool enabled) {
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: effectName: %s, enabled:%d", effectName.c_str(), enabled);
     struct paEffectSet effectSet;
     int status = false;
 
-    switch (effectId) {
-        case 0:
-            mEffectSpeechEnhancementEnabled = enabled;
-            effectSet.Type = PAUDIOD_EFFECT_SPEECH_ENHANCEMENT_LOAD;
-            break;
-        case 1:
-            mEffectGainControlEnabled = enabled;
-            effectSet.Type = PAUDIOD_EFFECT_GAIN_CONTROL_LOAD;
-            break;
-        case 2:
-            mEffectBeamformingEnabled = enabled;
-            effectSet.Type = PAUDIOD_EFFECT_BEAMFORMING_LOAD;
-            break;
-        case 3:
-            mEffectDynamicRangeCompressorEnabled = enabled;
-            effectSet.Type = PAUDIOD_EFFECT_DYNAMIC_COMPRESSOR_LOAD;
-            break;
-        case 4:
-            mEffectEqualizerEnalbed = enabled;
-            effectSet.Type = PAUDIOD_EFFECT_EQUALIZER_LOAD;
-            break;
-        default:
-            return false;
-            break;
+    if (effectName.compare("speech enhancement") == 0)
+    {
+        mEffectSpeechEnhancementEnabled = enabled;
+        effectSet.Type = PAUDIOD_EFFECT_SPEECH_ENHANCEMENT_LOAD;
+    }
+    else if (effectName.compare("gain control") == 0)
+    {
+        mEffectGainControlEnabled = enabled;
+        effectSet.Type = PAUDIOD_EFFECT_GAIN_CONTROL_LOAD;
+    }
+    else if (effectName.compare("beamforming") == 0)
+    {
+        mEffectBeamformingEnabled = enabled;
+        effectSet.Type = PAUDIOD_EFFECT_BEAMFORMING_LOAD;
+    }
+    else if (effectName.compare("dynamic compressor") == 0)
+    {
+        mEffectDynamicRangeCompressorEnabled = enabled;
+        effectSet.Type = PAUDIOD_EFFECT_DYNAMIC_COMPRESSOR_LOAD;
+    }
+    else if (effectName.compare("equalizer") == 0)
+    {
+        mEffectEqualizerEnalbed = enabled;
+        effectSet.Type = PAUDIOD_EFFECT_EQUALIZER_LOAD;
+    }
+    else
+    {
+        return false;
     }
 
-    effectSet.id = effectId;
+    effectSet.id = 0; //Not used
     effectSet.param[0] = enabled;
     effectSet.param[1] = 0;
     effectSet.param[2] = 0;
@@ -492,25 +496,23 @@ bool PulseAudioMixer::setAudioEqualizerParam(int preset, int band, int level) {
     return status;
 }
 
-bool PulseAudioMixer::checkAudioEffectStatus(int effectId) {
+bool PulseAudioMixer::checkAudioEffectStatus(std::string effectName) {
     char buffer[SIZE_MESG_TO_PULSE];
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "checkAudioEffectStatus: effectId: %d", effectId);
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "checkAudioEffectStatus: effectId: %s", effectName.c_str());
 
     //  return value
-    switch (effectId) {
-        case 0:
-            return mEffectSpeechEnhancementEnabled;
-        case 1:
-            return mEffectGainControlEnabled;
-        case 2:
-            return mEffectBeamformingEnabled;
-        case 3:
-            return mEffectDynamicRangeCompressorEnabled;
-        case 4:
-            return mEffectEqualizerEnalbed;
-        default:
-            return false;
-    }
+    if (effectName.compare("speech enhancement") == 0)
+        return mEffectSpeechEnhancementEnabled;
+    else if (effectName.compare("gain control") == 0)
+        return mEffectGainControlEnabled;
+    else if (effectName.compare("beamforming") == 0)
+        return mEffectBeamformingEnabled;
+    else if (effectName.compare("dynamic compressor") == 0)
+        return mEffectDynamicRangeCompressorEnabled;
+    else if (effectName.compare("equalizer") == 0)
+        return mEffectEqualizerEnalbed;
+    else
+        return false;
 }
 
 bool PulseAudioMixer::programLoadBluetooth (const char *address, const char *profile, const int displayID)

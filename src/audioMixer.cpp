@@ -917,13 +917,13 @@ bool AudioMixer::closeClient(int sinkIndex)
     }
 }
 
-bool AudioMixer::setAudioEffect(int effectId, bool enabled) {
+bool AudioMixer::setAudioEffect(std::string effectname, bool enabled) {
     PM_LOG_DEBUG("AudioMixer: setAudioEffect");
     if (!mObjPulseAudioMixer) {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "setAudioEffect: mObjPulseAudioMixer is null");
         return false;
     }
-    return mObjPulseAudioMixer->setAudioEffect(effectId, enabled);
+    return mObjPulseAudioMixer->setAudioEffect(std::move(effectname), enabled);
 }
 
 bool AudioMixer::setAudioEqualizerParam(int preset, int band, int level) {
@@ -935,12 +935,12 @@ bool AudioMixer::setAudioEqualizerParam(int preset, int band, int level) {
     return mObjPulseAudioMixer->setAudioEqualizerParam(preset, band, level);
 }
 
-bool AudioMixer::checkAudioEffectStatus(int effectId) {
+bool AudioMixer::checkAudioEffectStatus(std::string effectname) {
     PM_LOG_DEBUG("AudioMixer: checkAudioEffectStatus");
     if (!mObjPulseAudioMixer) {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "checkAudioEffectStatus: mObjPulseAudioMixer is null");
         return false;
     }
-    return mObjPulseAudioMixer->checkAudioEffectStatus(effectId);
+    return mObjPulseAudioMixer->checkAudioEffectStatus(std::move(effectname));
 }
 //Pulse Mixer Calls End//

@@ -122,8 +122,8 @@ class AudioMixer : public MixerInterface
         void openCloseSink(EVirtualAudioSink sink, bool openNotClose, int sinkIndex, std::string trackId);
         bool closeClient(int sinkIndex);
 
-        bool setAudioEffect(int effectId, bool enabled);
-        bool checkAudioEffectStatus(int effectId);
+        bool setAudioEffect(std::string effectname, bool enabled);
+        bool checkAudioEffectStatus(std::string effectname);
         bool setAudioEqualizerParam(int preset, int band, int level);
 
         //Audio mixer calls

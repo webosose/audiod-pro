@@ -24,15 +24,7 @@ class AudioEffectManager : public ModuleInterface
         AudioMixer *mObjAudioMixer;
         static bool mIsObjRegistered;
 
-        //  change audio effect list size and add to list
-        static const int audioEffectListSize = 5;
-        static constexpr const char* audioEffectList[] = {
-            "speech enhancement",
-            "gain control",
-            "beamforming",
-            "dynamic compressor",
-            "equalizer"
-        };
+        static std::vector <std::string> audioEffectList;
 
         //  equalizer configuration
         static const int audioEffectEqualizerBandSize = 6;

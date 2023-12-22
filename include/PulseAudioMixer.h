@@ -104,8 +104,8 @@ public:
             EVirtualAudioSink endSink, int display);
     bool closeClient(int sinkIndex);
 
-    bool setAudioEffect(int effectId, bool enabled);
-    bool checkAudioEffectStatus(int effectId);
+    bool setAudioEffect(std::string effectName, bool enabled);
+    bool checkAudioEffectStatus(std::string effectName);
     bool setAudioEqualizerParam(int preset, int band, int level);
 
 private:
