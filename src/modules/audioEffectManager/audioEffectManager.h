@@ -25,14 +25,13 @@ class AudioEffectManager : public ModuleInterface
         static bool mIsObjRegistered;
 
         //  change audio effect list size and add to list
-        static const int audioEffectListSize = 6;
+        static const int audioEffectListSize = 5;
         static constexpr const char* audioEffectList[] = {
             "speech enhancement",
             "gain control",
             "beamforming",
             "dynamic compressor",
-            "equalizer",
-            "bass boost"
+            "equalizer"
         };
 
         //  equalizer configuration
