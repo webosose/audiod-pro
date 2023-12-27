@@ -463,8 +463,13 @@ bool PulseAudioMixer::setAudioEffect(std::string effectName, bool enabled) {
     }
     else if (effectName.compare("equalizer") == 0)
     {
-        mEffectEqualizerEnalbed = enabled;
+        mEffectEqualizerEnabled = enabled;
         effectSet.Type = PAUDIOD_EFFECT_EQUALIZER_LOAD;
+    }
+    else if (effectName.compare("bass boost") == 0)
+    {
+        mEffectBassBoostEnabled = enabled;
+        effectSet.Type = PAUDIOD_EFFECT_BASS_BOOST_LOAD;
     }
     else
     {
@@ -510,7 +515,9 @@ bool PulseAudioMixer::checkAudioEffectStatus(std::string effectName) {
     else if (effectName.compare("dynamic compressor") == 0)
         return mEffectDynamicRangeCompressorEnabled;
     else if (effectName.compare("equalizer") == 0)
-        return mEffectEqualizerEnalbed;
+        return mEffectEqualizerEnabled;
+    else if (effectName.compare("bass boost") == 0)
+        return mEffectBassBoostEnabled;
     else
         return false;
 }

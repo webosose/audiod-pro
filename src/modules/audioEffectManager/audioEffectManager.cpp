@@ -12,7 +12,8 @@ AudioEffectManager* AudioEffectManager::mAudioEffectManager = nullptr;
 
 std::vector<std::string> AudioEffectManager::audioEffectList {
     "dynamic compressor",
-    "equalizer"
+    "equalizer",
+    "bass boost"
 };
 
 AudioEffectManager* AudioEffectManager::getAudioEffectManagerInstance() {
