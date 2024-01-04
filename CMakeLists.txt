@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2022 LG Electronics, Inc.
+# Copyright (c) 2012-2024 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ webos_component(1 0 0)
 
 webos_add_compiler_flags(ALL "-DAUDIOD_IPC_SERVER -DBOOST_DISABLE_THREADS -D_GNU_SOURCE")
 webos_add_compiler_flags(ALL "-Wall")
-
-webos_machine_dep()
 
 include(FindPkgConfig)
 
@@ -147,7 +145,7 @@ SET (modules_files
     install(FILES files/config/audiod_module_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/audiod_device_routing_config.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
     install(FILES files/config/bluetooth_configuration.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod)
-IF (${WEBOS_TARGET_MACHINE} STREQUAL qemux86-64)
+IF (${WEBOS_TARGET_MACHINE_IMPL} STREQUAL "emulator")
     install(FILES files/config/audiod_internal_device_loading_qemux86-64.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod RENAME audiod_internal_device_loading.json)
 ELSE ()
     install(FILES files/config/audiod_internal_device_loading_open.json DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/audiod RENAME audiod_internal_device_loading.json)
@@ -197,7 +195,7 @@ target_link_libraries(audiod     ${GLIB2_LDFLAGS}
 endif (WEBOS_LTTNG_ENABLED)
 add_definitions(-DENABLE_POWEROFF_REBOOT_SIGNAL)
 add_definitions(-DENABLE_WAKELOCK_FOR_SLEEP_STATE)
-IF (${WEBOS_TARGET_MACHINE} STREQUAL qemux86-64 OR ${WEBOS_TARGET_MACHINE} STREQUAL qemux86)
+IF (${WEBOS_TARGET_MACHINE_IMPL} STREQUAL "emulator")
 add_definitions(-DWEBOS_SOC_TYPE="x86")
 ELSE()
 add_definitions(-DWEBOS_SOC_TYPE="RPI4")
