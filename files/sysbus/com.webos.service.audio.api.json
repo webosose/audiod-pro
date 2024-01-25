@@ -26,6 +26,7 @@
     "com.webos.service.audio/setSoundInput",
     "com.webos.service.audio/systemsounds/playFeedback",
     "com.webos.service.audio/playSound",
+    "com.webos.service.audio/controlPlayback",
     "com.webos.service.audio/soundSettings/setSoundOut",
     "com.webos.service.audio/udev/event"
  ],
@@ -43,5 +44,8 @@
     "com.webos.service.audio/getAudioEffectList",
     "com.webos.service.audio/checkAudioEffectStatus",
     "com.webos.service.audio/getAudioEffectsStatus"
+ ],
+ "audio.previlagequery": [
+    "com.webos.service.audio/getPlaybackStatus"
  ]
 }

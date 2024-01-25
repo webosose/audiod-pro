@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2022 LG Electronics Company.
+*      Copyright (c) 2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,11 +26,6 @@
 #include "moduleFactory.h"
 #include "moduleManager.h"
 
-#include <functional>
-#include <random>
-
-
-#define AUDIOD_UNIQUE_ID_LENGTH 10
 #define LUNA_COMMAND "com.webos.lunasend"
 #define MAX_TRACK_COUNT 64
 typedef struct ClientInfo
@@ -74,50 +69,6 @@ class TrackManager : public ModuleInterface
         void initialize();
         void deInitialize();
         void handleEvent(events::EVENTS_T *event);
-
-
-        class GenerateUniqueID {
-            const std::string           source_;
-            const int                   base_;
-            const std::function<int()>  rand_;
-
-            public:
-            GenerateUniqueID(GenerateUniqueID&) = delete;
-            GenerateUniqueID& operator= (const GenerateUniqueID&) = delete;
-
-            explicit
-            GenerateUniqueID(const std::string& src = "0123456789ABCDEFGIJKLMNOPQRSTUVWXYZabcdefgijklmnopqrstuvwxyz") :
-                source_(src),
-                base_(source_.size()),
-                rand_(std::bind(
-                    std::uniform_int_distribution<int>(0, base_ - 1),
-                    std::mt19937( std::random_device()() )
-                ))
-            { }
-
-            std::string operator ()()
-            {
-                struct timespec time;
-                std::string s(AUDIOD_UNIQUE_ID_LENGTH, '0');
-
-                clock_gettime(CLOCK_MONOTONIC, &time);
-
-                s[0] = '_'; // Prepend uid with _ to comply with luna requirements
-                for (int i = 1; i < AUDIOD_UNIQUE_ID_LENGTH; ++i) {
-                    if (i < 5 && i < AUDIOD_UNIQUE_ID_LENGTH - 6) {
-                        s[i] = source_[time.tv_nsec % base_];
-                        time.tv_nsec /= base_;
-                    } else if (time.tv_sec > 0 && i < AUDIOD_UNIQUE_ID_LENGTH - 3) {
-                        s[i] = source_[time.tv_sec % base_];
-                        time.tv_sec /= base_;
-                    } else {
-                        s[i] = source_[rand_()];
-                    }
-                }
-
-                return s;
-            }
-        };
 
         static bool _registerTrack(LSHandle *lshandle, LSMessage *message, void *ctx);
         static bool _unregisterTrack(LSHandle *lshandle, LSMessage *message, void *ctx);

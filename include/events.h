@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2023 LG Electronics, Inc.
+// Copyright (c) 2021-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,6 +113,13 @@ namespace events
         EModuleEventType eventName;
         pbnjson::JValue sourcePolicyInfo;
     }EVENT_SOURCE_POLICY_INFO_T;
+
+    typedef struct
+    {
+        EModuleEventType eventName;
+        std::string playbackId;
+        std::string state;
+    }EVENT_GET_PLAYBACK_STATUS_INFO_T;
 
     typedef struct
     {

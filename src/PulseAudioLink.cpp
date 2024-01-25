@@ -41,6 +41,13 @@ PulseAudioLink::PulseAudioLink() : mContext(0), mMainLoop(0), mPulseAudioReady(f
     initializeDtmf();
 }
 
+PulseAudioLink::~PulseAudioLink()
+{
+    for (auto it : mMapAudioList)
+        delete it.second;
+    mMapAudioList.clear();
+}
+
 void PulseAudioLink::pulseAudioStateChanged(pa_context_state_t state)
 {
     switch (state)
@@ -178,6 +185,50 @@ bool PulseAudioLink::play(const char * samplename, const char * sink)
         return false;
     }
     return true;
+}
+
+std::string PulseAudioLink::playSound(const char * samplename, const char * sink, const char * format, int rate, int channels)
+{
+    std::string playbackID = GenerateUniqueID()();
+    PlaybackThread *thread = new PlaybackThread(mCallback, playbackID);;
+    bool ret = thread->play(samplename, sink, format, rate, channels);
+    if (ret)
+    {
+        mMapAudioList[playbackID] = thread;
+        return playbackID;
+    }
+    delete thread;
+    return std::string();
+}
+
+bool PulseAudioLink::controlPlayback(std::string playbackId, std::string requestType)
+{
+    std::map<std::string, PlaybackThread *>::iterator it = mMapAudioList.find (playbackId);
+    if (it == mMapAudioList.end())
+        return false;
+
+    if (requestType == "pause")
+        return it->second->pause();
+    if (requestType == "resume")
+        return it->second->resume();
+    if(requestType == "stop")
+    {
+        if (it->second->stop())
+        {
+            delete it->second;
+            mMapAudioList.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string PulseAudioLink::getPlaybackStatus(std::string playbackId)
+{
+    std::map<std::string, PlaybackThread *>::iterator it = mMapAudioList.find (playbackId);
+    if(it == mMapAudioList.end())
+        return std::string();
+    return it->second->getPlaybackStatus();
 }
 
 bool PulseAudioLink::play(const char * samplename, const char * sink, const char * format, int rate, int channels)
@@ -335,7 +386,7 @@ bool PulseAudioLink::play(PulseAudioDataProvider* data, const char* sinkname)
     return true;
 }
 
-bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink, const char *format, int rate, int channels)
+std::string PulseAudioLink::play(const char *snd, EVirtualAudioSink sink, const char *format, int rate, int channels)
 {
     PMTRACE_FUNCTION;
     PM_LOG_INFO(MSGID_PULSE_LINK, INIT_KVCOUNT,\
@@ -345,9 +396,9 @@ bool PulseAudioLink::play(const char *snd, EVirtualAudioSink sink, const char *f
     {
         PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
             "'%d' is not a valid sink id", (int)sink);
-        return false;
+        return std::string();
     }
-    return play(snd, virtualSinkName(sink, false), format, rate, channels);
+    return playSound(snd, virtualSinkName(sink, false), format, rate, channels);
 }
 
 bool PulseAudioLink::connectToPulse()
@@ -378,6 +429,11 @@ bool PulseAudioLink::connectToPulse()
         }
     }
     return false;
+}
+
+void PulseAudioLink::registerCallback(MixerInterface *mixerCallBack)
+{
+    mCallback = mixerCallBack;
 }
 
 class PreloadDeferCBData : public RefObj {
@@ -797,4 +853,152 @@ bool PulseDtmfGenerator::stream_write_callback(pa_stream *stream, size_t length)
         return false;
     } else return true;
 
+}
+
+PlaybackThread::PlaybackThread(MixerInterface* mixerCallBack, std::string playbackID)
+{
+    mCallback = mixerCallBack;
+    mPlaybackId = playbackID;
+}
+
+bool PlaybackThread::playThread()
+{
+    // Read and write data in chunks of 1024 bytes
+    size_t dataSize = 1024;
+    mPlayData = (uint8_t*)malloc(dataSize);
+    if (!mPlayData) {
+        pa_simple_free(mStream);
+        fclose(fptr);
+        playbackState = "error";
+        playbackStatusChanged(mPlaybackId, playbackState);
+        return false;
+    }
+
+    while (mDataAvailable) {
+    // Read data from the file
+    size_t n = fread(mPlayData, 1, dataSize, fptr);
+    if (n <= 0) {
+        playbackState = "stopped";
+        playbackStatusChanged(mPlaybackId, playbackState);
+        mDataAvailable = false;
+        break;
+    }
+    playbackState = "playing";
+    // Write data to the stream
+    if (pa_simple_write(mStream, mPlayData, n, NULL) < 0) {
+        break;
+    }
+    }
+    mDataAvailable = false;
+    return true;
+}
+
+
+bool PlaybackThread::play(const char * samplename, const char * sink, const char * format, int rate, int channels)
+{
+    PMTRACE_FUNCTION;
+    PM_LOG_DEBUG(" PlaybackThread::play");
+
+    if (nullptr == samplename)
+        return false;
+
+    fptr = fopen(samplename, "r");
+    if (!fptr)
+    {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "PulseAudioLink::play: File Open Failed");
+        return false;
+    }
+    pa_sample_spec ss;
+    if (std::strncmp(format, "PA_SAMPLE_S16LE", 15) == 0)
+        ss.format = PA_SAMPLE_S16LE;
+    else if (std::strncmp(format,"PA_SAMPLE_S24LE", 15) == 0)
+        ss.format = PA_SAMPLE_S24LE;
+    else
+        ss.format = PA_SAMPLE_S32LE;
+    ss.channels = channels;
+    ss.rate = rate;
+    mStream = pa_simple_new(NULL, NULL, PA_STREAM_PLAYBACK, sink,
+            "playback", &ss, NULL, NULL, NULL);
+    if (!mStream)
+    {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "PulseAudioLink::play: failed to create stream");
+        playbackState = "error";
+        return false;
+    }
+    mDataAvailable = true;
+    playbackThread = std::thread(&PlaybackThread::playThread, this);
+    return true;
+}
+
+bool PlaybackThread::pause()
+{
+    PM_LOG_DEBUG(" PlaybackThread::pause");
+    if (playbackState != "playing")
+        return false;
+    if (pa_simple_cork(mStream, 1, NULL) < 0) {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "PulseAudioLink::pause: Failed to pause stream");
+        free((void*)mPlayData);
+        pa_simple_free(mStream);
+        playbackState = "error";
+        playbackStatusChanged(mPlaybackId, playbackState);
+        return false;
+    }
+    playbackState = "paused";
+    playbackStatusChanged(mPlaybackId, playbackState);
+    return true;
+}
+
+bool PlaybackThread::resume()
+{
+    PM_LOG_DEBUG(" PlaybackThread::resume");
+    if (playbackState != "paused")
+        return false;
+    if (pa_simple_cork(mStream, 0, NULL) < 0) {
+        PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
+                "PulseAudioLink::resume: Failed to resume stream");
+        free((void*)mPlayData);
+        pa_simple_free(mStream);
+        playbackState = "error";
+        playbackStatusChanged(mPlaybackId, playbackState);
+        return false;
+    }
+    playbackState = "playing";
+    playbackStatusChanged(mPlaybackId, playbackState);
+    return true;
+}
+
+bool PlaybackThread::stop()
+{
+    PM_LOG_DEBUG(" PlaybackThread::stop");
+    if (pa_simple_flush(mStream, NULL) < 0) {
+        free((void*)mPlayData);
+        pa_simple_free(mStream);
+        playbackState = "error";
+        playbackStatusChanged(mPlaybackId, playbackState);
+        return false;
+    }
+    mDataAvailable = false;
+    playbackThread.join();
+    free(mPlayData);
+
+    pa_simple_free(mStream);
+    if(playbackState != "stopped")
+    {
+        playbackState = "stopped";
+        playbackStatusChanged(mPlaybackId, playbackState);
+    }
+    return true;
+}
+
+std::string PlaybackThread::getPlaybackStatus()
+{
+    return playbackState;
+}
+
+void PlaybackThread::playbackStatusChanged(std::string playbackID, std::string state)
+{
+   mCallback->callBackPlaybackStatusChanged(playbackID, state);
 }

@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-* Copyright (c) 2020-2021 LG Electronics Company.
+* Copyright (c) 2020-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -71,6 +71,64 @@ bool PlaybackManager::isValidFileExtension(const std::string& filePath)
     return success;
 }
 
+
+void PlaybackManager::stopInternal(std::string playbackId)
+{
+    PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
+        "stopInternal: playbackId: %s",playbackId.c_str());
+    PlaybackManager* playbackObj = PlaybackManager::getPlaybackManagerInstance();
+
+    AudioMixer* audioMixerObj = playbackObj->mObjAudioMixer;
+
+    if (audioMixerObj && !(audioMixerObj->controlPlayback(playbackId, "stop")))
+    {
+        PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, "stopPlayback throwed error");
+    }
+}
+
+void PlaybackManager::notifyGetPlayabackStatus(std::string& playbackId, std::string& state)
+{
+    PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
+        "notifyGetPlayabackStatus: playbackId: %s %s",playbackId.c_str(), state.c_str());
+
+    CLSError lserror;
+    std::string reply;
+    std::string key(AUDIOD_API_GET_PLAYBACK_STATUS);
+    pbnjson::JValue returnPayload  = pbnjson::Object();
+    bool retValAcquire = false;
+    LSSubscriptionIter *iter = NULL;
+
+    returnPayload.put("playbackId", playbackId);
+    returnPayload.put("state", state);
+    key.append("/" + playbackId);
+    if (!LSSubscriptionReply(GetPalmService(), \
+        key.c_str(), returnPayload.stringify().c_str(), &lserror))
+    {
+        lserror.Print(__FUNCTION__, __LINE__);
+        PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, "Notify error");
+    }
+    else
+    {
+        if(state == "stopped")
+        {
+            retValAcquire = LSSubscriptionAcquire(GetPalmService(), key.c_str(), &iter, &lserror);
+            if(retValAcquire)
+            {
+              while(LSSubscriptionHasNext(iter)){
+                    LSMessage *subscribeMessage = LSSubscriptionNext(iter);
+                    LSSubscriptionRemove(iter);
+                    break;
+
+                }
+                LSSubscriptionRelease(iter);
+            }
+            std::thread th(PlaybackManager::stopInternal, playbackId);
+            th.detach();
+        }
+    }
+}
+
+
 bool PlaybackManager::_playSound(LSHandle *lshandle, LSMessage *message, void *ctx)
 {
     LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_5(\
@@ -87,6 +145,8 @@ bool PlaybackManager::_playSound(LSHandle *lshandle, LSMessage *message, void *c
     std::string format;
     int sampleRate = 0;
     int channels = 0;
+    pbnjson::JValue resp = pbnjson::JObject();
+    CLSError lserror;
 
     std::string reply = STANDARD_JSON_SUCCESS;
 
@@ -107,28 +167,33 @@ bool PlaybackManager::_playSound(LSHandle *lshandle, LSMessage *message, void *c
 
         if (eVirtualSink_None == virtualSink)
         {
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid virtual sink name");
-            goto error;
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_INPUT_PARAMS, "Invalid virtual sink name");
+            LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+            return true;
         }
         if (!playbackObj->isValidFileExtension(filePath))
         {
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid file format");
-            goto error;
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_INPUT_PARAMS, "Invalid file format");
+            LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+            return true;
         }
         if (!playbackObj->isValidSampleFormat(format))
         {
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid sample format");
-            goto error;
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_INPUT_PARAMS, "Invalid sample format");
+            LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+            return true;
         }
         if (!playbackObj->isValidSampleRate(sampleRate))
         {
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid sample rate");
-            goto error;
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_INPUT_PARAMS, "Invalid sample rate");
+            LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+            return true;
         }
         if (!playbackObj->isValidChannelCount(channels))
         {
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid channel count");
-            goto error;
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_INPUT_PARAMS, "Invalid channel count");
+            LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+            return true;
         }
 
         fp = fopen(filePath.c_str(), "r");
@@ -136,8 +201,9 @@ bool PlaybackManager::_playSound(LSHandle *lshandle, LSMessage *message, void *c
         {
             PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
                 "Error : %s : file %s open failed. returning from here\n", __FUNCTION__, filePath.c_str());
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Could not open audio file");
-            goto error;
+            reply = STANDARD_JSON_ERROR(19, "Invalid Params");
+            LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+            return true;
         }
         else
         {
@@ -145,32 +211,143 @@ bool PlaybackManager::_playSound(LSHandle *lshandle, LSMessage *message, void *c
             fp = NULL;
         }
         AudioMixer* audioMixerObj = playbackObj->mObjAudioMixer;
-        if (audioMixerObj && !(audioMixerObj->playSound(filePath.c_str(), virtualSink, format.c_str(), \
-            sampleRate, channels)))
+        if (audioMixerObj)
         {
-            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Could not play the audio file");
-            goto error;
+            std::string playbackID = audioMixerObj->playSound(filePath.c_str(), \
+                virtualSink, format.c_str(), sampleRate, channels);
+
+            if(playbackID.empty())
+            {
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Could not play the audio file");
+                LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+                return true;
+            }
+            else
+            {
+                resp.put("playbackId",playbackID);
+                resp.put("returnValue",true);
+                utils::LSMessageResponse(lshandle, message, resp.stringify().c_str(), utils::eLSRespond, false);
+                return true;
+            }
         }
     }
     else
     {
         reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, "Could not get the playbck instance");
-        goto error;
+        LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+        return true;
     }
 
-error:
+    return true;
+}
+
+bool PlaybackManager::_controlPlayback(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(\
+        PROP(playbackId, string), PROP(requestType, string))\
+        REQUIRED_2(playbackId, requestType)));
+
+
+    if (!msg.parse(__FUNCTION__, lshandle))
+        return true;
+
+    std::string reply = STANDARD_JSON_SUCCESS;
+    std::string playbackId;
+    std::string requestType;
     CLSError lserror;
-    if (!LSMessageReply(lshandle, message, reply.c_str(), &lserror))
+
+    msg.get("playbackId", playbackId);
+    msg.get("requestType", requestType);
+    PlaybackManager* playbackObj = PlaybackManager::getPlaybackManagerInstance();
+
+    if (nullptr != playbackObj)
     {
-        lserror.Print(__FUNCTION__, __LINE__);
-        PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
-            "returning FALSE becuase of invalid parameters");
+        AudioMixer* audioMixerObj = playbackObj->mObjAudioMixer;
+
+        if (audioMixerObj && !(audioMixerObj->controlPlayback(playbackId, requestType)))
+        {
+            reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid Params");
+        }
+    }
+    else
+    {
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, \
+            "Could not get the playbck instance");
+    }
+    LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+    return true;
+
+}
+
+bool PlaybackManager::_getPlaybackStatus(LSHandle *lshandle, LSMessage *message, void *ctx)
+{
+    LSMessageJsonParser msg(message, STRICT_SCHEMA(PROPS_2(\
+        PROP(subscribe, boolean),
+        PROP(playbackId, string))\
+        REQUIRED_1(playbackId)));
+
+    if (!msg.parse(__FUNCTION__, lshandle))
+        return true;
+
+    std::string reply = STANDARD_JSON_SUCCESS;
+    std::string playbackId;
+    CLSError lserror;
+    bool subscribed;
+    if (!msg.get("subscribe", subscribed))
+        subscribed=false;
+    pbnjson::JValue resp = pbnjson::JObject();
+
+
+    msg.get("playbackId", playbackId);
+    PlaybackManager* playbackObj = PlaybackManager::getPlaybackManagerInstance();
+
+    if (nullptr != playbackObj)
+    {
+        AudioMixer* audioMixerObj = playbackObj->mObjAudioMixer;
+
+        if (audioMixerObj)
+        {
+            std::string state = audioMixerObj->getPlaybackStatus(playbackId);
+            if(state.empty())
+            {
+                reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INVALID_PARAMS, "Invalid Params");
+                LSMessageReply(lshandle, message, reply.c_str(), &lserror);
+            }
+            else
+            {
+                if (LSMessageIsSubscription(message))
+                {
+                    const char *key = LSMessageGetKind(message);
+                    std::string streamKey(key);
+                    streamKey.append("/" + playbackId);
+                    if(!LSSubscriptionAdd(lshandle, streamKey.c_str(), message, NULL))
+                    {
+                        lserror.Print(__FUNCTION__, __LINE__);
+                        PM_LOG_CRITICAL(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
+                            "LSSubscriptionAdd failed");
+                        return true;
+                    }
+                }
+                resp.put("playbackStatus",state);
+                resp.put("returnValue",true);
+                utils::LSMessageResponse(lshandle, message, resp.stringify().c_str(), \
+                    utils::eLSRespond, false);
+            }
+        }
+    }
+    else
+    {
+        reply = STANDARD_JSON_ERROR(AUDIOD_ERRORCODE_INTERNAL_ERROR, \
+            "Could not get the playbck instance");
+        LSMessageReply(lshandle, message, reply.c_str(), &lserror);
     }
     return true;
 }
 
 LSMethod PlaybackManager::playbackMethods[] = {
     { "playSound", PlaybackManager::_playSound},
+    { "controlPlayback", PlaybackManager::_controlPlayback},
+    { "getPlaybackStatus", PlaybackManager::_getPlaybackStatus},
     { },
 };
 
@@ -182,6 +359,14 @@ PlaybackManager::PlaybackManager(ModuleConfig* const pConfObj)
         PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
             "AudioMixer instance is null");
     }
+    mObjModuleManager = ModuleManager::getModuleManagerInstance();
+    if (mObjModuleManager)
+    {
+        mObjModuleManager->subscribeModuleEvent(this, utils::eEventGetPlaybackStatus);
+    }
+    else
+        PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT,\
+            "PlaybackManager:mObjModuleManager is null");
     PM_LOG_DEBUG("playback manager constructor");
 }
 
@@ -225,6 +410,25 @@ void PlaybackManager::deInitialize()
         PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, "mPlaybackManager is nullptr");
 }
 
-void PlaybackManager::handleEvent(events::EVENTS_T* ev)
+void PlaybackManager::handleEvent(events::EVENTS_T* event)
 {
+    switch(event->eventName)
+    {
+        case utils::eEventGetPlaybackStatus:
+        {
+            PM_LOG_INFO(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT,\
+                "handleEvent : eEventGetPlaybackStatus");
+            events::EVENT_GET_PLAYBACK_STATUS_INFO_T *stEventPlaybackStatus = \
+                (events::EVENT_GET_PLAYBACK_STATUS_INFO_T*)event;
+            notifyGetPlayabackStatus(stEventPlaybackStatus->playbackId, \
+                stEventPlaybackStatus->state);
+        }
+        break;
+        default:
+        {
+            PM_LOG_WARNING(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT,\
+                "handleEvent:Unknown event");
+        }
+        break;
+    }
 }

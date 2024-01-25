@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-* Copyright (c) 2020-2021 LG Electronics Company.
+* Copyright (c) 2020-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@
 #include "main.h"
 #include "moduleFactory.h"
 
+#define AUDIOD_API_GET_PLAYBACK_STATUS    "/getPlaybackStatus"
+
 class PlaybackManager : public ModuleInterface
 {
 private:
@@ -35,12 +37,15 @@ private:
     bool isValidSampleRate(const int& rate);
     bool isValidChannelCount(const int& channels);
     bool isValidFileExtension(const std::string& filePath);
+    void notifyGetPlayabackStatus(std::string& playbackId, std::string& state);
+    static void stopInternal(std::string playbackId);
 
     PlaybackManager(const PlaybackManager&) = delete;
     PlaybackManager& operator=(const PlaybackManager&) = delete;
     PlaybackManager(ModuleConfig* const pConfObj);
     AudioMixer *mObjAudioMixer;
     static bool mIsObjRegistered;
+    ModuleManager* mObjModuleManager;
     //Register Object to object factory. This is called automatically
     static bool RegisterObject()
     {
@@ -67,5 +72,7 @@ public:
     void deInitialize();
     void handleEvent(events::EVENTS_T* ev);
     static bool _playSound(LSHandle *lshandle, LSMessage *message, void *ctx);
+    static bool _controlPlayback(LSHandle *lshandle, LSMessage *message, void *ctx);
+    static bool _getPlaybackStatus(LSHandle *lshandle, LSMessage *message, void *ctx);
 };
 #endif // _PLAYBACK_MANAGER_

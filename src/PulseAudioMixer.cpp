@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2023 LG Electronics, Inc.
+// Copyright (c) 2012-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,6 +69,7 @@ PulseAudioMixer::PulseAudioMixer(MixerInterface* mixerCallBack) : mChannel(0),
         mPulseStateActiveSourceCount[i] = 0;
     }
     createPulseSocketCommunication();
+    mPulseLink.registerCallback(mixerCallBack);
 }
 
 PulseAudioMixer::~PulseAudioMixer()
@@ -1404,9 +1405,19 @@ bool PulseAudioMixer::playSystemSound(const char *snd, EVirtualAudioSink sink)
     return mPulseLink.play(snd, sink);
 }
 
-bool PulseAudioMixer::playSound(const char *snd, EVirtualAudioSink sink, const char *format, int rate, int channels)
+std::string PulseAudioMixer::playSound(const char *snd, EVirtualAudioSink sink, const char *format, int rate, int channels)
 {
     return mPulseLink.play(snd, sink, format, rate, channels);
+}
+
+bool PulseAudioMixer::controlPlayback(std::string playbackId, std::string requestType)
+{
+    return mPulseLink.controlPlayback(playbackId, requestType);
+}
+
+std::string PulseAudioMixer::getPlaybackStatus(std::string playbackId)
+{
+    return mPulseLink.getPlaybackStatus(playbackId);
 }
 
 void PulseAudioMixer::preloadSystemSound(const char * snd)

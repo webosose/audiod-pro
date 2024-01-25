@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2023 LG Electronics, Inc.
+// Copyright (c) 2012-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,8 +63,10 @@ public:
     bool setPhysicalSourceMute(const char* source, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
     /// Play a system sound using Pulse's API
     bool playSystemSound(const char *snd, EVirtualAudioSink sink);
-    bool playSound(const char *snd, EVirtualAudioSink sink, \
+    std::string playSound(const char *snd, EVirtualAudioSink sink, \
         const char *format, int rate, int channels);
+    bool controlPlayback(std::string playbackId, std::string requestType);
+    std::string getPlaybackStatus(std::string playbackId);
     /// Pre-load system sound in Pulse, if necessary
     void preloadSystemSound(const char * snd);
     bool muteSink(const int& sink, const int& mutestatus, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);  //TODO : remove

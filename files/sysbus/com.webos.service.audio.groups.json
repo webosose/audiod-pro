@@ -2,5 +2,6 @@
  "allowedNames": ["com.webos.service.audio"],
  "audio.operation": ["dev"],
  "audio.management": ["oem"],
- "audio.query": ["dev"]
+ "audio.query": ["dev"],
+ "audio.previlagequery": ["oem"]
 }

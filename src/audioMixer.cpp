@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2023 LG Electronics Company.
+*      Copyright (c) 2020-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -340,6 +340,21 @@ void AudioMixer::callBackMasterVolumeStatus()
     else
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "callBackMasterVolumeStatus: mObjModuleManager is null");
 }
+
+void AudioMixer::callBackPlaybackStatusChanged(const std::string &playbackId, const std::string &state)
+{
+    PM_LOG_DEBUG("callBackPlaybackStatusChanged");
+    if (mObjModuleManager)
+    {
+        events::EVENT_GET_PLAYBACK_STATUS_INFO_T eventPlaybackStatusInfo;
+        eventPlaybackStatusInfo.eventName = utils::eEventGetPlaybackStatus;
+        eventPlaybackStatusInfo.playbackId = playbackId;
+        eventPlaybackStatusInfo.state = state;
+        mObjModuleManager->publishModuleEvent((events::EVENTS_T*)&eventPlaybackStatusInfo);
+    }
+    else
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT, "callBackPlaybackStatusChanged: mObjModuleManager is null");
+}
 //Mixer calbacks end//
 
 //UMI Mixer Calls Start//
@@ -659,7 +674,7 @@ bool AudioMixer::playSystemSound(const char *snd, EVirtualAudioSink sink)
     }
 }
 
-bool AudioMixer::playSound(const char *snd, EVirtualAudioSink sink, \
+std::string AudioMixer::playSound(const char *snd, EVirtualAudioSink sink, \
                const char *format, int rate, int channels)
 {
     PM_LOG_DEBUG("AudioMixer: playSound");
@@ -669,7 +684,33 @@ bool AudioMixer::playSound(const char *snd, EVirtualAudioSink sink, \
     {
         PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
             "playSound: mObjPulseAudioMixer is null");
+        return "";
+    }
+}
+
+bool AudioMixer::controlPlayback(std::string playbackId, std::string requestType)
+{
+    PM_LOG_DEBUG("AudioMixer: controlPlayback");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->controlPlayback(playbackId, requestType);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "controlPlayback: mObjPulseAudioMixer is null");
         return false;
+    }
+}
+
+std::string AudioMixer::getPlaybackStatus(std::string playbackId)
+{
+    PM_LOG_DEBUG("AudioMixer: getPlaybackStatus");
+    if (mObjPulseAudioMixer)
+        return mObjPulseAudioMixer->getPlaybackStatus(playbackId);
+    else
+    {
+        PM_LOG_ERROR(MSGID_AUDIO_MIXER, INIT_KVCOUNT,\
+            "getPlaybackStatus: mObjPulseAudioMixer is null");
+        return "";
     }
 }
 

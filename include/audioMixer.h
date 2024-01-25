@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2023 LG Electronics Company.
+*      Copyright (c) 2020-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -95,8 +95,10 @@ class AudioMixer : public MixerInterface
         bool setVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
         bool setMicVolume(const char* deviceName, const int& volume, LSHandle *lshandle, LSMessage *message, void *ctx, PulseCallBackFunc cb);
         bool playSystemSound(const char *snd, EVirtualAudioSink sink);
-        bool playSound(const char *snd, EVirtualAudioSink sink, \
+        std::string playSound(const char *snd, EVirtualAudioSink sink, \
             const char *format, int rate, int channels);
+        bool controlPlayback(std::string playbackId, std::string requestType);
+        std::string getPlaybackStatus(std::string playbackId);
         bool externalSoundcardPathCheck(std::string filename,  int status);
         bool loadUSBSinkSource(char cmd,int cardno, int deviceno, int status, PulseCallBackFunc cb);
         bool sendUsbMultipleDeviceInfo(int isOutput, int maxDeviceCount, const std::string &deviceBaseName);
@@ -140,6 +142,9 @@ class AudioMixer : public MixerInterface
             utils::ESINK_STATUS sourceStatus, utils::EMIXER_TYPE mixerType);
         void callBackDeviceConnectionStatus(const std::string &deviceName, const std::string &deviceNameDetail, const std::string &deviceIcon, utils::E_DEVICE_STATUS deviceStatus, utils::EMIXER_TYPE mixerType, const bool& isOutput);
         void callBackMasterVolumeStatus();
+
+        void callBackPlaybackStatusChanged(const std::string &playbackId, const std::string &state);
+
 
 };
 

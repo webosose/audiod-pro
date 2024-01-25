@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 LG Electronics, Inc.
+// Copyright (c) 2012-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #define PULSEAUDIOLINK_H_
 
 #include <pulse/pulseaudio.h>
+#include <pulse/simple.h>
 #include <set>
 #include <string>
 #include "log.h"
@@ -25,6 +26,8 @@
 #include <math.h>
 #include <unistd.h>
 #include <audiodTracer.h>
+#include <thread>
+#include "mixerInterface.h"
 
 #include "utils.h"
 #define AUDIO_EFFECT_FADE_OUT  1
@@ -126,6 +129,28 @@ protected:
     int mAudioEffect;
 };
 
+class PlaybackThread
+{
+    public:
+        PlaybackThread(MixerInterface* mixerCallBack, std::string playbackId);
+        bool play(const char * samplename, const char * sink, const char * format, int rate, int channels);
+        bool pause();
+        bool resume();
+        bool stop();
+        std::string getPlaybackStatus();
+        void playbackStatusChanged(std::string playbackID, std::string state);
+    private:
+        bool mDataAvailable;
+        pa_simple *mStream;
+        bool playThread();
+        uint8_t* mPlayData;
+        FILE *fptr;
+        std::thread playbackThread;
+        std::string playbackState;
+        MixerInterface *mCallback;
+        std::string mPlaybackId;
+};
+
 /*
  * PulseAudioLink handles a connection with Pulse using Pulse official APIs
  * The only purpose of this class is to allow playing a system sound file
@@ -135,6 +160,7 @@ protected:
 class PulseAudioLink {
 public:
     PulseAudioLink();
+    ~PulseAudioLink();
 
     /// Connection status & management
     bool    isConnected() const    { return mPulseAudioReady; }
@@ -147,14 +173,20 @@ public:
     bool    play(PulseAudioDataProvider* data, const char* sink);
     bool    play(const char * filename, const char * sink, const char * format, \
         int rate, int channels);
-    bool    play(const char *snd,  EVirtualAudioSink sink, const char *format, \
+    std::string    playSound(const char * filename, const char * sink, const char * format, \
         int rate, int channels);
+    std::string    play(const char *snd,  EVirtualAudioSink sink, const char *format, \
+        int rate, int channels);
+    bool controlPlayback(std::string playbackId, std::string requestType);
+    std::string getPlaybackStatus(std::string playbackId);
 
     /// on-demand sounds need to be pre-loaded in Pulse for a faster initial playback
     void    preload(const char * filename, const char * format, int rate, int channels, const char * path);
 
     /// These should really be private, but they're needed for global callbacks...
     void    pulseAudioStateChanged(pa_context_state_t state);
+
+    void registerCallback(MixerInterface *mixerCallBack);
 
 protected:
     bool     connectToPulse();
@@ -173,7 +205,8 @@ private:
     pa_mainloop *            mMainLoop;
     bool                    mPulseAudioReady;
     std::set<std::string>    mLoadedSounds;
-
+    std::map<std::string, PlaybackThread *> mMapAudioList;
+    MixerInterface *mCallback;
     pthread_t mThread;
 };
 
