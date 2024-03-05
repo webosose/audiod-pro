@@ -859,6 +859,10 @@ PlaybackThread::PlaybackThread(MixerInterface* mixerCallBack, std::string playba
 {
     mCallback = mixerCallBack;
     mPlaybackId = playbackID;
+    mDataAvailable = false;
+    fptr = NULL;
+    mStream = NULL;
+    mPlayData = NULL;
 }
 
 bool PlaybackThread::playThread()
