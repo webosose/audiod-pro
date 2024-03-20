@@ -43,7 +43,7 @@ PulseAudioLink::PulseAudioLink() : mContext(0), mMainLoop(0), mPulseAudioReady(f
 
 PulseAudioLink::~PulseAudioLink()
 {
-    for (auto it : mMapAudioList)
+    for (const auto& it : mMapAudioList)
         delete it.second;
     mMapAudioList.clear();
 }
@@ -874,10 +874,12 @@ bool PlaybackThread::playThread()
         pa_simple_free(mStream);
         fclose(fptr);
         playbackState = "error";
+        PM_LOG_DEBUG(" PlaybackThread::playThread playbackState = %s", playbackState.c_str());
         playbackStatusChanged(mPlaybackId, playbackState);
         return false;
     }
-
+    playbackState = "playing";
+    PM_LOG_DEBUG(" PlaybackThread::playThread playbackState = %s", playbackState.c_str());
     while (mDataAvailable) {
     // Read data from the file
     size_t n = fread(mPlayData, 1, dataSize, fptr);
@@ -887,7 +889,6 @@ bool PlaybackThread::playThread()
         mDataAvailable = false;
         break;
     }
-    playbackState = "playing";
     // Write data to the stream
     if (pa_simple_write(mStream, mPlayData, n, NULL) < 0) {
         break;
@@ -929,6 +930,7 @@ bool PlaybackThread::play(const char * samplename, const char * sink, const char
         PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,\
                 "PulseAudioLink::play: failed to create stream");
         playbackState = "error";
+        PM_LOG_DEBUG(" PlaybackThread::play playbackState = %s", playbackState.c_str());
         return false;
     }
     mDataAvailable = true;
@@ -947,10 +949,12 @@ bool PlaybackThread::pause()
         free((void*)mPlayData);
         pa_simple_free(mStream);
         playbackState = "error";
+        PM_LOG_DEBUG(" PlaybackThread::pause playbackState = %s", playbackState.c_str());
         playbackStatusChanged(mPlaybackId, playbackState);
         return false;
     }
     playbackState = "paused";
+    PM_LOG_DEBUG(" PlaybackThread::pause playbackState = %s", playbackState.c_str());
     playbackStatusChanged(mPlaybackId, playbackState);
     return true;
 }
@@ -966,10 +970,12 @@ bool PlaybackThread::resume()
         free((void*)mPlayData);
         pa_simple_free(mStream);
         playbackState = "error";
+        PM_LOG_DEBUG(" PlaybackThread::resume playbackState = %s", playbackState.c_str());
         playbackStatusChanged(mPlaybackId, playbackState);
         return false;
     }
     playbackState = "playing";
+    PM_LOG_DEBUG(" PlaybackThread::resume playbackState = %s", playbackState.c_str());
     playbackStatusChanged(mPlaybackId, playbackState);
     return true;
 }
@@ -981,6 +987,7 @@ bool PlaybackThread::stop()
         free((void*)mPlayData);
         pa_simple_free(mStream);
         playbackState = "error";
+        PM_LOG_DEBUG(" PlaybackThread::stop playbackState = %s", playbackState.c_str());
         playbackStatusChanged(mPlaybackId, playbackState);
         return false;
     }
@@ -992,6 +999,7 @@ bool PlaybackThread::stop()
     if(playbackState != "stopped")
     {
         playbackState = "stopped";
+        PM_LOG_DEBUG(" PlaybackThread::stop playbackState = %s", playbackState.c_str());
         playbackStatusChanged(mPlaybackId, playbackState);
     }
     return true;

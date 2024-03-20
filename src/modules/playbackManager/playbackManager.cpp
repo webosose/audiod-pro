@@ -98,8 +98,9 @@ void PlaybackManager::notifyGetPlayabackStatus(std::string& playbackId, std::str
     bool retValAcquire = false;
     LSSubscriptionIter *iter = NULL;
 
-    returnPayload.put("playbackId", playbackId);
-    returnPayload.put("state", state);
+    returnPayload.put("playbackStatus", state);
+    returnPayload.put("returnValue", true);
+    returnPayload.put("subscribed", true);
     key.append("/" + playbackId);
     if (!LSSubscriptionReply(GetPalmService(), \
         key.c_str(), returnPayload.stringify().c_str(), &lserror))
@@ -330,6 +331,7 @@ bool PlaybackManager::_getPlaybackStatus(LSHandle *lshandle, LSMessage *message,
                 }
                 resp.put("playbackStatus",state);
                 resp.put("returnValue",true);
+                resp.put("subscribed",subscribed);
                 utils::LSMessageResponse(lshandle, message, resp.stringify().c_str(), \
                     utils::eLSRespond, false);
             }
