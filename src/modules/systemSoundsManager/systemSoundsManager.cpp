@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -86,26 +86,36 @@ bool SystemSoundsManager::_playFeedback(LSHandle *lshandle, LSMessage *message, 
     }
     size = strlen(SYSTEMSOUNDS_PATH) + strlen(name.c_str()) + strlen("-ondemand.pcm")+ 1;
     filename = (char *)malloc( size );
-    if (filename == NULL) {
+    if (filename == NULL)
+    {
          reply = STANDARD_JSON_ERROR(4, "Unable to allocate memory");
          goto error;
     }
-    snprintf(filename, size, SYSTEMSOUNDS_PATH "%s-ondemand.pcm", name.c_str());
-    PM_LOG_INFO(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
-        "complete file name to playback = %s\n", filename);
+    if (snprintf(filename, size, SYSTEMSOUNDS_PATH "%s-ondemand.pcm", name.c_str()) < 0)
+    {
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT,"snprintf failed to generate filename. Returning from here\n");
+        goto error;
+    }
+    else if (snprintf(filename, size, SYSTEMSOUNDS_PATH "%s-ondemand.pcm", name.c_str()) >= size)
+    {
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT,"snprintf buffer overflow. Filename might be truncated\n");
+    }
 
     fp = fopen(filename, "r");
     free(filename);
     filename= NULL;
     if (!fp){
-         PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+        PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
             "Error : %s : file open failed. returning from here\n", __FUNCTION__);
          reply = INVALID_PARAMETER_ERROR(name, string);
          goto error;
     }
     else{
-         fclose(fp);
-         fp = NULL;
+        if(fclose(fp))
+        {
+            PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT,"Failed to close file");
+        }
+        fp = NULL;
     }
 
     // if "play" is false, pre-load the sound & do nothing else

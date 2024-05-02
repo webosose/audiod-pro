@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2021 LG Electronics Company.
+*      Copyright (c) 2020-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -486,7 +486,8 @@ void ConnectionManager::initialize()
     {
         CLSError lserror;
         bool bRetVal = LSRegisterCategoryAppend(GetPalmService(), UMI_CATEGORY_NAME, connectionManagerMethods, nullptr, &lserror);
-        if (!bRetVal || !LSCategorySetData(GetPalmService(), UMI_CATEGORY_NAME, mConnectionManager, &lserror))
+        void * ptrConnectionManager = (void *) mConnectionManager;
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), UMI_CATEGORY_NAME, ptrConnectionManager, &lserror))
         {
             PM_LOG_ERROR(MSGID_CONNECTION_MANAGER, INIT_KVCOUNT,\
                         "%s: Registering Service for '%s' category failed", __FUNCTION__, UMI_CATEGORY_NAME);

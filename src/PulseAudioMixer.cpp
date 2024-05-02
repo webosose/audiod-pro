@@ -646,19 +646,21 @@ bool PulseAudioMixer::loadInternalSoundCard(char cmd, int cardNumber, int device
     std::string card_no;
     std::string device_no;
     std::string filename;
-    try
+    card_no = std::to_string(cardNumber);
+
+    if (card_no.empty())
     {
-        card_no = std::to_string(cardNumber);
-        device_no = std::to_string(deviceNumber);
-    }
-    catch (const std::bad_alloc&)
-    {
-        PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-            "caught exception for to_string converion");
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Failed to convert card number to string");
         return returnValue;
     }
-    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
-        "check for pulseaudio connection");
+
+    device_no = std::to_string(deviceNumber);
+    if (device_no.empty())
+    {
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "Failed to convert device number to string");
+        return returnValue;
+    }
+    PM_LOG_INFO(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,"check for pulseaudio connection");
     if (!mChannel) {
         PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT,\
             "There is no socket connection to pulseaudio");

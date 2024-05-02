@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2021-2023 LG Electronics Company.
+*      Copyright (c) 2021-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -1062,7 +1062,8 @@ void DeviceManager::initialize()
         bool result = false;
         CLSError lserror;
         result = LSRegisterCategoryAppend(GetPalmService(), "/udev", DeviceManager::deviceManagerMethods, nullptr, &lserror);
-        if (!result || !LSCategorySetData(GetPalmService(), "/udev", mObjDeviceManager, &lserror))
+        void * ptrDeviceManager = (void *) mObjDeviceManager;
+        if (!result || !LSCategorySetData(GetPalmService(), "/udev", ptrDeviceManager, &lserror))
         {
             PM_LOG_ERROR(MSGID_DEVICE_MANAGER, INIT_KVCOUNT, \
                 "%s: Registering Service for '%s' category failed", __FUNCTION__, "/udev");

@@ -208,7 +208,10 @@ bool PlaybackManager::_playSound(LSHandle *lshandle, LSMessage *message, void *c
         }
         else
         {
-            fclose(fp);
+            if(fclose(fp))
+            {
+                PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT,"PlayBack Manager :Failed to close file!");
+            }
             fp = NULL;
         }
         AudioMixer* audioMixerObj = playbackObj->mObjAudioMixer;
@@ -384,7 +387,8 @@ void PlaybackManager::initialize()
         bool result = false;
         CLSError lserror;
         result = LSRegisterCategoryAppend(GetPalmService(), "/", PlaybackManager::playbackMethods, nullptr, &lserror);
-        if (!result || !LSCategorySetData(GetPalmService(), "/", mPlaybackManager, &lserror))
+        void *ptrPlaybackManager = (void*) mPlaybackManager;
+        if (!result || !LSCategorySetData(GetPalmService(), "/", ptrPlaybackManager, &lserror))
         {
             PM_LOG_ERROR(MSGID_PLAYBACK_MANAGER, INIT_KVCOUNT, \
                 "%s registering for %s category faled",  __FUNCTION__, "/");

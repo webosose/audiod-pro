@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2023 LG Electronics, Inc.
+// Copyright (c) 2021-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -2868,7 +2868,8 @@ void OSEMasterVolumeManager::eventServerStatusInfo(SERVER_TYPE_E serviceName, bo
         LSHandle *sh = GetPalmService();
         PM_LOG_INFO(MSGID_CLIENT_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
             "payload = %s",payload.c_str());
-        result = LSCallOneReply (sh, GETSETTINGS, payload.c_str(), VolumeFromSettingService, this, nullptr, &lserror);
+           void *ptrOSEMasterVolumeManager = (void*) this;
+        result = LSCallOneReply (sh, GETSETTINGS, payload.c_str(), VolumeFromSettingService, ptrOSEMasterVolumeManager, nullptr, &lserror);
     }
 }
 

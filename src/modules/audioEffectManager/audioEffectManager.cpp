@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 LG Electronics Inc.
+ * Copyright (c) 2022-2024 LG Electronics Inc.
  * SPDX-License-Identifier: LicenseRef-LGE-Proprietary
  */
 
@@ -65,7 +65,8 @@ void AudioEffectManager::initialize() {
         CLSError lserror;
 
         bool result = LSRegisterCategoryAppend(GetPalmService(), "/", audioeffectMethods, nullptr, &lserror);
-        if (!result || !LSCategorySetData(GetPalmService(), "/", mAudioEffectManager, &lserror)) {
+        void * ptrAudioEffectManager = (void *) mAudioEffectManager;
+        if (!result || !LSCategorySetData(GetPalmService(), "/", ptrAudioEffectManager, &lserror)) {
             PM_LOG_ERROR(MSGID_AUDIO_EFFECT_MANAGER, INIT_KVCOUNT,
                     "%s: Registering Service for '%s' category failed", __FUNCTION__, "/");
             lserror.Print(__FUNCTION__, __LINE__);

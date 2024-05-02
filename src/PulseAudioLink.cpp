@@ -436,26 +436,38 @@ void PulseAudioLink::registerCallback(MixerInterface *mixerCallBack)
     mCallback = mixerCallBack;
 }
 
-class PreloadDeferCBData : public RefObj {
+class PreloadDeferCBData : public RefObj
+{
 public:
-    PreloadDeferCBData() {
+    PreloadDeferCBData()
+    {
         memset(&snd, 0, sizeof(snd));
         mainloop = NULL;
         context = NULL;
         s = NULL;
     }
-    ~PreloadDeferCBData() {
-        if (s) {
-            pa_stream_set_write_callback(s, NULL, NULL);
-            pa_stream_set_write_callback(s, NULL, NULL);
-            pa_stream_unref(s);
+
+    ~PreloadDeferCBData()
+    {
+        if (s)
+        {
+        pa_stream_set_write_callback(s, NULL, NULL);
+        pa_stream_unref(s);
         }
-        if (snd.file) fclose(snd.file);
+
+        if (snd.file)
+        {
+        if (fclose(snd.file) != 0)
+        {
+            PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT,"Error closing audio file:");
+        }
+        }
     }
-    ssound_t     snd;
+
+    ssound_t snd;
     pa_mainloop* mainloop;
     pa_context* context;
-    pa_stream * s;
+    pa_stream *s;
 };
 
 static void preload_stream_state_cb(pa_stream * s, void *userdata)
@@ -507,6 +519,10 @@ static void preload_stream_write_cb(pa_stream * s, size_t length, void * userdat
     void * data = pa_xmalloc(length);
 
     size_t len = fread(data, 1, length, snd->file);
+    if(len < length){
+    PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,
+              "PulseAudioLink::preload_stream_write_cb: Error reading from file");
+    }
     snd->tot_written += len;
 
     pa_stream_write(s, data, len, pa_xfree, 0, PA_SEEK_RELATIVE);
@@ -534,8 +550,8 @@ static void preloadDeferCB(pa_mainloop_api *a, pa_defer_event *e, void *userdata
                               NULL);
     if (VERIFY(cbdata->s))
     {
-        pa_stream_set_state_callback(cbdata->s, preload_stream_state_cb, cbdata);
-        pa_stream_set_write_callback(cbdata->s, preload_stream_write_cb, cbdata);
+        pa_stream_set_state_callback(cbdata->s, preload_stream_state_cb, userdata);
+        pa_stream_set_write_callback(cbdata->s, preload_stream_write_cb, userdata);
         pa_stream_connect_upload(cbdata->s, cbdata->snd.length);
     } else {
         unref = true;
@@ -870,9 +886,16 @@ bool PlaybackThread::playThread()
     // Read and write data in chunks of 1024 bytes
     size_t dataSize = 1024;
     mPlayData = (uint8_t*)malloc(dataSize);
-    if (!mPlayData) {
+    if (!mPlayData)
+    {
         pa_simple_free(mStream);
-        fclose(fptr);
+        if(fptr != nullptr)
+        {
+            if(fclose(fptr))
+            {
+                PM_LOG_ERROR(MSGID_PULSE_LINK, INIT_KVCOUNT,"PulseAudioLink::playThread: Error closing file");
+            }
+        }
         playbackState = "error";
         PM_LOG_DEBUG(" PlaybackThread::playThread playbackState = %s", playbackState.c_str());
         playbackStatusChanged(mPlaybackId, playbackState);

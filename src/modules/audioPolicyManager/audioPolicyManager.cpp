@@ -1,6 +1,6 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2020-2023 LG Electronics Company.
+*      Copyright (c) 2020-2024 LG Electronics Company.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -2904,7 +2904,8 @@ void AudioPolicyManager::initialize()
         bool bRetVal;
         PM_LOG_INFO(MSGID_POLICY_MANAGER, INIT_KVCOUNT, "AudioPolicyManager module initialize is successful");
         bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/", InputVolumeMethods, nullptr, &lserror);
-        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/", mAudioPolicyManager, &lserror))
+        void* ptraudioPolicyManager =(void* ) mAudioPolicyManager;
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/", ptraudioPolicyManager, &lserror))
         {
            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
             "%s: Registering Service for '%s' category failed", __FUNCTION__, "/");
@@ -2912,7 +2913,7 @@ void AudioPolicyManager::initialize()
         }
 
         bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/media", MediaInputVolumeMethods, nullptr, &lserror);
-        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/media", mAudioPolicyManager, &lserror))
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/media", ptraudioPolicyManager, &lserror))
         {
            PM_LOG_ERROR(MSGID_POLICY_MANAGER, INIT_KVCOUNT, \
             "%s: Registering Service for '%s' category failed", __FUNCTION__, "/media");

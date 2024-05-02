@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2023 LG Electronics, Inc.
+// Copyright (c) 2020-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -221,7 +221,8 @@ void MasterVolumeManager::initialize()
     if (mMasterVolumeManager)
     {
         bool bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/master", MasterVolumeMethods, nullptr, &lserror);
-        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/master", mMasterVolumeManager, &lserror))
+        void *ptrMasterVolumeManager = (void*) mMasterVolumeManager;
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/master", ptrMasterVolumeManager, &lserror))
         {
            PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT, "%s: Registering Service for '%s' category failed", \
                         __FUNCTION__, "/master");

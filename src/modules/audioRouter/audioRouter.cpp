@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2023 LG Electronics, Inc.
+// Copyright (c) 2020-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1794,14 +1794,15 @@ void AudioRouter::initialize()
         bool bRetVal;
         PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, "load module AudioRouter successful");
         bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/", SoundOutputMethods, nullptr, &lserror);
-        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/", mAudioRouter, &lserror))
+        void *ptrmAudioRouter =(void*) mAudioRouter;
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/", ptrmAudioRouter, &lserror))
         {
             PM_LOG_INFO(MSGID_AUDIOROUTER, INIT_KVCOUNT, \
             "%s: Registering Service for '%s' category failed", __FUNCTION__, "/");
             lserror.Print(__FUNCTION__, __LINE__);
         }
         bRetVal = LSRegisterCategoryAppend(GetPalmService(), "/soundSettings", SoundOutputManagerMethods, nullptr, &lserror);
-        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/soundSettings", mAudioRouter, &lserror))
+        if (!bRetVal || !LSCategorySetData(GetPalmService(), "/soundSettings", ptrmAudioRouter, &lserror))
         {
             PM_LOG_ERROR(MSGID_MASTER_VOLUME_MANAGER, INIT_KVCOUNT,\
                 "%s: Registering Service for '%s' category failed", __FUNCTION__, "/soundSettings");

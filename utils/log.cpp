@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 LG Electronics, Inc.
+// Copyright (c) 2012-2024 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -144,7 +144,11 @@ void logFilter(const gchar *log_domain, GLogLevelFlags log_level, const gchar *m
             ::localtime_r(&now, &sLogStartTime);
             char startTime[64];
             const char *time_format = "%c";    //Current time representation for locale
-            ::strftime(startTime, sizeof(startTime), time_format, &sLogStartTime);
+             char formattedTimeLength = strftime(startTime, sizeof(startTime), time_format, &sLogStartTime);
+             if (formattedTimeLength == 0)
+             {
+             PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, "Error formatting timestamp for log file");
+            }
             if (sLogDestination & eLogDestination_PrivateLogFiles)
             {
                 if (sLogFile > 0)
@@ -271,8 +275,13 @@ void setProcessName(const gchar * name)
             int c;
             while ((c = fgetc(file)) != EOF)
             {
+                if (ferror(file))
+                {
+                    PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, "log : setProcessName : Error reading preference file");
+                    break; // Exit loop on error
+                }
                 ++count;
-                if (g_ascii_isdigit(c))
+        if (g_ascii_isdigit(c))
                 {    // 0 = error, 1 = critical, 2 = warning, 3 = message, 4 = info, 5 = debug, others: debug
                     logLevel = (GLogLevelFlags) (1 << (c - '0' + 2));
                     if (logLevel < G_LOG_LEVEL_ERROR)
@@ -300,7 +309,10 @@ void setProcessName(const gchar * name)
                     }
                 }
             }
-            fclose(file);
+          if(fclose(file)){
+            PM_LOG_ERROR(MSGID_SYSTEMSOUND_MANAGER, INIT_KVCOUNT, \
+            "log: Error in file closing");
+          }
             // default for an empty preference file: debug level to private files, no terminal output.
             if (count == 0)
             {
