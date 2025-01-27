@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2024 LG Electronics, Inc.
+// Copyright (c) 2012-2025 LG Electronics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,11 @@ bool PulseAudioMixer::sendDataToPulse (uint32_t msgType, uint32_t msgID, T subOb
 {
     paudiodMsgHdr audioMsgHdr = addAudioMsgHeader(msgType, msgID);
 
+    if (mChannel == nullptr)
+    {
+        PM_LOG_ERROR(MSGID_PULSEAUDIO_MIXER, INIT_KVCOUNT, "pulse connection is not available");
+        return false;
+    }
     char *data=(char*)malloc(sizeof(struct paudiodMsgHdr) + sizeof(T));
 
     if (data)
